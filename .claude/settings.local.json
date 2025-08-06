@@ -8,7 +8,12 @@
       "Bash(npm run env:setup:*)",
       "Bash(rm:*)",
       "Bash(cp:*)",
-      "Bash(npm run env:check:*)"
+      "Bash(npm run env:check:*)",
+      "Bash(npm run build:*)",
+      "Bash(npm run build:*)",
+      "Bash(timeout 10 npm run dev)",
+      "Bash(true)",
+      "mcp__context7__resolve-library-id"
     ]
   },
   "enableAllProjectMcpServers": true,

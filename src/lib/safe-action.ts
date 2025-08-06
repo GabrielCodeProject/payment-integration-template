@@ -15,51 +15,7 @@ import { getServerEnv } from "./env";
 /**
  * Base safe action client with environment-aware configuration
  */
-export const actionClient = createSafeActionClient({
-  // Handle validation errors
-  handleValidationErrorsShape: (ve) => {
-    return {
-      type: "validation" as const,
-      message: "Validation failed",
-      errors: ve,
-    };
-  },
-
-  // Handle server errors
-  handleServerErrorLog: (e) => {
-    const env = getServerEnv();
-    
-    // Only log detailed errors in development
-    if (env.NODE_ENV === "development") {
-      console.error("❌ Server Action Error:", e);
-    } else {
-      // In production, log sanitized error info
-      console.error("❌ Server Action Error:", {
-        message: e.message,
-        timestamp: new Date().toISOString(),
-      });
-    }
-  },
-
-  // Transform server errors for client
-  handleServerError: (e) => {
-    const env = getServerEnv();
-    
-    // Return detailed errors only in development
-    if (env.NODE_ENV === "development") {
-      return {
-        type: "server" as const,
-        message: e.message,
-      };
-    }
-
-    // Return generic error in production
-    return {
-      type: "server" as const,
-      message: "An unexpected error occurred. Please try again.",
-    };
-  },
-});
+export const actionClient = createSafeActionClient();
 
 // =============================================================================
 // AUTHENTICATED ACTION CLIENT
@@ -86,7 +42,7 @@ export const authActionClient = actionClient.use(async ({ next }) => {
 });
 
 // =============================================================================
-// RATE LIMITED ACTION CLIENT
+// RATE LIMITED ACTION CLIENT  
 // =============================================================================
 
 /**
@@ -121,24 +77,17 @@ export const rateLimitedActionClient = actionClient.use(async ({ next }) => {
  * Specialized action client for payment operations
  * Includes authentication, rate limiting, and payment-specific validation
  */
-export const paymentActionClient = authActionClient
-  .use(async ({ next }) => {
-    // Rate limiting for payment operations
-    return rateLimitedActionClient.use(async ({ next: innerNext }) => {
-      return innerNext();
-    })({ next });
-  })
-  .use(async ({ next }) => {
-    const env = getServerEnv();
-    
-    // Validate Stripe configuration
-    if (!env.STRIPE_SECRET_KEY) {
-      throw new Error("Stripe configuration is missing");
-    }
-    
-    // Additional payment-specific checks can go here
-    return next();
-  });
+export const paymentActionClient = authActionClient.use(async ({ next }) => {
+  const env = getServerEnv();
+  
+  // Validate Stripe configuration
+  if (!env.STRIPE_SECRET_KEY) {
+    throw new Error("Stripe configuration is missing");
+  }
+  
+  // Additional payment-specific checks can go here
+  return next();
+});
 
 // =============================================================================
 // UTILITY FUNCTIONS

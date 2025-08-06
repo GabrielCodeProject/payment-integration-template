@@ -2,7 +2,7 @@ import type { NextConfig } from "next";
 
 /**
  * Next.js Configuration for Payment Integration Template
- * 
+ *
  * This configuration optimizes the app for payment processing,
  * security, and performance with App Router.
  */
@@ -11,38 +11,21 @@ const nextConfig: NextConfig = {
   // =============================================================================
   // EXPERIMENTAL FEATURES
   // =============================================================================
-  experimental: {
-    // Enable Partial Pre-Rendering for better performance
-    ppr: true,
-    
-    // Enable optimistic client cache for faster navigation
-    staleTimes: {
-      dynamic: 30, // 30 seconds for dynamic content
-      static: 180, // 3 minutes for static content
-    },
-    
-    // Optimize server actions
-    serverActions: {
-      bodySizeLimit: '2mb', // Limit for file uploads in payment forms
-      allowedOrigins: process.env.BETTER_AUTH_TRUSTED_ORIGINS?.split(',') || ['localhost:3000'],
-    },
-  },
 
   // =============================================================================
   // PERFORMANCE OPTIMIZATIONS
   // =============================================================================
-  
+
   // Optimize images for payment UI
   images: {
-    formats: ['image/webp', 'image/avif'],
+    formats: ["image/webp", "image/avif"],
     minimumCacheTTL: 60,
     dangerouslyAllowSVG: true,
-    contentDispositionType: 'attachment',
+    contentDispositionType: "attachment",
     contentSecurityPolicy: "default-src 'self'; script-src 'none'; sandbox;",
   },
 
-  // Optimize fonts
-  optimizeFonts: true,
+  // Note: optimizeFonts is enabled by default in Next.js 15
 
   // Enable compression
   compress: true,
@@ -53,42 +36,42 @@ const nextConfig: NextConfig = {
   async headers() {
     return [
       {
-        source: '/(.*)',
+        source: "/(.*)",
         headers: [
           // Prevent clickjacking
           {
-            key: 'X-Frame-Options',
-            value: 'DENY',
+            key: "X-Frame-Options",
+            value: "DENY",
           },
           // Prevent MIME type sniffing
           {
-            key: 'X-Content-Type-Options',
-            value: 'nosniff',
+            key: "X-Content-Type-Options",
+            value: "nosniff",
           },
           // Enable XSS protection
           {
-            key: 'X-XSS-Protection',
-            value: '1; mode=block',
+            key: "X-XSS-Protection",
+            value: "1; mode=block",
           },
           // Referrer policy for privacy
           {
-            key: 'Referrer-Policy',
-            value: 'strict-origin-when-cross-origin',
+            key: "Referrer-Policy",
+            value: "strict-origin-when-cross-origin",
           },
           // Permissions policy
           {
-            key: 'Permissions-Policy',
-            value: 'camera=(), microphone=(), geolocation=()',
+            key: "Permissions-Policy",
+            value: "camera=(), microphone=(), geolocation=()",
           },
         ],
       },
       // Special headers for API routes (payments, webhooks)
       {
-        source: '/api/(.*)',
+        source: "/api/(.*)",
         headers: [
           {
-            key: 'Cache-Control',
-            value: 'no-store, no-cache, must-revalidate',
+            key: "Cache-Control",
+            value: "no-store, no-cache, must-revalidate",
           },
         ],
       },
@@ -100,7 +83,7 @@ const nextConfig: NextConfig = {
   // =============================================================================
   env: {
     // Make sure critical environment variables are available at build time
-    CUSTOM_ENV_CHECK: process.env.NODE_ENV || 'development',
+    CUSTOM_ENV_CHECK: process.env.NODE_ENV || "development",
   },
 
   // =============================================================================
@@ -112,15 +95,15 @@ const nextConfig: NextConfig = {
       config.optimization.splitChunks.cacheGroups = {
         ...config.optimization.splitChunks.cacheGroups,
         stripe: {
-          name: 'stripe',
-          chunks: 'all',
+          name: "stripe",
+          chunks: "all",
           test: /[\\/]node_modules[\\/](@stripe)[\\/]/,
           priority: 30,
           reuseExistingChunk: true,
         },
         auth: {
-          name: 'auth',
-          chunks: 'all',
+          name: "auth",
+          chunks: "all",
           test: /[\\/]node_modules[\\/](better-auth|@auth)[\\/]/,
           priority: 25,
           reuseExistingChunk: true,
@@ -138,8 +121,8 @@ const nextConfig: NextConfig = {
     return [
       // Redirect old payment URLs if migrating from another system
       {
-        source: '/payment/:path*',
-        destination: '/checkout/:path*',
+        source: "/payment/:path*",
+        destination: "/checkout/:path*",
         permanent: true,
       },
     ];
@@ -148,14 +131,14 @@ const nextConfig: NextConfig = {
   // =============================================================================
   // RUNTIME CONFIGURATION
   // =============================================================================
-  
+
   // Enable static generation where possible
-  output: 'standalone',
-  
+  output: "standalone",
+
   // Configure logging in development
   logging: {
     fetches: {
-      fullUrl: process.env.NODE_ENV === 'development',
+      fullUrl: process.env.NODE_ENV === "development",
     },
   },
 
