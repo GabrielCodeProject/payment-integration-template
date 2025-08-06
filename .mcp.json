@@ -1,0 +1,31 @@
+{
+    "mcpServers": {
+      "shadcn-ui": {
+        "description": "A server for managing Shadcn UI components",
+        "command": "cmd",
+        "args": ["/c", "npx", "@jpisnice/shadcn-ui-mcp-server"]
+      },
+      "sequential-thinking": {
+      "command": "cmd",
+      "args": [
+        "/c",
+        "npx",
+        "-y",
+        "@modelcontextprotocol/server-sequential-thinking"
+      ]
+      },
+       "context7": {
+      "type": "stdio",
+      "command": "cmd",
+      "args": ["/c","npx","-y", "@upstash/context7-mcp"]
+    },
+      "playwright": {
+        "command": "cmd",
+        "args": [
+            "/c",
+            "npx",
+            "@playwright/mcp@latest", "--browser=firefox"
+        ]
+      }
+    }
+}

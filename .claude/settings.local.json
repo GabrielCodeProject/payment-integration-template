@@ -1,0 +1,15 @@
+{
+  "permissions": {
+    "allow": [
+      "mcp__sequential-thinking__sequentialthinking",
+      "Bash(mkdir:*)"
+    ]
+  },
+  "enableAllProjectMcpServers": true,
+  "enabledMcpjsonServers": [
+    "shadcn-ui",
+    "sequential-thinking",
+    "context7",
+    "playwright"
+  ]
+}
