@@ -2,7 +2,13 @@
   "permissions": {
     "allow": [
       "mcp__sequential-thinking__sequentialthinking",
-      "Bash(mkdir:*)"
+      "Bash(mkdir:*)",
+      "Bash(npm install:*)",
+      "Bash(npx shadcn:*)",
+      "Bash(npm run env:setup:*)",
+      "Bash(rm:*)",
+      "Bash(cp:*)",
+      "Bash(npm run env:check:*)"
     ]
   },
   "enableAllProjectMcpServers": true,
