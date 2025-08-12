@@ -2,7 +2,8 @@
 
 ## 1. Component Architecture Overview
 
-The NextJS Stripe Payment Template follows a modular, layered architecture with clear separation between frontend components, backend services, and external integrations.
+The NextJS Stripe Payment Template follows a modular, layered architecture with clear separation
+between frontend components, backend services, and external integrations.
 
 ### 1.1 Architecture Layers
 
@@ -14,14 +15,14 @@ graph TB
         LC[Layout Components]
         FC[Form Components]
     end
-    
+
     subgraph "Application Layer"
         SA[Server Actions]
         API[API Routes]
         MW[Middleware]
         HOK[Hooks]
     end
-    
+
     subgraph "Business Logic Layer"
         AS[Auth Service]
         PS[Product Service]
@@ -29,31 +30,31 @@ graph TB
         PayS[Payment Service]
         ES[Email Service]
     end
-    
+
     subgraph "Data Access Layer"
         PR[Prisma Client]
         DB[(PostgreSQL)]
         CACHE[Redis Cache]
     end
-    
+
     subgraph "External Services"
         STRIPE[Stripe API]
         RESEND[Resend Email]
         STORAGE[File Storage]
     end
-    
+
     PC --> SA
     UC --> HOK
     SA --> AS
     API --> PS
     MW --> API
-    
+
     AS --> PR
     PS --> PR
     OS --> PayS
     PayS --> STRIPE
     ES --> RESEND
-    
+
     PR --> DB
     HOK --> CACHE
 ```
@@ -113,35 +114,35 @@ graph TB
         FT[Footer]
         SB[Sidebar]
     end
-    
+
     subgraph "Page Components"
         HP[Home Page]
         PP[Product Page]
         CP[Checkout Page]
         DP[Dashboard Page]
     end
-    
+
     subgraph "Feature Components"
         PC[Product Card]
         SC[Shopping Cart]
         PF[Payment Form]
         DT[Data Table]
     end
-    
+
     subgraph "UI Components"
         BTN[Button]
         INP[Input]
         MDL[Modal]
         CRD[Card]
     end
-    
+
     RL --> NB
     RL --> FT
     HP --> PC
     PP --> PF
     CP --> SC
     DP --> DT
-    
+
     PC --> BTN
     SC --> CRD
     PF --> INP
@@ -232,7 +233,7 @@ export const ProductCard: React.FC<ProductCardProps> = ({
   size = 'md',
 }) => {
   const { addItem, isLoading } = useCart()
-  
+
   const handleAddToCart = async () => {
     const defaultPrice = product.prices.find(p => p.active) || product.prices[0]
     await addItem({
@@ -262,7 +263,7 @@ export const ProductCard: React.FC<ProductCardProps> = ({
             <Badge variant="secondary">Featured</Badge>
           )}
         </div>
-        
+
         {product.images && JSON.parse(product.images as string).length > 0 && (
           <div className="aspect-video relative overflow-hidden rounded-md bg-muted">
             <img
@@ -273,7 +274,7 @@ export const ProductCard: React.FC<ProductCardProps> = ({
           </div>
         )}
       </CardHeader>
-      
+
       <CardContent className="flex-1 pt-0">
         <div className="space-y-2">
           <div className="flex items-center justify-between">
@@ -284,7 +285,7 @@ export const ProductCard: React.FC<ProductCardProps> = ({
               {product.type === 'SUBSCRIPTION' ? 'Monthly' : 'One-time'}
             </Badge>
           </div>
-          
+
           {product.trialDays && product.trialDays > 0 && (
             <p className="text-sm text-muted-foreground">
               {product.trialDays}-day free trial
@@ -292,10 +293,10 @@ export const ProductCard: React.FC<ProductCardProps> = ({
           )}
         </div>
       </CardContent>
-      
+
       {showAddToCart && (
         <CardFooter className="pt-4">
-          <Button 
+          <Button
             onClick={handleAddToCart}
             disabled={isLoading || product.status !== 'PUBLISHED'}
             className="w-full"
@@ -423,9 +424,9 @@ export const StripePaymentForm: React.FC<StripePaymentFormProps> = ({
                 }).format(amount / 100)}
               </p>
             </div>
-            
-            <Button 
-              type="submit" 
+
+            <Button
+              type="submit"
               disabled={!stripe || isProcessing}
               className="min-w-32"
             >
@@ -452,13 +453,13 @@ export const StripePaymentForm: React.FC<StripePaymentFormProps> = ({
 
 ```typescript
 // hooks/use-auth.ts
-import { useEffect, useState } from 'react'
-import { User } from '@/types/auth'
+import { useEffect, useState } from "react";
+import { User } from "@/types/auth";
 
 interface AuthState {
-  user: User | null
-  isLoading: boolean
-  isAuthenticated: boolean
+  user: User | null;
+  isLoading: boolean;
+  isAuthenticated: boolean;
 }
 
 export const useAuth = () => {
@@ -466,77 +467,77 @@ export const useAuth = () => {
     user: null,
     isLoading: true,
     isAuthenticated: false,
-  })
+  });
 
   useEffect(() => {
-    fetchCurrentUser()
-  }, [])
+    fetchCurrentUser();
+  }, []);
 
   const fetchCurrentUser = async () => {
     try {
-      const response = await fetch('/api/auth/me')
+      const response = await fetch("/api/auth/me");
       if (response.ok) {
-        const { user } = await response.json()
+        const { user } = await response.json();
         setState({
           user,
           isLoading: false,
           isAuthenticated: !!user,
-        })
+        });
       } else {
         setState({
           user: null,
           isLoading: false,
           isAuthenticated: false,
-        })
+        });
       }
     } catch (error) {
       setState({
         user: null,
         isLoading: false,
         isAuthenticated: false,
-      })
+      });
     }
-  }
+  };
 
   const login = async (credentials: LoginCredentials) => {
-    const response = await fetch('/api/auth/login', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+    const response = await fetch("/api/auth/login", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
       body: JSON.stringify(credentials),
-    })
+    });
 
     if (response.ok) {
-      await fetchCurrentUser()
-      return { success: true }
+      await fetchCurrentUser();
+      return { success: true };
     } else {
-      const error = await response.json()
-      return { success: false, error: error.message }
+      const error = await response.json();
+      return { success: false, error: error.message };
     }
-  }
+  };
 
   const logout = async () => {
-    await fetch('/api/auth/logout', { method: 'POST' })
+    await fetch("/api/auth/logout", { method: "POST" });
     setState({
       user: null,
       isLoading: false,
       isAuthenticated: false,
-    })
-  }
+    });
+  };
 
   const register = async (userData: RegisterData) => {
-    const response = await fetch('/api/auth/register', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+    const response = await fetch("/api/auth/register", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
       body: JSON.stringify(userData),
-    })
+    });
 
     if (response.ok) {
-      return { success: true }
+      return { success: true };
     } else {
-      const error = await response.json()
-      return { success: false, error: error.message }
+      const error = await response.json();
+      return { success: false, error: error.message };
     }
-  }
+  };
 
   return {
     ...state,
@@ -544,34 +545,34 @@ export const useAuth = () => {
     logout,
     register,
     refetch: fetchCurrentUser,
-  }
-}
+  };
+};
 ```
 
 #### 2.3.2 Shopping Cart Hook
 
 ```typescript
 // hooks/use-cart.ts
-import { create } from 'zustand'
-import { persist } from 'zustand/middleware'
+import { create } from "zustand";
+import { persist } from "zustand/middleware";
 
 interface CartItem {
-  productId: string
-  priceId: string
-  quantity: number
-  product?: Product
-  price?: Price
+  productId: string;
+  priceId: string;
+  quantity: number;
+  product?: Product;
+  price?: Price;
 }
 
 interface CartStore {
-  items: CartItem[]
-  isLoading: boolean
-  addItem: (item: Omit<CartItem, 'quantity'> & { quantity?: number }) => Promise<void>
-  removeItem: (productId: string, priceId: string) => void
-  updateQuantity: (productId: string, priceId: string, quantity: number) => void
-  clearCart: () => void
-  getTotalItems: () => number
-  getTotalAmount: () => number
+  items: CartItem[];
+  isLoading: boolean;
+  addItem: (item: Omit<CartItem, "quantity"> & { quantity?: number }) => Promise<void>;
+  removeItem: (productId: string, priceId: string) => void;
+  updateQuantity: (productId: string, priceId: string, quantity: number) => void;
+  clearCart: () => void;
+  getTotalItems: () => number;
+  getTotalAmount: () => number;
 }
 
 export const useCart = create<CartStore>()(
@@ -581,93 +582,91 @@ export const useCart = create<CartStore>()(
       isLoading: false,
 
       addItem: async (newItem) => {
-        set({ isLoading: true })
-        
+        set({ isLoading: true });
+
         try {
           // Fetch product and price details if not provided
           if (!newItem.product || !newItem.price) {
             const [productRes, priceRes] = await Promise.all([
               fetch(`/api/products/${newItem.productId}`),
-              fetch(`/api/prices/${newItem.priceId}`)
-            ])
-            
-            const [product, price] = await Promise.all([
-              productRes.json(),
-              priceRes.json()
-            ])
-            
-            newItem.product = product
-            newItem.price = price
+              fetch(`/api/prices/${newItem.priceId}`),
+            ]);
+
+            const [product, price] = await Promise.all([productRes.json(), priceRes.json()]);
+
+            newItem.product = product;
+            newItem.price = price;
           }
 
           set((state) => {
             const existingItem = state.items.find(
-              item => item.productId === newItem.productId && item.priceId === newItem.priceId
-            )
+              (item) => item.productId === newItem.productId && item.priceId === newItem.priceId
+            );
 
             if (existingItem) {
               return {
-                items: state.items.map(item =>
+                items: state.items.map((item) =>
                   item.productId === newItem.productId && item.priceId === newItem.priceId
                     ? { ...item, quantity: item.quantity + (newItem.quantity || 1) }
                     : item
                 ),
                 isLoading: false,
-              }
+              };
             } else {
               return {
                 items: [...state.items, { ...newItem, quantity: newItem.quantity || 1 }],
                 isLoading: false,
-              }
+              };
             }
-          })
+          });
         } catch (error) {
-          console.error('Failed to add item to cart:', error)
-          set({ isLoading: false })
+          console.error("Failed to add item to cart:", error);
+          set({ isLoading: false });
         }
       },
 
       removeItem: (productId, priceId) =>
         set((state) => ({
           items: state.items.filter(
-            item => !(item.productId === productId && item.priceId === priceId)
+            (item) => !(item.productId === productId && item.priceId === priceId)
           ),
         })),
 
       updateQuantity: (productId, priceId, quantity) =>
         set((state) => ({
-          items: quantity > 0
-            ? state.items.map(item =>
-                item.productId === productId && item.priceId === priceId
-                  ? { ...item, quantity }
-                  : item
-              )
-            : state.items.filter(
-                item => !(item.productId === productId && item.priceId === priceId)
-              ),
+          items:
+            quantity > 0
+              ? state.items.map((item) =>
+                  item.productId === productId && item.priceId === priceId
+                    ? { ...item, quantity }
+                    : item
+                )
+              : state.items.filter(
+                  (item) => !(item.productId === productId && item.priceId === priceId)
+                ),
         })),
 
       clearCart: () => set({ items: [] }),
 
       getTotalItems: () => {
-        const { items } = get()
-        return items.reduce((total, item) => total + item.quantity, 0)
+        const { items } = get();
+        return items.reduce((total, item) => total + item.quantity, 0);
       },
 
       getTotalAmount: () => {
-        const { items } = get()
+        const { items } = get();
         return items.reduce((total, item) => {
-          const price = item.price?.unitAmount || 0
-          return total + (Number(price) * item.quantity)
-        }, 0)
+          const price = item.price?.unitAmount || 0;
+          return total + Number(price) * item.quantity;
+        }, 0);
       },
     }),
     {
-      name: 'shopping-cart',
+      name: "shopping-cart",
       partialize: (state) => ({ items: state.items }), // Only persist items
     }
   )
-)
+);
 ```
 
 ## 3. Backend Service Architecture
@@ -677,19 +676,19 @@ export const useCart = create<CartStore>()(
 ```typescript
 // lib/services/base.service.ts
 export abstract class BaseService {
-  protected abstract model: any
-  protected abstract relations?: string[]
+  protected abstract model: any;
+  protected abstract relations?: string[];
 
   async findById(id: string, include?: Record<string, boolean>) {
     return this.model.findUnique({
       where: { id },
       include: include || this.getDefaultIncludes(),
-    })
+    });
   }
 
   async findMany(params: FindManyParams) {
-    const { page = 1, limit = 10, where, orderBy } = params
-    const skip = (page - 1) * limit
+    const { page = 1, limit = 10, where, orderBy } = params;
+    const skip = (page - 1) * limit;
 
     const [data, total] = await Promise.all([
       this.model.findMany({
@@ -700,7 +699,7 @@ export abstract class BaseService {
         include: this.getDefaultIncludes(),
       }),
       this.model.count({ where }),
-    ])
+    ]);
 
     return {
       data,
@@ -710,14 +709,19 @@ export abstract class BaseService {
         total,
         totalPages: Math.ceil(total / limit),
       },
-    }
+    };
   }
 
   protected getDefaultIncludes(): Record<string, boolean> {
-    return this.relations?.reduce((acc, relation) => {
-      acc[relation] = true
-      return acc
-    }, {} as Record<string, boolean>) || {}
+    return (
+      this.relations?.reduce(
+        (acc, relation) => {
+          acc[relation] = true;
+          return acc;
+        },
+        {} as Record<string, boolean>
+      ) || {}
+    );
   }
 }
 ```
@@ -726,37 +730,37 @@ export abstract class BaseService {
 
 ```typescript
 // lib/services/product.service.ts
-import { prisma } from '@/lib/prisma'
-import { BaseService } from './base.service'
-import { ProductType, ProductStatus } from '@prisma/client'
+import { prisma } from "@/lib/prisma";
+import { BaseService } from "./base.service";
+import { ProductType, ProductStatus } from "@prisma/client";
 
 interface CreateProductParams {
-  name: string
-  description: string
-  shortDescription?: string
-  type: ProductType
-  basePrice: number
-  billingInterval?: string
-  trialDays?: number
-  images?: string[]
-  categoryIds?: string[]
+  name: string;
+  description: string;
+  shortDescription?: string;
+  type: ProductType;
+  basePrice: number;
+  billingInterval?: string;
+  trialDays?: number;
+  images?: string[];
+  categoryIds?: string[];
 }
 
 interface ProductFilters {
-  type?: ProductType
-  status?: ProductStatus
-  categoryId?: string
-  featured?: boolean
-  search?: string
+  type?: ProductType;
+  status?: ProductStatus;
+  categoryId?: string;
+  featured?: boolean;
+  search?: string;
   priceRange?: {
-    min?: number
-    max?: number
-  }
+    min?: number;
+    max?: number;
+  };
 }
 
 export class ProductService extends BaseService {
-  protected model = prisma.product
-  protected relations = ['prices', 'categories']
+  protected model = prisma.product;
+  protected relations = ["prices", "categories"];
 
   async createProduct(params: CreateProductParams, userId: string) {
     const product = await prisma.product.create({
@@ -770,172 +774,169 @@ export class ProductService extends BaseService {
         billingInterval: params.billingInterval,
         trialDays: params.trialDays,
         images: JSON.stringify(params.images || []),
-        status: 'DRAFT',
-        categories: params.categoryIds ? {
-          connect: params.categoryIds.map(id => ({ id }))
-        } : undefined,
+        status: "DRAFT",
+        categories: params.categoryIds
+          ? {
+              connect: params.categoryIds.map((id) => ({ id })),
+            }
+          : undefined,
       },
       include: this.getDefaultIncludes(),
-    })
+    });
 
     // Create default price
-    await this.createDefaultPrice(product.id, params.basePrice, params.type)
+    await this.createDefaultPrice(product.id, params.basePrice, params.type);
 
     // Audit log
-    await this.auditLog('PRODUCT_CREATED', userId, product.id)
+    await this.auditLog("PRODUCT_CREATED", userId, product.id);
 
-    return product
+    return product;
   }
 
   async findProducts(filters: ProductFilters = {}, pagination = { page: 1, limit: 10 }) {
-    const where: any = {}
+    const where: any = {};
 
-    if (filters.type) where.type = filters.type
-    if (filters.status) where.status = filters.status
-    if (filters.featured !== undefined) where.featured = filters.featured
+    if (filters.type) where.type = filters.type;
+    if (filters.status) where.status = filters.status;
+    if (filters.featured !== undefined) where.featured = filters.featured;
 
     if (filters.search) {
       where.OR = [
-        { name: { contains: filters.search, mode: 'insensitive' } },
-        { description: { contains: filters.search, mode: 'insensitive' } },
-      ]
+        { name: { contains: filters.search, mode: "insensitive" } },
+        { description: { contains: filters.search, mode: "insensitive" } },
+      ];
     }
 
     if (filters.priceRange) {
-      const { min, max } = filters.priceRange
-      where.basePrice = {}
-      if (min !== undefined) where.basePrice.gte = min
-      if (max !== undefined) where.basePrice.lte = max
+      const { min, max } = filters.priceRange;
+      where.basePrice = {};
+      if (min !== undefined) where.basePrice.gte = min;
+      if (max !== undefined) where.basePrice.lte = max;
     }
 
     if (filters.categoryId) {
       where.categories = {
-        some: { id: filters.categoryId }
-      }
+        some: { id: filters.categoryId },
+      };
     }
 
     return this.findMany({
       where,
-      orderBy: [
-        { featured: 'desc' },
-        { createdAt: 'desc' },
-      ],
+      orderBy: [{ featured: "desc" }, { createdAt: "desc" }],
       ...pagination,
-    })
+    });
   }
 
   async publishProduct(id: string, userId: string) {
     const product = await prisma.product.update({
       where: { id },
-      data: { 
-        status: 'PUBLISHED',
+      data: {
+        status: "PUBLISHED",
         publishedAt: new Date(),
       },
       include: this.getDefaultIncludes(),
-    })
+    });
 
-    await this.auditLog('PRODUCT_PUBLISHED', userId, id)
-    return product
+    await this.auditLog("PRODUCT_PUBLISHED", userId, id);
+    return product;
   }
 
   private async generateSlug(name: string): Promise<string> {
     const baseSlug = name
       .toLowerCase()
-      .replace(/[^a-z0-9]+/g, '-')
-      .replace(/^-+|-+$/g, '')
+      .replace(/[^a-z0-9]+/g, "-")
+      .replace(/^-+|-+$/g, "");
 
-    let slug = baseSlug
-    let counter = 1
+    let slug = baseSlug;
+    let counter = 1;
 
     while (await prisma.product.findUnique({ where: { slug } })) {
-      slug = `${baseSlug}-${counter}`
-      counter++
+      slug = `${baseSlug}-${counter}`;
+      counter++;
     }
 
-    return slug
+    return slug;
   }
 
   private async createDefaultPrice(productId: string, amount: number, type: ProductType) {
     // Integration with Stripe to create price
     const stripePrice = await stripe.prices.create({
       unit_amount: Math.round(amount * 100),
-      currency: 'usd',
+      currency: "usd",
       product_data: { name: `Price for ${productId}` },
-      recurring: type === 'SUBSCRIPTION' ? { interval: 'month' } : undefined,
-    })
+      recurring: type === "SUBSCRIPTION" ? { interval: "month" } : undefined,
+    });
 
     return prisma.price.create({
       data: {
         productId,
         stripePriceId: stripePrice.id,
         unitAmount: amount,
-        type: type === 'SUBSCRIPTION' ? 'RECURRING' : 'ONE_TIME',
-        recurring: type === 'SUBSCRIPTION' ? { interval: 'month' } : null,
+        type: type === "SUBSCRIPTION" ? "RECURRING" : "ONE_TIME",
+        recurring: type === "SUBSCRIPTION" ? { interval: "month" } : null,
       },
-    })
+    });
   }
 
   private async auditLog(action: string, userId: string, resourceId: string) {
     await prisma.auditLog.create({
       data: {
         action,
-        resource: 'product',
+        resource: "product",
         resourceId,
         userId,
       },
-    })
+    });
   }
 }
 
-export const productService = new ProductService()
+export const productService = new ProductService();
 ```
 
 ### 3.3 Order Service
 
 ```typescript
 // lib/services/order.service.ts
-import { prisma } from '@/lib/prisma'
-import { paymentService } from './payment.service'
-import { emailService } from './email.service'
+import { prisma } from "@/lib/prisma";
+import { paymentService } from "./payment.service";
+import { emailService } from "./email.service";
 
 interface CreateOrderParams {
-  userId: string
+  userId: string;
   items: Array<{
-    productId: string
-    priceId: string
-    quantity: number
-  }>
-  billingAddress: any
-  shippingAddress?: any
-  discountCode?: string
+    productId: string;
+    priceId: string;
+    quantity: number;
+  }>;
+  billingAddress: any;
+  shippingAddress?: any;
+  discountCode?: string;
 }
 
 export class OrderService {
   async createOrder(params: CreateOrderParams) {
     return prisma.$transaction(async (tx) => {
       // Generate order number
-      const orderNumber = await this.generateOrderNumber()
+      const orderNumber = await this.generateOrderNumber();
 
       // Calculate totals
-      const { subtotal, taxAmount, discountAmount, totalAmount, items } = 
-        await this.calculateOrderTotals(params.items, params.discountCode)
+      const { subtotal, taxAmount, discountAmount, totalAmount, items } =
+        await this.calculateOrderTotals(params.items, params.discountCode);
 
       // Create order
       const order = await tx.order.create({
         data: {
           userId: params.userId,
           orderNumber,
-          status: 'PENDING',
+          status: "PENDING",
           subtotal,
           taxAmount,
           discountAmount,
           totalAmount,
           billingAddress: JSON.stringify(params.billingAddress),
-          shippingAddress: params.shippingAddress 
-            ? JSON.stringify(params.shippingAddress) 
-            : null,
+          shippingAddress: params.shippingAddress ? JSON.stringify(params.shippingAddress) : null,
           items: {
-            create: items.map(item => ({
+            create: items.map((item) => ({
               productId: item.productId,
               priceId: item.priceId,
               quantity: item.quantity,
@@ -953,39 +954,39 @@ export class OrderService {
           },
           user: true,
         },
-      })
+      });
 
       // Process discount usage
       if (params.discountCode) {
-        await this.recordDiscountUsage(params.discountCode, params.userId, order.id)
+        await this.recordDiscountUsage(params.discountCode, params.userId, order.id);
       }
 
       // Create payment intent for non-subscription items
-      const oneTimeItems = items.filter(item => item.type === 'ONE_TIME')
+      const oneTimeItems = items.filter((item) => item.type === "ONE_TIME");
       if (oneTimeItems.length > 0) {
         const paymentIntent = await paymentService.createPaymentIntent({
           amount: Math.round(totalAmount * 100),
-          currency: 'usd',
+          currency: "usd",
           customerId: order.user.stripeCustomerId,
           orderId: order.id,
           userEmail: order.user.email,
-        })
+        });
 
         await tx.order.update({
           where: { id: order.id },
           data: { stripePaymentIntentId: paymentIntent.id },
-        })
+        });
       }
 
-      return order
-    })
+      return order;
+    });
   }
 
   async completeOrder(orderId: string) {
     const order = await prisma.order.update({
       where: { id: orderId },
       data: {
-        status: 'COMPLETED',
+        status: "COMPLETED",
         completedAt: new Date(),
       },
       include: {
@@ -996,22 +997,22 @@ export class OrderService {
         },
         user: true,
       },
-    })
+    });
 
     // Generate download URLs for digital products
-    const downloadUrls = await this.generateDownloadUrls(order.items)
+    const downloadUrls = await this.generateDownloadUrls(order.items);
 
     // Send confirmation email
-    await emailService.sendOrderConfirmation(order)
+    await emailService.sendOrderConfirmation(order);
 
-    return { order, downloadUrls }
+    return { order, downloadUrls };
   }
 
   private async generateOrderNumber(): Promise<string> {
-    const now = new Date()
-    const year = now.getFullYear()
-    const month = String(now.getMonth() + 1).padStart(2, '0')
-    
+    const now = new Date();
+    const year = now.getFullYear();
+    const month = String(now.getMonth() + 1).padStart(2, "0");
+
     const count = await prisma.order.count({
       where: {
         createdAt: {
@@ -1019,9 +1020,9 @@ export class OrderService {
           lt: new Date(year, now.getMonth() + 1, 1),
         },
       },
-    })
+    });
 
-    return `ORD-${year}${month}-${String(count + 1).padStart(4, '0')}`
+    return `ORD-${year}${month}-${String(count + 1).padStart(4, "0")}`;
   }
 
   private async calculateOrderTotals(
@@ -1034,14 +1035,14 @@ export class OrderService {
         const [product, price] = await Promise.all([
           prisma.product.findUnique({ where: { id: item.productId } }),
           prisma.price.findUnique({ where: { id: item.priceId } }),
-        ])
+        ]);
 
         if (!product || !price) {
-          throw new Error(`Product or price not found`)
+          throw new Error(`Product or price not found`);
         }
 
-        const unitPrice = Number(price.unitAmount)
-        const totalPrice = unitPrice * item.quantity
+        const unitPrice = Number(price.unitAmount);
+        const totalPrice = unitPrice * item.quantity;
 
         return {
           ...item,
@@ -1050,22 +1051,22 @@ export class OrderService {
           unitPrice,
           totalPrice,
           type: price.type,
-        }
+        };
       })
-    )
+    );
 
-    const subtotal = itemDetails.reduce((sum, item) => sum + item.totalPrice, 0)
-    
+    const subtotal = itemDetails.reduce((sum, item) => sum + item.totalPrice, 0);
+
     // Calculate tax (simplified - in production, use tax service)
-    const taxAmount = subtotal * 0.08 // 8% tax rate
+    const taxAmount = subtotal * 0.08; // 8% tax rate
 
     // Apply discount
-    let discountAmount = 0
+    let discountAmount = 0;
     if (discountCode) {
-      discountAmount = await this.calculateDiscount(discountCode, subtotal)
+      discountAmount = await this.calculateDiscount(discountCode, subtotal);
     }
 
-    const totalAmount = subtotal + taxAmount - discountAmount
+    const totalAmount = subtotal + taxAmount - discountAmount;
 
     return {
       subtotal,
@@ -1073,41 +1074,41 @@ export class OrderService {
       discountAmount,
       totalAmount,
       items: itemDetails,
-    }
+    };
   }
 
   private async calculateDiscount(code: string, subtotal: number): Promise<number> {
     const discount = await prisma.discount.findUnique({
       where: { code },
-    })
+    });
 
     if (!discount || !discount.active) {
-      return 0
+      return 0;
     }
 
     // Check validity period
-    const now = new Date()
-    if (discount.validFrom && discount.validFrom > now) return 0
-    if (discount.validUntil && discount.validUntil < now) return 0
+    const now = new Date();
+    if (discount.validFrom && discount.validFrom > now) return 0;
+    if (discount.validUntil && discount.validUntil < now) return 0;
 
     // Check usage limits
-    if (discount.maxUses && discount.currentUses >= discount.maxUses) return 0
+    if (discount.maxUses && discount.currentUses >= discount.maxUses) return 0;
 
     // Check minimum amount
-    if (discount.minimumAmount && subtotal < Number(discount.minimumAmount)) return 0
+    if (discount.minimumAmount && subtotal < Number(discount.minimumAmount)) return 0;
 
     // Calculate discount amount
-    if (discount.type === 'PERCENTAGE') {
-      return subtotal * (Number(discount.value) / 100)
+    if (discount.type === "PERCENTAGE") {
+      return subtotal * (Number(discount.value) / 100);
     } else {
-      return Math.min(Number(discount.value), subtotal)
+      return Math.min(Number(discount.value), subtotal);
     }
   }
 
   private async recordDiscountUsage(code: string, userId: string, orderId: string) {
     const discount = await prisma.discount.findUnique({
       where: { code },
-    })
+    });
 
     if (discount) {
       await Promise.all([
@@ -1123,86 +1124,84 @@ export class OrderService {
           where: { id: discount.id },
           data: { currentUses: { increment: 1 } },
         }),
-      ])
+      ]);
     }
   }
 
   private async generateDownloadUrls(orderItems: any[]) {
-    const digitalItems = orderItems.filter(item => 
-      item.product.type === 'DIGITAL_DOWNLOAD'
-    )
+    const digitalItems = orderItems.filter((item) => item.product.type === "DIGITAL_DOWNLOAD");
 
     return Promise.all(
       digitalItems.map(async (item) => {
         // Generate secure, time-limited download URL
-        const token = crypto.randomUUID()
-        const expiresAt = new Date(Date.now() + 24 * 60 * 60 * 1000) // 24 hours
+        const token = crypto.randomUUID();
+        const expiresAt = new Date(Date.now() + 24 * 60 * 60 * 1000); // 24 hours
 
         return {
           productId: item.productId,
           url: `/api/downloads/${token}`,
           expiresAt,
-        }
+        };
       })
-    )
+    );
   }
 }
 
-export const orderService = new OrderService()
+export const orderService = new OrderService();
 ```
 
 ### 3.4 Server Actions
 
 ```typescript
 // actions/auth.actions.ts
-'use server'
+"use server";
 
-import { z } from 'zod'
-import { redirect } from 'next/navigation'
-import { auth } from '@/lib/auth'
-import { userService } from '@/lib/services/user.service'
-import { loginSchema, registerSchema } from '@/lib/validation/auth'
+import { z } from "zod";
+import { redirect } from "next/navigation";
+import { auth } from "@/lib/auth";
+import { userService } from "@/lib/services/user.service";
+import { loginSchema, registerSchema } from "@/lib/validation/auth";
 
 export async function loginAction(values: z.infer<typeof loginSchema>) {
   try {
-    const validatedData = loginSchema.parse(values)
-    
-    const result = await auth.api.signIn('credentials', {
+    const validatedData = loginSchema.parse(values);
+
+    const result = await auth.api.signIn("credentials", {
       email: validatedData.email,
       password: validatedData.password,
       redirect: false,
-    })
+    });
 
     if (result?.error) {
-      return { error: result.error }
+      return { error: result.error };
     }
 
-    return { success: true }
+    return { success: true };
   } catch (error) {
-    return { error: 'Invalid credentials' }
+    return { error: "Invalid credentials" };
   }
 }
 
 export async function registerAction(values: z.infer<typeof registerSchema>) {
   try {
-    const validatedData = registerSchema.parse(values)
-    
-    const existingUser = await userService.findByEmail(validatedData.email)
+    const validatedData = registerSchema.parse(values);
+
+    const existingUser = await userService.findByEmail(validatedData.email);
     if (existingUser) {
-      return { error: 'User already exists' }
+      return { error: "User already exists" };
     }
 
-    await userService.createUser(validatedData)
-    
-    return { success: true, message: 'Registration successful. Please check your email.' }
+    await userService.createUser(validatedData);
+
+    return { success: true, message: "Registration successful. Please check your email." };
   } catch (error) {
-    return { error: 'Registration failed' }
+    return { error: "Registration failed" };
   }
 }
 
 export async function logoutAction() {
-  await auth.api.signOut()
-  redirect('/login')
+  await auth.api.signOut();
+  redirect("/login");
 }
 ```
 
@@ -1212,16 +1211,16 @@ export async function logoutAction() {
 
 ```typescript
 // lib/services/stripe.service.ts
-import Stripe from 'stripe'
-import { prisma } from '@/lib/prisma'
+import Stripe from "stripe";
+import { prisma } from "@/lib/prisma";
 
 export class StripeService {
-  private stripe: Stripe
+  private stripe: Stripe;
 
   constructor() {
     this.stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
-      apiVersion: '2024-06-20',
-    })
+      apiVersion: "2024-06-20",
+    });
   }
 
   async createCustomer(user: any) {
@@ -1231,14 +1230,14 @@ export class StripeService {
       metadata: {
         userId: user.id,
       },
-    })
+    });
 
     await prisma.user.update({
       where: { id: user.id },
       data: { stripeCustomerId: customer.id },
-    })
+    });
 
-    return customer
+    return customer;
   }
 
   async syncProductToStripe(product: any) {
@@ -1249,9 +1248,9 @@ export class StripeService {
       metadata: {
         productId: product.id,
       },
-    })
+    });
 
-    return stripeProduct
+    return stripeProduct;
   }
 
   async handleWebhook(signature: string, payload: string) {
@@ -1259,47 +1258,49 @@ export class StripeService {
       payload,
       signature,
       process.env.STRIPE_WEBHOOK_SECRET!
-    )
+    );
 
     switch (event.type) {
-      case 'payment_intent.succeeded':
-        await this.handlePaymentSuccess(event.data.object as Stripe.PaymentIntent)
-        break
-      case 'customer.subscription.created':
-        await this.handleSubscriptionCreated(event.data.object as Stripe.Subscription)
-        break
-      case 'invoice.payment_failed':
-        await this.handlePaymentFailed(event.data.object as Stripe.Invoice)
-        break
+      case "payment_intent.succeeded":
+        await this.handlePaymentSuccess(event.data.object as Stripe.PaymentIntent);
+        break;
+      case "customer.subscription.created":
+        await this.handleSubscriptionCreated(event.data.object as Stripe.Subscription);
+        break;
+      case "invoice.payment_failed":
+        await this.handlePaymentFailed(event.data.object as Stripe.Invoice);
+        break;
       default:
-        console.log(`Unhandled event type: ${event.type}`)
+        console.log(`Unhandled event type: ${event.type}`);
     }
 
-    return { received: true }
+    return { received: true };
   }
 
   private async handlePaymentSuccess(paymentIntent: Stripe.PaymentIntent) {
     const order = await prisma.order.findUnique({
       where: { stripePaymentIntentId: paymentIntent.id },
-    })
+    });
 
     if (order) {
-      await orderService.completeOrder(order.id)
+      await orderService.completeOrder(order.id);
     }
   }
 
   private async handleSubscriptionCreated(subscription: Stripe.Subscription) {
     // Handle subscription creation logic
-    console.log('Subscription created:', subscription.id)
+    console.log("Subscription created:", subscription.id);
   }
 
   private async handlePaymentFailed(invoice: Stripe.Invoice) {
     // Handle payment failure logic
-    console.log('Payment failed for invoice:', invoice.id)
+    console.log("Payment failed for invoice:", invoice.id);
   }
 }
 
-export const stripeService = new StripeService()
+export const stripeService = new StripeService();
 ```
 
-This component architecture provides a comprehensive foundation for building the NextJS Stripe Payment Template with clear separation of concerns, reusable components, and maintainable service layers.
+This component architecture provides a comprehensive foundation for building the NextJS Stripe
+Payment Template with clear separation of concerns, reusable components, and maintainable service
+layers.

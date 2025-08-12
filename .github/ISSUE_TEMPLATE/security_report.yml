@@ -1,0 +1,146 @@
+name: 🔒 Security Report
+description: Report a security vulnerability (please use private reporting for sensitive issues)
+title: "[Security]: "
+labels: ["security", "needs-triage"]
+assignees: []
+
+body:
+  - type: markdown
+    attributes:
+      value: |
+        ⚠️ **IMPORTANT**: For sensitive security vulnerabilities, please use GitHub's [private vulnerability reporting](https://docs.github.com/en/code-security/security-advisories/guidance-on-reporting-and-writing/privately-reporting-a-security-vulnerability) feature instead of creating a public issue.
+
+        This template is for security-related issues that are not sensitive or for general security improvements.
+
+  - type: checkboxes
+    id: prerequisites
+    attributes:
+      label: Prerequisites
+      description: Please confirm the following before submitting a security report
+      options:
+        - label: I have verified this is not a sensitive security vulnerability that should be reported privately
+          required: true
+        - label: I have searched existing issues to avoid duplicates
+          required: true
+        - label: I have read the security guidelines in CONTRIBUTING.md
+          required: true
+
+  - type: dropdown
+    id: security-type
+    attributes:
+      label: Security Issue Type
+      description: What type of security issue is this?
+      options:
+        - Authentication/Authorization
+        - Input Validation
+        - Data Exposure
+        - Stripe Integration Security
+        - Dependency Vulnerability
+        - Configuration Issue
+        - Code Quality/Best Practices
+        - Other
+    validations:
+      required: true
+
+  - type: dropdown
+    id: severity
+    attributes:
+      label: Severity Level
+      description: How severe is this security issue?
+      options:
+        - Low (minimal impact)
+        - Medium (moderate impact)
+        - High (significant impact)
+        - Critical (severe impact)
+    validations:
+      required: true
+
+  - type: textarea
+    id: description
+    attributes:
+      label: Security Issue Description
+      description: Describe the security issue in detail
+      placeholder: Provide a clear description of the security concern...
+    validations:
+      required: true
+
+  - type: textarea
+    id: reproduction-steps
+    attributes:
+      label: Steps to Reproduce (if applicable)
+      description: If this is a vulnerability, provide steps to reproduce it
+      placeholder: |
+        1. Step one
+        2. Step two
+        3. Step three
+        4. Observe security issue
+
+  - type: textarea
+    id: impact
+    attributes:
+      label: Potential Impact
+      description: What could happen if this security issue is exploited?
+      placeholder: Describe the potential security impact...
+    validations:
+      required: true
+
+  - type: textarea
+    id: affected-components
+    attributes:
+      label: Affected Components
+      description: Which parts of the system are affected?
+      placeholder: |
+        - Authentication system
+        - Payment processing
+        - API endpoints
+        - Database
+        - Frontend components
+
+  - type: textarea
+    id: current-mitigations
+    attributes:
+      label: Current Mitigations
+      description: Are there any current mitigations or workarounds?
+      placeholder: Describe any existing protections or workarounds...
+
+  - type: textarea
+    id: proposed-solution
+    attributes:
+      label: Proposed Solution
+      description: Do you have suggestions for fixing this security issue?
+      placeholder: Describe potential fixes or improvements...
+
+  - type: textarea
+    id: environment
+    attributes:
+      label: Environment Details
+      description: Provide relevant environment information
+      placeholder: |
+        - Environment: [development/staging/production]
+        - Browser: [if applicable]
+        - Version: [application version]
+        - Dependencies: [relevant package versions]
+
+  - type: checkboxes
+    id: stripe-security
+    attributes:
+      label: Stripe Security Considerations
+      description: Is this related to Stripe integration security?
+      options:
+        - label: Webhook signature validation
+        - label: API key exposure
+        - label: Payment data handling
+        - label: PCI compliance
+        - label: Customer data protection
+
+  - type: textarea
+    id: additional-context
+    attributes:
+      label: Additional Context
+      description: Any additional information about the security issue
+      placeholder: Provide any other relevant details...
+
+  - type: markdown
+    attributes:
+      value: |
+        **Note**: After submitting this issue, our security team will review it and may follow up with additional questions. Thank you for helping keep our project secure!

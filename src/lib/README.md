@@ -1,6 +1,7 @@
 # Environment & Utilities Library
 
-This directory contains core utility functions and configurations for the Payment Integration Template.
+This directory contains core utility functions and configurations for the Payment Integration
+Template.
 
 ## Environment Variables (`env.ts`)
 
@@ -9,7 +10,7 @@ Type-safe environment variable validation and access for Next.js App Router.
 ### Server-Side Usage
 
 ```typescript
-import { getServerEnv } from '@/lib/env';
+import { getServerEnv } from "@/lib/env";
 
 // In API routes, Server Components, or middleware
 export async function POST() {
@@ -22,7 +23,7 @@ export async function POST() {
 ### Client-Side Usage
 
 ```typescript
-import { getClientEnv } from '@/lib/env';
+import { getClientEnv } from "@/lib/env";
 
 // In Client Components
 export function PaymentForm() {
@@ -35,14 +36,14 @@ export function PaymentForm() {
 ### Feature Flags
 
 ```typescript
-import { isDebugMode, isStripeTestMode } from '@/lib/env';
+import { isDebugMode, isStripeTestMode } from "@/lib/env";
 
 if (isDebugMode()) {
-  console.log('Debug mode enabled');
+  console.log("Debug mode enabled");
 }
 
 if (isStripeTestMode()) {
-  console.warn('Using Stripe test mode');
+  console.warn("Using Stripe test mode");
 }
 ```
 
@@ -53,14 +54,16 @@ Type-safe server actions with validation, authentication, and rate limiting.
 ### Basic Action
 
 ```typescript
-import { actionClient } from '@/lib/safe-action';
-import { z } from 'zod';
+import { actionClient } from "@/lib/safe-action";
+import { z } from "zod";
 
 export const createUser = actionClient
-  .schema(z.object({
-    email: z.string().email(),
-    name: z.string().min(2)
-  }))
+  .schema(
+    z.object({
+      email: z.string().email(),
+      name: z.string().min(2),
+    })
+  )
   .action(async ({ parsedInput }) => {
     // Your server action logic
     return { success: true, user: parsedInput };
@@ -70,7 +73,7 @@ export const createUser = actionClient
 ### Authenticated Action
 
 ```typescript
-import { authActionClient } from '@/lib/safe-action';
+import { authActionClient } from "@/lib/safe-action";
 
 export const updateProfile = authActionClient
   .schema(z.object({ name: z.string() }))
@@ -83,16 +86,18 @@ export const updateProfile = authActionClient
 ### Payment Action
 
 ```typescript
-import { paymentActionClient } from '@/lib/safe-action';
+import { paymentActionClient } from "@/lib/safe-action";
 
 export const processPayment = paymentActionClient
-  .schema(z.object({
-    amount: z.number().positive(),
-    currency: z.string().length(3)
-  }))
+  .schema(
+    z.object({
+      amount: z.number().positive(),
+      currency: z.string().length(3),
+    })
+  )
   .action(async ({ parsedInput }) => {
     // Authenticated, rate-limited, Stripe-configured
-    return { success: true, paymentId: 'pi_123' };
+    return { success: true, paymentId: "pi_123" };
   });
 ```
 

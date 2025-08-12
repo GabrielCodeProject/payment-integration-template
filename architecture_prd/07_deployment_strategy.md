@@ -2,7 +2,8 @@
 
 ## 1. Deployment Architecture Overview
 
-The NextJS Stripe Payment Template employs a modern, cloud-native deployment strategy using LeaseWeb infrastructure with automated CI/CD pipelines, containerization, and comprehensive monitoring.
+The NextJS Stripe Payment Template employs a modern, cloud-native deployment strategy using LeaseWeb
+infrastructure with automated CI/CD pipelines, containerization, and comprehensive monitoring.
 
 ### 1.1 Infrastructure Diagram
 
@@ -13,14 +14,14 @@ graph TB
         DOCKER[Docker Compose]
         TESTDB[Test Database]
     end
-    
+
     subgraph "CI/CD Pipeline"
         GITHUB[GitHub Repository]
         ACTIONS[GitHub Actions]
         TESTS[Automated Testing]
         BUILD[Build & Package]
     end
-    
+
     subgraph "LeaseWeb Production Environment"
         LB[Load Balancer]
         APP1[App Instance 1]
@@ -30,19 +31,19 @@ graph TB
         REDIS[Redis Cache]
         STORAGE[File Storage]
     end
-    
+
     subgraph "External Services"
         STRIPE[Stripe API]
         RESEND[Resend Email]
         MONITORING[Monitoring Services]
     end
-    
+
     DEV --> GITHUB
     GITHUB --> ACTIONS
     ACTIONS --> TESTS
     TESTS --> BUILD
     BUILD --> LB
-    
+
     LB --> APP1
     LB --> APP2
     APP1 --> DB
@@ -51,7 +52,7 @@ graph TB
     APP2 --> DBREAD
     APP1 --> REDIS
     APP2 --> REDIS
-    
+
     APP1 --> STRIPE
     APP1 --> RESEND
     APP1 --> MONITORING
@@ -69,7 +70,7 @@ graph TB
 
 ```yaml
 # docker-compose.yml
-version: '3.8'
+version: "3.8"
 
 services:
   app:
@@ -182,12 +183,12 @@ name: CI/CD Pipeline
 
 on:
   push:
-    branches: [ main, develop ]
+    branches: [main, develop]
   pull_request:
-    branches: [ main ]
+    branches: [main]
 
 env:
-  NODE_VERSION: '18'
+  NODE_VERSION: "18"
   DOCKER_REGISTRY: registry.leaseweb.com
   IMAGE_NAME: nextjs-stripe-template
 
@@ -197,28 +198,28 @@ jobs:
   # ============================================================================
   quality-checks:
     runs-on: ubuntu-latest
-    
+
     steps:
-    - name: Checkout code
-      uses: actions/checkout@v4
+      - name: Checkout code
+        uses: actions/checkout@v4
 
-    - name: Setup Node.js
-      uses: actions/setup-node@v4
-      with:
-        node-version: ${{ env.NODE_VERSION }}
-        cache: 'npm'
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: "npm"
 
-    - name: Install dependencies
-      run: npm ci
+      - name: Install dependencies
+        run: npm ci
 
-    - name: Type checking
-      run: npm run type-check
+      - name: Type checking
+        run: npm run type-check
 
-    - name: Lint checking
-      run: npm run lint
+      - name: Lint checking
+        run: npm run lint
 
-    - name: Format checking
-      run: npm run format:check
+      - name: Format checking
+        run: npm run format:check
 
   # ============================================================================
   # UNIT TESTS
@@ -234,56 +235,50 @@ jobs:
           POSTGRES_PASSWORD: postgres
           POSTGRES_DB: test_db
         options: >-
-          --health-cmd pg_isready
-          --health-interval 10s
-          --health-timeout 5s
-          --health-retries 5
+          --health-cmd pg_isready --health-interval 10s --health-timeout 5s --health-retries 5
         ports:
           - 5432:5432
 
       redis:
         image: redis:7-alpine
         options: >-
-          --health-cmd "redis-cli ping"
-          --health-interval 10s
-          --health-timeout 5s
-          --health-retries 5
+          --health-cmd "redis-cli ping" --health-interval 10s --health-timeout 5s --health-retries 5
         ports:
           - 6379:6379
 
     steps:
-    - name: Checkout code
-      uses: actions/checkout@v4
+      - name: Checkout code
+        uses: actions/checkout@v4
 
-    - name: Setup Node.js
-      uses: actions/setup-node@v4
-      with:
-        node-version: ${{ env.NODE_VERSION }}
-        cache: 'npm'
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: "npm"
 
-    - name: Install dependencies
-      run: npm ci
+      - name: Install dependencies
+        run: npm ci
 
-    - name: Setup test database
-      run: |
-        npx prisma migrate deploy
-        npx prisma db seed
-      env:
-        DATABASE_URL: postgresql://postgres:postgres@localhost:5432/test_db
+      - name: Setup test database
+        run: |
+          npx prisma migrate deploy
+          npx prisma db seed
+        env:
+          DATABASE_URL: postgresql://postgres:postgres@localhost:5432/test_db
 
-    - name: Run unit tests
-      run: npm run test -- --coverage
-      env:
-        DATABASE_URL: postgresql://postgres:postgres@localhost:5432/test_db
-        REDIS_URL: redis://localhost:6379
-        NEXTAUTH_SECRET: test-secret
-        STRIPE_SECRET_KEY: ${{ secrets.STRIPE_TEST_SECRET_KEY }}
+      - name: Run unit tests
+        run: npm run test -- --coverage
+        env:
+          DATABASE_URL: postgresql://postgres:postgres@localhost:5432/test_db
+          REDIS_URL: redis://localhost:6379
+          NEXTAUTH_SECRET: test-secret
+          STRIPE_SECRET_KEY: ${{ secrets.STRIPE_TEST_SECRET_KEY }}
 
-    - name: Upload coverage reports
-      uses: codecov/codecov-action@v3
-      with:
-        file: ./coverage/lcov.info
-        flags: unittests
+      - name: Upload coverage reports
+        uses: codecov/codecov-action@v3
+        with:
+          file: ./coverage/lcov.info
+          flags: unittests
 
   # ============================================================================
   # E2E TESTS
@@ -293,42 +288,42 @@ jobs:
     needs: unit-tests
 
     steps:
-    - name: Checkout code
-      uses: actions/checkout@v4
+      - name: Checkout code
+        uses: actions/checkout@v4
 
-    - name: Setup Node.js
-      uses: actions/setup-node@v4
-      with:
-        node-version: ${{ env.NODE_VERSION }}
-        cache: 'npm'
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: "npm"
 
-    - name: Install dependencies
-      run: npm ci
+      - name: Install dependencies
+        run: npm ci
 
-    - name: Install Playwright browsers
-      run: npx playwright install --with-deps
+      - name: Install Playwright browsers
+        run: npx playwright install --with-deps
 
-    - name: Start application
-      run: |
-        npm run build
-        npm run start &
-        npx wait-on http://localhost:3000
-      env:
-        DATABASE_URL: ${{ secrets.TEST_DATABASE_URL }}
-        NEXTAUTH_SECRET: test-secret
-        STRIPE_PUBLISHABLE_KEY: ${{ secrets.STRIPE_TEST_PUBLISHABLE_KEY }}
+      - name: Start application
+        run: |
+          npm run build
+          npm run start &
+          npx wait-on http://localhost:3000
+        env:
+          DATABASE_URL: ${{ secrets.TEST_DATABASE_URL }}
+          NEXTAUTH_SECRET: test-secret
+          STRIPE_PUBLISHABLE_KEY: ${{ secrets.STRIPE_TEST_PUBLISHABLE_KEY }}
 
-    - name: Run Playwright tests
-      run: npm run test:e2e
-      env:
-        STRIPE_SECRET_KEY: ${{ secrets.STRIPE_TEST_SECRET_KEY }}
+      - name: Run Playwright tests
+        run: npm run test:e2e
+        env:
+          STRIPE_SECRET_KEY: ${{ secrets.STRIPE_TEST_SECRET_KEY }}
 
-    - name: Upload Playwright report
-      uses: actions/upload-artifact@v3
-      if: always()
-      with:
-        name: playwright-report
-        path: playwright-report/
+      - name: Upload Playwright report
+        uses: actions/upload-artifact@v3
+        if: always()
+        with:
+          name: playwright-report
+          path: playwright-report/
 
   # ============================================================================
   # SECURITY SCAN
@@ -338,25 +333,25 @@ jobs:
     needs: quality-checks
 
     steps:
-    - name: Checkout code
-      uses: actions/checkout@v4
+      - name: Checkout code
+        uses: actions/checkout@v4
 
-    - name: Setup Node.js
-      uses: actions/setup-node@v4
-      with:
-        node-version: ${{ env.NODE_VERSION }}
-        cache: 'npm'
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: "npm"
 
-    - name: Install dependencies
-      run: npm ci
+      - name: Install dependencies
+        run: npm ci
 
-    - name: Run security audit
-      run: npm audit --audit-level high
+      - name: Run security audit
+        run: npm audit --audit-level high
 
-    - name: Run Snyk security scan
-      uses: snyk/actions/node@master
-      env:
-        SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
+      - name: Run Snyk security scan
+        uses: snyk/actions/node@master
+        env:
+          SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
 
   # ============================================================================
   # BUILD AND DEPLOY TO STAGING
@@ -369,38 +364,38 @@ jobs:
     environment: staging
 
     steps:
-    - name: Checkout code
-      uses: actions/checkout@v4
+      - name: Checkout code
+        uses: actions/checkout@v4
 
-    - name: Setup Docker Buildx
-      uses: docker/setup-buildx-action@v3
+      - name: Setup Docker Buildx
+        uses: docker/setup-buildx-action@v3
 
-    - name: Login to LeaseWeb Registry
-      uses: docker/login-action@v3
-      with:
-        registry: ${{ env.DOCKER_REGISTRY }}
-        username: ${{ secrets.LEASEWEB_REGISTRY_USERNAME }}
-        password: ${{ secrets.LEASEWEB_REGISTRY_PASSWORD }}
+      - name: Login to LeaseWeb Registry
+        uses: docker/login-action@v3
+        with:
+          registry: ${{ env.DOCKER_REGISTRY }}
+          username: ${{ secrets.LEASEWEB_REGISTRY_USERNAME }}
+          password: ${{ secrets.LEASEWEB_REGISTRY_PASSWORD }}
 
-    - name: Build and push Docker image
-      uses: docker/build-push-action@v5
-      with:
-        context: .
-        file: ./Dockerfile.prod
-        push: true
-        tags: |
-          ${{ env.DOCKER_REGISTRY }}/${{ env.IMAGE_NAME }}:staging
-          ${{ env.DOCKER_REGISTRY }}/${{ env.IMAGE_NAME }}:staging-${{ github.sha }}
-        cache-from: type=gha
-        cache-to: type=gha,mode=max
+      - name: Build and push Docker image
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          file: ./Dockerfile.prod
+          push: true
+          tags: |
+            ${{ env.DOCKER_REGISTRY }}/${{ env.IMAGE_NAME }}:staging
+            ${{ env.DOCKER_REGISTRY }}/${{ env.IMAGE_NAME }}:staging-${{ github.sha }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
 
-    - name: Deploy to staging
-      run: |
-        echo "Deploying to staging environment..."
-        ./scripts/deploy-staging.sh
-      env:
-        LEASEWEB_API_KEY: ${{ secrets.LEASEWEB_API_KEY }}
-        DOCKER_IMAGE: ${{ env.DOCKER_REGISTRY }}/${{ env.IMAGE_NAME }}:staging-${{ github.sha }}
+      - name: Deploy to staging
+        run: |
+          echo "Deploying to staging environment..."
+          ./scripts/deploy-staging.sh
+        env:
+          LEASEWEB_API_KEY: ${{ secrets.LEASEWEB_API_KEY }}
+          DOCKER_IMAGE: ${{ env.DOCKER_REGISTRY }}/${{ env.IMAGE_NAME }}:staging-${{ github.sha }}
 
   # ============================================================================
   # DEPLOY TO PRODUCTION
@@ -413,57 +408,57 @@ jobs:
     environment: production
 
     steps:
-    - name: Checkout code
-      uses: actions/checkout@v4
+      - name: Checkout code
+        uses: actions/checkout@v4
 
-    - name: Setup Docker Buildx
-      uses: docker/setup-buildx-action@v3
+      - name: Setup Docker Buildx
+        uses: docker/setup-buildx-action@v3
 
-    - name: Login to LeaseWeb Registry
-      uses: docker/login-action@v3
-      with:
-        registry: ${{ env.DOCKER_REGISTRY }}
-        username: ${{ secrets.LEASEWEB_REGISTRY_USERNAME }}
-        password: ${{ secrets.LEASEWEB_REGISTRY_PASSWORD }}
+      - name: Login to LeaseWeb Registry
+        uses: docker/login-action@v3
+        with:
+          registry: ${{ env.DOCKER_REGISTRY }}
+          username: ${{ secrets.LEASEWEB_REGISTRY_USERNAME }}
+          password: ${{ secrets.LEASEWEB_REGISTRY_PASSWORD }}
 
-    - name: Build and push Docker image
-      uses: docker/build-push-action@v5
-      with:
-        context: .
-        file: ./Dockerfile.prod
-        push: true
-        tags: |
-          ${{ env.DOCKER_REGISTRY }}/${{ env.IMAGE_NAME }}:latest
-          ${{ env.DOCKER_REGISTRY }}/${{ env.IMAGE_NAME }}:prod-${{ github.sha }}
-        cache-from: type=gha
-        cache-to: type=gha,mode=max
+      - name: Build and push Docker image
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          file: ./Dockerfile.prod
+          push: true
+          tags: |
+            ${{ env.DOCKER_REGISTRY }}/${{ env.IMAGE_NAME }}:latest
+            ${{ env.DOCKER_REGISTRY }}/${{ env.IMAGE_NAME }}:prod-${{ github.sha }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
 
-    - name: Run database migrations
-      run: |
-        ./scripts/run-migrations.sh
-      env:
-        DATABASE_URL: ${{ secrets.PRODUCTION_DATABASE_URL }}
+      - name: Run database migrations
+        run: |
+          ./scripts/run-migrations.sh
+        env:
+          DATABASE_URL: ${{ secrets.PRODUCTION_DATABASE_URL }}
 
-    - name: Deploy to production
-      run: |
-        echo "Deploying to production environment..."
-        ./scripts/deploy-production.sh
-      env:
-        LEASEWEB_API_KEY: ${{ secrets.LEASEWEB_API_KEY }}
-        DOCKER_IMAGE: ${{ env.DOCKER_REGISTRY }}/${{ env.IMAGE_NAME }}:prod-${{ github.sha }}
+      - name: Deploy to production
+        run: |
+          echo "Deploying to production environment..."
+          ./scripts/deploy-production.sh
+        env:
+          LEASEWEB_API_KEY: ${{ secrets.LEASEWEB_API_KEY }}
+          DOCKER_IMAGE: ${{ env.DOCKER_REGISTRY }}/${{ env.IMAGE_NAME }}:prod-${{ github.sha }}
 
-    - name: Run smoke tests
-      run: |
-        ./scripts/smoke-tests.sh
-      env:
-        PRODUCTION_URL: https://your-domain.com
+      - name: Run smoke tests
+        run: |
+          ./scripts/smoke-tests.sh
+        env:
+          PRODUCTION_URL: https://your-domain.com
 
-    - name: Notify deployment
-      uses: 8398a7/action-slack@v3
-      with:
-        status: ${{ job.status }}
-        channel: '#deployments'
-        webhook_url: ${{ secrets.SLACK_WEBHOOK }}
+      - name: Notify deployment
+        uses: 8398a7/action-slack@v3
+        with:
+          status: ${{ job.status }}
+          channel: "#deployments"
+          webhook_url: ${{ secrets.SLACK_WEBHOOK }}
 ```
 
 ### 3.2 Production Dockerfile
@@ -572,7 +567,7 @@ resource "leaseweb_load_balancer" "main" {
   name = "nextjs-app-lb"
   vpc_id = leaseweb_virtual_private_cloud.main.id
   subnet_id = leaseweb_subnet.public.id
-  
+
   health_check {
     enabled = true
     path = "/api/health"
@@ -583,14 +578,14 @@ resource "leaseweb_load_balancer" "main" {
     healthy_threshold = 2
     unhealthy_threshold = 3
   }
-  
+
   listeners {
     port = 80
     protocol = "HTTP"
     target_port = 3000
     target_protocol = "HTTP"
   }
-  
+
   listeners {
     port = 443
     protocol = "HTTPS"
@@ -610,13 +605,13 @@ resource "leaseweb_instance" "app" {
   flavor = "Standard-4-8GB"
   vpc_id = leaseweb_virtual_private_cloud.main.id
   subnet_id = leaseweb_subnet.private.id
-  
+
   user_data = templatefile("${path.module}/user-data.sh", {
     docker_image = var.docker_image
     database_url = var.database_url
     redis_url = var.redis_url
   })
-  
+
   tags = {
     Environment = var.environment
     Application = "nextjs-stripe-template"
@@ -633,10 +628,10 @@ resource "leaseweb_database" "postgresql" {
   flavor = "Standard-2-4GB"
   vpc_id = leaseweb_virtual_private_cloud.main.id
   subnet_id = leaseweb_subnet.private.id
-  
+
   backup_retention_days = 30
   backup_time = "02:00"
-  
+
   replica {
     count = 1
     flavor = "Standard-2-4GB"
@@ -669,7 +664,7 @@ resource "leaseweb_ssl_certificate" "main" {
 # ============================================================================
 resource "leaseweb_monitoring" "app_monitoring" {
   name = "nextjs-app-monitoring"
-  
+
   targets = [
     for instance in leaseweb_instance.app : {
       type = "instance"
@@ -678,7 +673,7 @@ resource "leaseweb_monitoring" "app_monitoring" {
       path = "/api/health"
     }
   ]
-  
+
   alert_channels = [
     leaseweb_alert_channel.slack.id,
     leaseweb_alert_channel.email.id
@@ -821,49 +816,49 @@ echo "Migration process completed!"
 
 ```javascript
 // scripts/data-migration.js
-const { PrismaClient } = require('@prisma/client')
+const { PrismaClient } = require("@prisma/client");
 
-const prisma = new PrismaClient()
+const prisma = new PrismaClient();
 
 async function runDataMigrations() {
-  console.log('Starting data migrations...')
+  console.log("Starting data migrations...");
 
   try {
     // Example: Update existing products with new fields
     const productsWithoutSlug = await prisma.product.findMany({
       where: { slug: null },
-    })
+    });
 
     for (const product of productsWithoutSlug) {
       const slug = product.name
         .toLowerCase()
-        .replace(/[^a-z0-9]+/g, '-')
-        .replace(/^-+|-+$/g, '')
+        .replace(/[^a-z0-9]+/g, "-")
+        .replace(/^-+|-+$/g, "");
 
       await prisma.product.update({
         where: { id: product.id },
         data: { slug },
-      })
+      });
     }
 
-    console.log(`Updated ${productsWithoutSlug.length} products with slugs`)
+    console.log(`Updated ${productsWithoutSlug.length} products with slugs`);
 
     // Example: Migrate user data
     await prisma.user.updateMany({
       where: { timezone: null },
-      data: { timezone: 'UTC' },
-    })
+      data: { timezone: "UTC" },
+    });
 
-    console.log('Data migrations completed successfully!')
+    console.log("Data migrations completed successfully!");
   } catch (error) {
-    console.error('Data migration failed:', error)
-    process.exit(1)
+    console.error("Data migration failed:", error);
+    process.exit(1);
   } finally {
-    await prisma.$disconnect()
+    await prisma.$disconnect();
   }
 }
 
-runDataMigrations()
+runDataMigrations();
 ```
 
 ## 6. Monitoring & Observability
@@ -872,55 +867,55 @@ runDataMigrations()
 
 ```typescript
 // app/api/health/route.ts
-import { NextResponse } from 'next/server'
-import { prisma } from '@/lib/prisma'
-import { redis } from '@/lib/redis'
+import { NextResponse } from "next/server";
+import { prisma } from "@/lib/prisma";
+import { redis } from "@/lib/redis";
 
 export async function GET() {
   const checks = {
     timestamp: new Date().toISOString(),
-    status: 'healthy',
+    status: "healthy",
     version: process.env.npm_package_version,
     uptime: process.uptime(),
     checks: {
-      database: 'unknown',
-      redis: 'unknown',
-      external_apis: 'unknown',
+      database: "unknown",
+      redis: "unknown",
+      external_apis: "unknown",
     },
-  }
+  };
 
   try {
     // Database check
-    await prisma.$queryRaw`SELECT 1`
-    checks.checks.database = 'healthy'
+    await prisma.$queryRaw`SELECT 1`;
+    checks.checks.database = "healthy";
   } catch (error) {
-    checks.checks.database = 'unhealthy'
-    checks.status = 'unhealthy'
+    checks.checks.database = "unhealthy";
+    checks.status = "unhealthy";
   }
 
   try {
     // Redis check
-    await redis.ping()
-    checks.checks.redis = 'healthy'
+    await redis.ping();
+    checks.checks.redis = "healthy";
   } catch (error) {
-    checks.checks.redis = 'unhealthy'
-    checks.status = 'degraded'
+    checks.checks.redis = "unhealthy";
+    checks.status = "degraded";
   }
 
   try {
     // Stripe API check
-    const stripe = require('stripe')(process.env.STRIPE_SECRET_KEY)
-    await stripe.balance.retrieve()
-    checks.checks.external_apis = 'healthy'
+    const stripe = require("stripe")(process.env.STRIPE_SECRET_KEY);
+    await stripe.balance.retrieve();
+    checks.checks.external_apis = "healthy";
   } catch (error) {
-    checks.checks.external_apis = 'unhealthy'
-    if (checks.status === 'healthy') {
-      checks.status = 'degraded'
+    checks.checks.external_apis = "unhealthy";
+    if (checks.status === "healthy") {
+      checks.status = "degraded";
     }
   }
 
-  const statusCode = checks.status === 'healthy' ? 200 : 503
-  return NextResponse.json(checks, { status: statusCode })
+  const statusCode = checks.status === "healthy" ? 200 : 503;
+  return NextResponse.json(checks, { status: statusCode });
 }
 ```
 
@@ -928,44 +923,44 @@ export async function GET() {
 
 ```typescript
 // lib/metrics.ts
-import { register, collectDefaultMetrics, Counter, Histogram, Gauge } from 'prom-client'
+import { register, collectDefaultMetrics, Counter, Histogram, Gauge } from "prom-client";
 
 // Collect default metrics
-collectDefaultMetrics({ register })
+collectDefaultMetrics({ register });
 
 // Custom metrics
 export const httpRequestDuration = new Histogram({
-  name: 'http_request_duration_seconds',
-  help: 'Duration of HTTP requests in seconds',
-  labelNames: ['method', 'route', 'status_code'],
+  name: "http_request_duration_seconds",
+  help: "Duration of HTTP requests in seconds",
+  labelNames: ["method", "route", "status_code"],
   buckets: [0.1, 0.5, 1, 2, 5],
-})
+});
 
 export const httpRequestTotal = new Counter({
-  name: 'http_requests_total',
-  help: 'Total number of HTTP requests',
-  labelNames: ['method', 'route', 'status_code'],
-})
+  name: "http_requests_total",
+  help: "Total number of HTTP requests",
+  labelNames: ["method", "route", "status_code"],
+});
 
 export const activeUsers = new Gauge({
-  name: 'active_users_total',
-  help: 'Total number of active users',
-})
+  name: "active_users_total",
+  help: "Total number of active users",
+});
 
 export const stripePayments = new Counter({
-  name: 'stripe_payments_total',
-  help: 'Total number of Stripe payments',
-  labelNames: ['status', 'currency'],
-})
+  name: "stripe_payments_total",
+  help: "Total number of Stripe payments",
+  labelNames: ["status", "currency"],
+});
 
 export const databaseConnections = new Gauge({
-  name: 'database_connections_active',
-  help: 'Number of active database connections',
-})
+  name: "database_connections_active",
+  help: "Number of active database connections",
+});
 
 // Metrics endpoint
 export async function getMetrics() {
-  return register.metrics()
+  return register.metrics();
 }
 ```
 
@@ -973,62 +968,64 @@ export async function getMetrics() {
 
 ```typescript
 // lib/logger.ts
-import winston from 'winston'
+import winston from "winston";
 
 const logger = winston.createLogger({
-  level: process.env.LOG_LEVEL || 'info',
+  level: process.env.LOG_LEVEL || "info",
   format: winston.format.combine(
     winston.format.timestamp(),
     winston.format.errors({ stack: true }),
     winston.format.json()
   ),
   defaultMeta: {
-    service: 'nextjs-stripe-template',
+    service: "nextjs-stripe-template",
     version: process.env.npm_package_version,
   },
   transports: [
-    new winston.transports.File({ filename: '/var/log/app/error.log', level: 'error' }),
-    new winston.transports.File({ filename: '/var/log/app/combined.log' }),
+    new winston.transports.File({ filename: "/var/log/app/error.log", level: "error" }),
+    new winston.transports.File({ filename: "/var/log/app/combined.log" }),
   ],
-})
+});
 
-if (process.env.NODE_ENV !== 'production') {
-  logger.add(new winston.transports.Console({
-    format: winston.format.simple()
-  }))
+if (process.env.NODE_ENV !== "production") {
+  logger.add(
+    new winston.transports.Console({
+      format: winston.format.simple(),
+    })
+  );
 }
 
-export { logger }
+export { logger };
 
 // Usage example
 export const auditLogger = {
   logUserAction: (userId: string, action: string, details: any) => {
-    logger.info('User action', {
+    logger.info("User action", {
       userId,
       action,
       details,
-      category: 'audit',
-    })
+      category: "audit",
+    });
   },
-  
+
   logSecurityEvent: (event: string, details: any) => {
-    logger.warn('Security event', {
+    logger.warn("Security event", {
       event,
       details,
-      category: 'security',
-    })
+      category: "security",
+    });
   },
-  
+
   logPaymentEvent: (userId: string, event: string, amount: number, currency: string) => {
-    logger.info('Payment event', {
+    logger.info("Payment event", {
       userId,
       event,
       amount,
       currency,
-      category: 'payment',
-    })
+      category: "payment",
+    });
   },
-}
+};
 ```
 
 ## 7. Backup & Disaster Recovery
@@ -1129,70 +1126,70 @@ echo "Disaster recovery completed!"
 
 ```typescript
 // lib/cache.ts
-import { Redis } from 'ioredis'
+import { Redis } from "ioredis";
 
-const redis = new Redis(process.env.REDIS_URL!)
+const redis = new Redis(process.env.REDIS_URL!);
 
 export class CacheService {
   private static TTL = {
-    SHORT: 300,    // 5 minutes
-    MEDIUM: 1800,  // 30 minutes
-    LONG: 3600,    // 1 hour
-    DAILY: 86400,  // 24 hours
-  }
+    SHORT: 300, // 5 minutes
+    MEDIUM: 1800, // 30 minutes
+    LONG: 3600, // 1 hour
+    DAILY: 86400, // 24 hours
+  };
 
   static async get<T>(key: string): Promise<T | null> {
     try {
-      const value = await redis.get(key)
-      return value ? JSON.parse(value) : null
+      const value = await redis.get(key);
+      return value ? JSON.parse(value) : null;
     } catch (error) {
-      console.error('Cache get error:', error)
-      return null
+      console.error("Cache get error:", error);
+      return null;
     }
   }
 
   static async set(key: string, value: any, ttl: number = this.TTL.MEDIUM): Promise<void> {
     try {
-      await redis.setex(key, ttl, JSON.stringify(value))
+      await redis.setex(key, ttl, JSON.stringify(value));
     } catch (error) {
-      console.error('Cache set error:', error)
+      console.error("Cache set error:", error);
     }
   }
 
   static async del(key: string): Promise<void> {
     try {
-      await redis.del(key)
+      await redis.del(key);
     } catch (error) {
-      console.error('Cache delete error:', error)
+      console.error("Cache delete error:", error);
     }
   }
 
   static async invalidatePattern(pattern: string): Promise<void> {
     try {
-      const keys = await redis.keys(pattern)
+      const keys = await redis.keys(pattern);
       if (keys.length > 0) {
-        await redis.del(...keys)
+        await redis.del(...keys);
       }
     } catch (error) {
-      console.error('Cache invalidate error:', error)
+      console.error("Cache invalidate error:", error);
     }
   }
 
   // Specific caching methods
   static async cacheProduct(productId: string, product: any): Promise<void> {
-    await this.set(`product:${productId}`, product, this.TTL.LONG)
+    await this.set(`product:${productId}`, product, this.TTL.LONG);
   }
 
   static async getCachedProduct(productId: string): Promise<any> {
-    return this.get(`product:${productId}`)
+    return this.get(`product:${productId}`);
   }
 
   static async cacheUserSession(userId: string, sessionData: any): Promise<void> {
-    await this.set(`session:${userId}`, sessionData, this.TTL.MEDIUM)
+    await this.set(`session:${userId}`, sessionData, this.TTL.MEDIUM);
   }
 
   static async invalidateUserCache(userId: string): Promise<void> {
-    await this.invalidatePattern(`*user:${userId}*`)
+    await this.invalidatePattern(`*user:${userId}*`);
   }
 }
 ```
@@ -1228,4 +1225,6 @@ $$ LANGUAGE plpgsql;
 SELECT cron.schedule('cleanup-audit-logs', '0 2 * * 0', 'SELECT cleanup_old_audit_logs();');
 ```
 
-This comprehensive deployment strategy provides a robust foundation for deploying and maintaining the NextJS Stripe Payment Template in production with proper monitoring, backup strategies, and performance optimization.
+This comprehensive deployment strategy provides a robust foundation for deploying and maintaining
+the NextJS Stripe Payment Template in production with proper monitoring, backup strategies, and
+performance optimization.

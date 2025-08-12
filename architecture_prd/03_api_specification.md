@@ -2,7 +2,8 @@
 
 ## 1. API Architecture Overview
 
-The API follows RESTful principles with additional support for Server Actions in NextJS 14+. All APIs are implemented using NextJS API routes with TypeScript and comprehensive validation.
+The API follows RESTful principles with additional support for Server Actions in NextJS 14+. All
+APIs are implemented using NextJS API routes with TypeScript and comprehensive validation.
 
 ### 1.1 API Design Principles
 
@@ -39,14 +40,14 @@ sequenceDiagram
     participant A as API
     participant B as BetterAuth
     participant D as Database
-    
+
     C->>A: POST /api/auth/login
     A->>A: Validate credentials
     A->>B: Create session
     B->>D: Store session
     B-->>A: Session token
     A-->>C: Set HTTP-only cookie
-    
+
     Note over C,A: Subsequent requests
     C->>A: API Request (with cookie)
     A->>A: Validate session
@@ -132,31 +133,31 @@ interface CurrentUserResponse {
 
 ```typescript
 // middleware/auth.ts
-import { NextRequest, NextResponse } from 'next/server';
-import { auth } from '@/lib/auth';
+import { NextRequest, NextResponse } from "next/server";
+import { auth } from "@/lib/auth";
 
 export async function authMiddleware(request: NextRequest) {
   const session = await auth.api.getSession({ request });
-  
+
   // Public routes
-  const publicRoutes = ['/api/health', '/api/webhooks'];
-  if (publicRoutes.some(route => request.nextUrl.pathname.startsWith(route))) {
+  const publicRoutes = ["/api/health", "/api/webhooks"];
+  if (publicRoutes.some((route) => request.nextUrl.pathname.startsWith(route))) {
     return NextResponse.next();
   }
-  
+
   // Require authentication
   if (!session) {
-    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
-  
+
   // Role-based access control
-  const adminRoutes = ['/api/admin'];
-  if (adminRoutes.some(route => request.nextUrl.pathname.startsWith(route))) {
-    if (session.user.role !== 'ADMIN') {
-      return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
+  const adminRoutes = ["/api/admin"];
+  if (adminRoutes.some((route) => request.nextUrl.pathname.startsWith(route))) {
+    if (session.user.role !== "ADMIN") {
+      return NextResponse.json({ error: "Forbidden" }, { status: 403 });
     }
   }
-  
+
   return NextResponse.next();
 }
 ```
@@ -202,7 +203,7 @@ interface CreateProductRequest {
   shortDescription?: string;
   type: ProductType;
   basePrice: number;
-  billingInterval?: 'month' | 'year';
+  billingInterval?: "month" | "year";
   trialDays?: number;
   images?: string[];
   categoryIds?: string[];
@@ -231,7 +232,7 @@ interface CategoryListResponse {
     slug: string;
     description?: string;
     productCount: number;
-    children?: CategoryListResponse['categories'];
+    children?: CategoryListResponse["categories"];
   }>;
 }
 
@@ -547,7 +548,7 @@ interface AnalyticsOverviewResponse {
 interface RevenueAnalyticsQuery {
   startDate: string;
   endDate: string;
-  interval: 'day' | 'week' | 'month';
+  interval: "day" | "week" | "month";
 }
 
 interface RevenueAnalyticsResponse {
@@ -594,26 +595,22 @@ interface CustomerAnalyticsResponse {
 // POST /api/webhooks/stripe
 interface StripeWebhookHandler {
   // Handle various Stripe events
-  'payment_intent.succeeded': (event: PaymentIntentSucceeded) => Promise<void>;
-  'payment_intent.payment_failed': (event: PaymentIntentFailed) => Promise<void>;
-  'customer.subscription.created': (event: SubscriptionCreated) => Promise<void>;
-  'customer.subscription.updated': (event: SubscriptionUpdated) => Promise<void>;
-  'customer.subscription.deleted': (event: SubscriptionDeleted) => Promise<void>;
-  'invoice.payment_succeeded': (event: InvoicePaymentSucceeded) => Promise<void>;
-  'invoice.payment_failed': (event: InvoicePaymentFailed) => Promise<void>;
+  "payment_intent.succeeded": (event: PaymentIntentSucceeded) => Promise<void>;
+  "payment_intent.payment_failed": (event: PaymentIntentFailed) => Promise<void>;
+  "customer.subscription.created": (event: SubscriptionCreated) => Promise<void>;
+  "customer.subscription.updated": (event: SubscriptionUpdated) => Promise<void>;
+  "customer.subscription.deleted": (event: SubscriptionDeleted) => Promise<void>;
+  "invoice.payment_succeeded": (event: InvoicePaymentSucceeded) => Promise<void>;
+  "invoice.payment_failed": (event: InvoicePaymentFailed) => Promise<void>;
 }
 
 // Webhook validation
 async function validateStripeWebhook(request: NextRequest): Promise<boolean> {
-  const signature = request.headers.get('stripe-signature');
+  const signature = request.headers.get("stripe-signature");
   const payload = await request.text();
-  
+
   try {
-    stripe.webhooks.constructEvent(
-      payload,
-      signature,
-      process.env.STRIPE_WEBHOOK_SECRET
-    );
+    stripe.webhooks.constructEvent(payload, signature, process.env.STRIPE_WEBHOOK_SECRET);
     return true;
   } catch (error) {
     return false;
@@ -654,36 +651,36 @@ interface SendEmailRequest {
 }
 
 enum EmailTemplate {
-  WELCOME = 'welcome',
-  ORDER_CONFIRMATION = 'order-confirmation',
-  PAYMENT_RECEIPT = 'payment-receipt',
-  SUBSCRIPTION_CREATED = 'subscription-created',
-  SUBSCRIPTION_CANCELLED = 'subscription-cancelled',
-  TRIAL_ENDING = 'trial-ending',
-  PAYMENT_FAILED = 'payment-failed',
-  PASSWORD_RESET = 'password-reset',
+  WELCOME = "welcome",
+  ORDER_CONFIRMATION = "order-confirmation",
+  PAYMENT_RECEIPT = "payment-receipt",
+  SUBSCRIPTION_CREATED = "subscription-created",
+  SUBSCRIPTION_CANCELLED = "subscription-cancelled",
+  TRIAL_ENDING = "trial-ending",
+  PAYMENT_FAILED = "payment-failed",
+  PASSWORD_RESET = "password-reset",
 }
 
 // Email service implementation
 class EmailService {
   private resend: Resend;
-  
+
   constructor() {
     this.resend = new Resend(process.env.RESEND_API_KEY);
   }
-  
+
   async sendWelcomeEmail(user: User): Promise<void> {
     await this.resend.emails.send({
-      from: 'noreply@yourapp.com',
+      from: "noreply@yourapp.com",
       to: user.email,
-      subject: 'Welcome to Our Platform!',
+      subject: "Welcome to Our Platform!",
       react: WelcomeEmailTemplate({ userName: user.name }),
     });
   }
-  
+
   async sendOrderConfirmation(order: OrderWithItems): Promise<void> {
     await this.resend.emails.send({
-      from: 'orders@yourapp.com',
+      from: "orders@yourapp.com",
       to: order.user.email,
       subject: `Order Confirmation - ${order.orderNumber}`,
       react: OrderConfirmationTemplate({ order }),
@@ -709,27 +706,27 @@ interface APIError {
 // Error handler middleware
 export function errorHandler(error: Error, req: NextRequest): Response {
   const errorResponse: APIError = {
-    error: error.name || 'InternalServerError',
-    message: error.message || 'An unexpected error occurred',
+    error: error.name || "InternalServerError",
+    message: error.message || "An unexpected error occurred",
     timestamp: new Date().toISOString(),
-    requestId: req.headers.get('x-request-id') || generateRequestId(),
+    requestId: req.headers.get("x-request-id") || generateRequestId(),
   };
-  
+
   // Log error for monitoring
-  console.error('API Error:', {
+  console.error("API Error:", {
     ...errorResponse,
     stack: error.stack,
     url: req.url,
     method: req.method,
   });
-  
+
   // Return appropriate status code
   let statusCode = 500;
   if (error instanceof ValidationError) statusCode = 400;
   if (error instanceof AuthenticationError) statusCode = 401;
   if (error instanceof AuthorizationError) statusCode = 403;
   if (error instanceof NotFoundError) statusCode = 404;
-  
+
   return Response.json(errorResponse, { status: statusCode });
 }
 ```
@@ -738,30 +735,36 @@ export function errorHandler(error: Error, req: NextRequest): Response {
 
 ```typescript
 export class ValidationError extends Error {
-  constructor(message: string, public field?: string) {
+  constructor(
+    message: string,
+    public field?: string
+  ) {
     super(message);
-    this.name = 'ValidationError';
+    this.name = "ValidationError";
   }
 }
 
 export class AuthenticationError extends Error {
-  constructor(message: string = 'Authentication required') {
+  constructor(message: string = "Authentication required") {
     super(message);
-    this.name = 'AuthenticationError';
+    this.name = "AuthenticationError";
   }
 }
 
 export class AuthorizationError extends Error {
-  constructor(message: string = 'Insufficient permissions') {
+  constructor(message: string = "Insufficient permissions") {
     super(message);
-    this.name = 'AuthorizationError';
+    this.name = "AuthorizationError";
   }
 }
 
 export class StripeError extends Error {
-  constructor(message: string, public stripeCode?: string) {
+  constructor(
+    message: string,
+    public stripeCode?: string
+  ) {
     super(message);
-    this.name = 'StripeError';
+    this.name = "StripeError";
   }
 }
 ```
@@ -773,29 +776,26 @@ export class StripeError extends Error {
 ```typescript
 // Rate limiting rules
 const rateLimitConfig = {
-  '/api/auth/login': { windowMs: 15 * 60 * 1000, max: 5 }, // 5 attempts per 15 minutes
-  '/api/auth/register': { windowMs: 60 * 60 * 1000, max: 3 }, // 3 registrations per hour
-  '/api/payments': { windowMs: 60 * 1000, max: 10 }, // 10 payment requests per minute
-  '/api/products': { windowMs: 60 * 1000, max: 100 }, // 100 requests per minute
+  "/api/auth/login": { windowMs: 15 * 60 * 1000, max: 5 }, // 5 attempts per 15 minutes
+  "/api/auth/register": { windowMs: 60 * 60 * 1000, max: 3 }, // 3 registrations per hour
+  "/api/payments": { windowMs: 60 * 1000, max: 10 }, // 10 payment requests per minute
+  "/api/products": { windowMs: 60 * 1000, max: 100 }, // 100 requests per minute
   default: { windowMs: 60 * 1000, max: 60 }, // Default: 60 requests per minute
 };
 
 // Rate limiter middleware
-export async function rateLimiter(
-  request: NextRequest,
-  identifier: string
-): Promise<boolean> {
+export async function rateLimiter(request: NextRequest, identifier: string): Promise<boolean> {
   const path = request.nextUrl.pathname;
   const config = rateLimitConfig[path] || rateLimitConfig.default;
-  
+
   // Implementation using Redis or in-memory store
   const key = `rate_limit:${identifier}:${path}`;
   const current = await redis.incr(key);
-  
+
   if (current === 1) {
     await redis.expire(key, config.windowMs / 1000);
   }
-  
+
   return current <= config.max;
 }
 ```
@@ -804,19 +804,19 @@ export async function rateLimiter(
 
 ```typescript
 // Validation middleware using Zod
-import { z } from 'zod';
+import { z } from "zod";
 
 export function validateRequest<T>(schema: z.ZodSchema<T>) {
   return async (request: NextRequest): Promise<T> => {
     const body = await request.json();
-    
+
     try {
       return schema.parse(body);
     } catch (error) {
       if (error instanceof z.ZodError) {
         throw new ValidationError(
-          'Invalid request data',
-          error.errors[0]?.path?.join('.') || 'unknown'
+          "Invalid request data",
+          error.errors[0]?.path?.join(".") || "unknown"
         );
       }
       throw error;
@@ -829,7 +829,7 @@ const createProductSchema = z.object({
   name: z.string().min(1).max(255),
   description: z.string().min(10),
   basePrice: z.number().positive(),
-  type: z.enum(['ONE_TIME', 'SUBSCRIPTION', 'DIGITAL_DOWNLOAD', 'SERVICE']),
+  type: z.enum(["ONE_TIME", "SUBSCRIPTION", "DIGITAL_DOWNLOAD", "SERVICE"]),
 });
 
 // In API route
@@ -845,43 +845,43 @@ export async function POST(request: NextRequest) {
 
 ```typescript
 // __tests__/api/products.test.ts
-import { GET, POST } from '@/app/api/products/route';
-import { createMocks } from 'node-mocks-http';
+import { GET, POST } from "@/app/api/products/route";
+import { createMocks } from "node-mocks-http";
 
-describe('/api/products', () => {
-  it('should return products list', async () => {
+describe("/api/products", () => {
+  it("should return products list", async () => {
     const { req, res } = createMocks({
-      method: 'GET',
-      query: { page: '1', limit: '10' },
+      method: "GET",
+      query: { page: "1", limit: "10" },
     });
-    
+
     const response = await GET(req);
     const data = await response.json();
-    
+
     expect(response.status).toBe(200);
     expect(data.products).toBeArray();
     expect(data.pagination).toBeDefined();
   });
-  
-  it('should create new product (admin only)', async () => {
+
+  it("should create new product (admin only)", async () => {
     const productData = {
-      name: 'Test Product',
-      description: 'Test description',
+      name: "Test Product",
+      description: "Test description",
       basePrice: 29.99,
-      type: 'ONE_TIME',
+      type: "ONE_TIME",
     };
-    
+
     const { req } = createMocks({
-      method: 'POST',
+      method: "POST",
       body: productData,
       headers: {
-        authorization: 'Bearer admin-token',
+        authorization: "Bearer admin-token",
       },
     });
-    
+
     const response = await POST(req);
     const data = await response.json();
-    
+
     expect(response.status).toBe(201);
     expect(data.product.name).toBe(productData.name);
   });
@@ -892,30 +892,31 @@ describe('/api/products', () => {
 
 ```typescript
 // __tests__/integration/stripe.test.ts
-import { stripe } from '@/lib/stripe';
+import { stripe } from "@/lib/stripe";
 
-describe('Stripe Integration', () => {
-  it('should create payment intent', async () => {
+describe("Stripe Integration", () => {
+  it("should create payment intent", async () => {
     const paymentIntent = await stripe.paymentIntents.create({
       amount: 2999,
-      currency: 'usd',
-      metadata: { orderId: 'test-order' },
+      currency: "usd",
+      metadata: { orderId: "test-order" },
     });
-    
-    expect(paymentIntent.status).toBe('requires_payment_method');
+
+    expect(paymentIntent.status).toBe("requires_payment_method");
     expect(paymentIntent.amount).toBe(2999);
   });
-  
-  it('should handle webhook events', async () => {
+
+  it("should handle webhook events", async () => {
     const event = {
-      type: 'payment_intent.succeeded',
-      data: { object: { id: 'pi_test', status: 'succeeded' } },
+      type: "payment_intent.succeeded",
+      data: { object: { id: "pi_test", status: "succeeded" } },
     };
-    
+
     const result = await handleStripeWebhook(event);
     expect(result.success).toBe(true);
   });
 });
 ```
 
-This comprehensive API specification provides the foundation for implementing all required endpoints and integrations for the NextJS Stripe Payment Template.
+This comprehensive API specification provides the foundation for implementing all required endpoints
+and integrations for the NextJS Stripe Payment Template.

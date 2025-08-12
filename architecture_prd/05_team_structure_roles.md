@@ -2,44 +2,45 @@
 
 ## 1. Team Organization Overview
 
-The NextJS Stripe Payment Template requires a cross-functional team of specialists working in coordinated sprints to deliver a production-ready, secure, and scalable payment system.
+The NextJS Stripe Payment Template requires a cross-functional team of specialists working in
+coordinated sprints to deliver a production-ready, secure, and scalable payment system.
 
 ### 1.1 Team Structure Diagram
 
 ```mermaid
 graph TB
     PA[Project Architect<br/>System Design & Coordination]
-    
+
     subgraph "Frontend Development"
         FE[Frontend Engineer<br/>React/NextJS UI]
         UX[UI/UX Designer<br/>Design System & Experience]
     end
-    
-    subgraph "Backend Development" 
+
+    subgraph "Backend Development"
         BE[Backend Engineer<br/>API & Business Logic]
         PS[Payment Specialist<br/>Stripe Integration]
         DBA[Database Specialist<br/>Prisma & PostgreSQL]
     end
-    
+
     subgraph "Infrastructure & Security"
         DO[DevOps Engineer<br/>CI/CD & Deployment]
         SE[Security Engineer<br/>Auth & Compliance]
     end
-    
+
     subgraph "Quality Assurance"
         QA[QA Engineer<br/>Testing & Automation]
     end
-    
+
     PA --> FE
     PA --> BE
     PA --> DO
     PA --> SE
-    
+
     FE <--> UX
     BE <--> PS
     BE <--> DBA
     SE <--> DO
-    
+
     QA <--> FE
     QA <--> BE
     QA <--> SE
@@ -58,6 +59,7 @@ graph TB
 ### 2.1 Frontend Engineer
 
 **Primary Responsibilities:**
+
 - Develop React/NextJS components using Shadcn UI
 - Implement responsive, mobile-first design
 - Create interactive payment forms and checkout flows
@@ -65,6 +67,7 @@ graph TB
 - Optimize frontend performance and user experience
 
 **Key Skills Required:**
+
 - Expert in React 18+ and NextJS 14+
 - Proficient with TypeScript and modern JavaScript
 - Experience with Shadcn UI and Tailwind CSS
@@ -72,6 +75,7 @@ graph TB
 - Understanding of payment UI/UX best practices
 
 **Deliverables:**
+
 - [ ] **Phase 1**: Core UI component library setup
   - Authentication forms (login, register, password reset)
   - Base layout components and navigation
@@ -91,11 +95,13 @@ graph TB
   - Responsive design across all devices
 
 **Dependencies:**
+
 - UI/UX designs from Designer
 - API endpoints from Backend Engineer
 - Authentication flow from Security Engineer
 
 **Code Quality Standards:**
+
 ```typescript
 // Component structure example
 interface ProductCardProps {
@@ -119,7 +125,7 @@ export const ProductCard: React.FC<ProductCardProps> = ({
         {/* Component implementation */}
       </CardContent>
       <CardFooter>
-        <Button 
+        <Button
           onClick={() => onAddToCart(product.id)}
           disabled={isLoading}
           className="w-full"
@@ -135,6 +141,7 @@ export const ProductCard: React.FC<ProductCardProps> = ({
 ### 2.2 UI/UX Designer
 
 **Primary Responsibilities:**
+
 - Create comprehensive design system and component library
 - Design user flows for authentication, purchasing, and subscription management
 - Ensure accessibility compliance (WCAG 2.1 AA)
@@ -142,6 +149,7 @@ export const ProductCard: React.FC<ProductCardProps> = ({
 - Design dashboard interfaces for admin and customer portals
 
 **Key Skills Required:**
+
 - Proficiency in Figma, Adobe XD, or similar design tools
 - Understanding of design systems and component libraries
 - Knowledge of payment flow UX best practices
@@ -149,6 +157,7 @@ export const ProductCard: React.FC<ProductCardProps> = ({
 - Mobile-first design methodology
 
 **Deliverables:**
+
 - [ ] **Design System**: Complete component library in Figma
   - Colors, typography, spacing tokens
   - Button variants, form controls, cards
@@ -168,6 +177,7 @@ export const ProductCard: React.FC<ProductCardProps> = ({
   - Email template designs
 
 **Design Specifications:**
+
 - **Color Palette**: Primary, secondary, neutral, and semantic colors
 - **Typography**: System font stack with proper hierarchy
 - **Spacing**: 4px base unit with consistent spacing scale
@@ -177,6 +187,7 @@ export const ProductCard: React.FC<ProductCardProps> = ({
 ### 2.3 Backend Engineer
 
 **Primary Responsibilities:**
+
 - Design and implement NextJS API routes
 - Create business logic services and middleware
 - Implement server actions for form handling
@@ -184,6 +195,7 @@ export const ProductCard: React.FC<ProductCardProps> = ({
 - Integrate with external APIs (Stripe, Resend)
 
 **Key Skills Required:**
+
 - Expert in Node.js and NextJS API routes
 - Strong TypeScript and JavaScript skills
 - Experience with RESTful API design
@@ -191,6 +203,7 @@ export const ProductCard: React.FC<ProductCardProps> = ({
 - Understanding of microservices patterns
 
 **Deliverables:**
+
 - [ ] **API Foundation**: Core API structure and middleware
   - Authentication middleware and session management
   - Request validation using Zod schemas
@@ -204,23 +217,24 @@ export const ProductCard: React.FC<ProductCardProps> = ({
   - Email notification service
 
 - [ ] **API Endpoints**: Complete REST API implementation
+
   ```typescript
   // Example API endpoint structure
   // app/api/products/route.ts
   export async function GET(request: NextRequest) {
     const { searchParams } = new URL(request.url);
-    const page = parseInt(searchParams.get('page') || '1');
-    const limit = parseInt(searchParams.get('limit') || '10');
-    
+    const page = parseInt(searchParams.get("page") || "1");
+    const limit = parseInt(searchParams.get("limit") || "10");
+
     const products = await productService.getProducts({
       page,
       limit,
       filters: {
-        status: 'PUBLISHED',
-        type: searchParams.get('type') as ProductType,
+        status: "PUBLISHED",
+        type: searchParams.get("type") as ProductType,
       },
     });
-    
+
     return Response.json({
       products: products.data,
       pagination: products.pagination,
@@ -229,6 +243,7 @@ export const ProductCard: React.FC<ProductCardProps> = ({
   ```
 
 **Integration Points:**
+
 - Database schema with Database Specialist
 - Payment processing with Payment Specialist
 - Authentication with Security Engineer
@@ -237,6 +252,7 @@ export const ProductCard: React.FC<ProductCardProps> = ({
 ### 2.4 Payment Integration Specialist
 
 **Primary Responsibilities:**
+
 - Implement comprehensive Stripe integration
 - Handle payment processing, subscriptions, and webhooks
 - Ensure PCI DSS compliance
@@ -244,6 +260,7 @@ export const ProductCard: React.FC<ProductCardProps> = ({
 - Handle complex billing scenarios (trials, discounts, refunds)
 
 **Key Skills Required:**
+
 - Expert knowledge of Stripe API and webhooks
 - Understanding of payment processing and PCI compliance
 - Experience with subscription billing models
@@ -251,16 +268,18 @@ export const ProductCard: React.FC<ProductCardProps> = ({
 - Strong error handling and retry logic implementation
 
 **Deliverables:**
+
 - [ ] **Stripe Integration**: Complete payment processing system
+
   ```typescript
   // Payment service implementation
   export class PaymentService {
     private stripe: Stripe;
-    
+
     constructor() {
       this.stripe = new Stripe(process.env.STRIPE_SECRET_KEY!);
     }
-    
+
     async createPaymentIntent(params: CreatePaymentParams) {
       return this.stripe.paymentIntents.create({
         amount: params.amount,
@@ -275,13 +294,13 @@ export const ProductCard: React.FC<ProductCardProps> = ({
         },
       });
     }
-    
+
     async handleWebhook(event: Stripe.Event) {
       switch (event.type) {
-        case 'payment_intent.succeeded':
+        case "payment_intent.succeeded":
           await this.handlePaymentSuccess(event.data.object);
           break;
-        case 'customer.subscription.created':
+        case "customer.subscription.created":
           await this.handleSubscriptionCreated(event.data.object);
           break;
         // Additional event handlers
@@ -303,6 +322,7 @@ export const ProductCard: React.FC<ProductCardProps> = ({
   - Fraud detection integration
 
 **Compliance Requirements:**
+
 - PCI DSS Level 1 compliance through Stripe
 - No storage of sensitive payment data
 - Secure webhook endpoint implementation
@@ -311,6 +331,7 @@ export const ProductCard: React.FC<ProductCardProps> = ({
 ### 2.5 Database Specialist
 
 **Primary Responsibilities:**
+
 - Design and optimize PostgreSQL database schema
 - Implement Prisma ORM models and migrations
 - Create efficient database queries and indexes
@@ -318,6 +339,7 @@ export const ProductCard: React.FC<ProductCardProps> = ({
 - Monitor database performance
 
 **Key Skills Required:**
+
 - Expert in PostgreSQL administration
 - Proficiency with Prisma ORM
 - Database design and normalization principles
@@ -325,6 +347,7 @@ export const ProductCard: React.FC<ProductCardProps> = ({
 - Backup and disaster recovery planning
 
 **Deliverables:**
+
 - [ ] **Database Schema**: Complete Prisma schema implementation
   - User authentication and profile tables
   - Product catalog and pricing structures
@@ -333,6 +356,7 @@ export const ProductCard: React.FC<ProductCardProps> = ({
   - Audit logging and analytics tables
 
 - [ ] **Performance Optimization**: Database tuning
+
   ```sql
   -- Critical indexes for performance
   CREATE INDEX CONCURRENTLY idx_users_email ON users(email);
@@ -346,6 +370,7 @@ export const ProductCard: React.FC<ProductCardProps> = ({
   - Rollback procedures for failed migrations
 
 **Performance Metrics:**
+
 - Query response times < 100ms for 95th percentile
 - Database connection pooling optimization
 - Regular VACUUM and ANALYZE operations
@@ -354,6 +379,7 @@ export const ProductCard: React.FC<ProductCardProps> = ({
 ### 2.6 Security Engineer
 
 **Primary Responsibilities:**
+
 - Implement authentication and authorization systems
 - Ensure security compliance and best practices
 - Set up audit logging and security monitoring
@@ -361,6 +387,7 @@ export const ProductCard: React.FC<ProductCardProps> = ({
 - Implement data protection and encryption
 
 **Key Skills Required:**
+
 - Expert in authentication systems (BetterAuth, OAuth)
 - Knowledge of security standards (OWASP, PCI DSS)
 - Experience with encryption and secure data handling
@@ -368,7 +395,9 @@ export const ProductCard: React.FC<ProductCardProps> = ({
 - Penetration testing and vulnerability assessment
 
 **Deliverables:**
+
 - [ ] **Authentication System**: Secure user authentication
+
   ```typescript
   // Security configuration example
   export const authConfig = {
@@ -404,6 +433,7 @@ export const ProductCard: React.FC<ProductCardProps> = ({
   - Security incident response procedures
 
 **Security Checklist:**
+
 - [ ] Password strength requirements enforced
 - [ ] Rate limiting on authentication endpoints
 - [ ] HTTPS enforced in production
@@ -416,6 +446,7 @@ export const ProductCard: React.FC<ProductCardProps> = ({
 ### 2.7 DevOps Engineer
 
 **Primary Responsibilities:**
+
 - Set up CI/CD pipelines and deployment automation
 - Configure production infrastructure on LeaseWeb
 - Implement monitoring and logging systems
@@ -423,6 +454,7 @@ export const ProductCard: React.FC<ProductCardProps> = ({
 - Optimize application performance and scaling
 
 **Key Skills Required:**
+
 - Experience with GitHub Actions and CI/CD
 - Knowledge of Docker and containerization
 - Understanding of cloud infrastructure (LeaseWeb)
@@ -430,14 +462,16 @@ export const ProductCard: React.FC<ProductCardProps> = ({
 - Performance optimization and caching strategies
 
 **Deliverables:**
+
 - [ ] **CI/CD Pipeline**: Automated deployment system
+
   ```yaml
   # .github/workflows/deploy.yml
   name: Deploy to Production
   on:
     push:
       branches: [main]
-  
+
   jobs:
     test:
       runs-on: ubuntu-latest
@@ -446,14 +480,14 @@ export const ProductCard: React.FC<ProductCardProps> = ({
         - name: Setup Node.js
           uses: actions/setup-node@v3
           with:
-            node-version: '18'
+            node-version: "18"
         - name: Install dependencies
           run: npm ci
         - name: Run tests
           run: npm run test
         - name: Run Playwright tests
           run: npm run test:e2e
-    
+
     deploy:
       needs: test
       runs-on: ubuntu-latest
@@ -475,6 +509,7 @@ export const ProductCard: React.FC<ProductCardProps> = ({
   - Security event monitoring
 
 **Infrastructure Components:**
+
 - **Web Server**: Nginx reverse proxy
 - **Application**: Node.js/NextJS in Docker
 - **Database**: PostgreSQL with automated backups
@@ -485,6 +520,7 @@ export const ProductCard: React.FC<ProductCardProps> = ({
 ### 2.8 QA Engineer
 
 **Primary Responsibilities:**
+
 - Develop comprehensive test strategy and test plans
 - Create automated test suites using Playwright
 - Perform manual testing of critical user flows
@@ -492,6 +528,7 @@ export const ProductCard: React.FC<ProductCardProps> = ({
 - Validate security and performance requirements
 
 **Key Skills Required:**
+
 - Experience with automated testing (Playwright, Jest)
 - Knowledge of payment system testing
 - Understanding of API testing and validation
@@ -499,6 +536,7 @@ export const ProductCard: React.FC<ProductCardProps> = ({
 - Performance and load testing experience
 
 **Deliverables:**
+
 - [ ] **Test Strategy**: Comprehensive testing approach
   - Unit test coverage requirements (>90%)
   - Integration test scenarios
@@ -506,29 +544,30 @@ export const ProductCard: React.FC<ProductCardProps> = ({
   - Payment flow testing procedures
 
 - [ ] **Automated Test Suite**: Complete test automation
+
   ```typescript
   // Example E2E test
-  import { test, expect } from '@playwright/test';
-  
-  test('complete purchase flow', async ({ page }) => {
-    await page.goto('/products');
-    
+  import { test, expect } from "@playwright/test";
+
+  test("complete purchase flow", async ({ page }) => {
+    await page.goto("/products");
+
     // Select product
     await page.click('[data-testid="product-card"]:first-child');
     await page.click('[data-testid="add-to-cart"]');
-    
+
     // Proceed to checkout
     await page.click('[data-testid="cart-icon"]');
     await page.click('[data-testid="checkout-button"]');
-    
+
     // Fill payment details (test mode)
-    await page.fill('[data-testid="card-number"]', '4242424242424242');
-    await page.fill('[data-testid="card-expiry"]', '12/25');
-    await page.fill('[data-testid="card-cvc"]', '123');
-    
+    await page.fill('[data-testid="card-number"]', "4242424242424242");
+    await page.fill('[data-testid="card-expiry"]', "12/25");
+    await page.fill('[data-testid="card-cvc"]', "123");
+
     // Complete payment
     await page.click('[data-testid="pay-button"]');
-    
+
     // Verify success
     await expect(page.locator('[data-testid="success-message"]')).toBeVisible();
   });
@@ -541,6 +580,7 @@ export const ProductCard: React.FC<ProductCardProps> = ({
   - Rate limiting verification
 
 **Testing Coverage:**
+
 - **Unit Tests**: 90%+ code coverage for business logic
 - **Integration Tests**: All API endpoints tested
 - **E2E Tests**: Critical user journeys automated
@@ -554,12 +594,14 @@ export const ProductCard: React.FC<ProductCardProps> = ({
 **Sprint Duration**: 2 weeks
 
 **Sprint Ceremonies**:
+
 - **Sprint Planning** (Monday Week 1): 2 hours
 - **Daily Standups**: 15 minutes daily
 - **Sprint Review** (Friday Week 2): 1 hour
 - **Sprint Retrospective** (Friday Week 2): 1 hour
 
 **Definition of Ready**:
+
 - [ ] User story has clear acceptance criteria
 - [ ] Dependencies identified and resolved
 - [ ] Technical approach agreed upon
@@ -567,6 +609,7 @@ export const ProductCard: React.FC<ProductCardProps> = ({
 - [ ] Story sized and estimated
 
 **Definition of Done**:
+
 - [ ] Code reviewed and approved
 - [ ] Unit tests written and passing
 - [ ] Integration tests passing
@@ -578,12 +621,14 @@ export const ProductCard: React.FC<ProductCardProps> = ({
 ### 3.2 Code Review Process
 
 **Review Requirements**:
+
 - Minimum 1 reviewer for non-critical changes
 - Minimum 2 reviewers for security-related changes
 - Project Architect approval for architectural changes
 - All automated tests must pass before review
 
 **Review Checklist**:
+
 - [ ] Code follows established patterns and conventions
 - [ ] Security considerations addressed
 - [ ] Performance impact considered
@@ -601,7 +646,7 @@ sequenceDiagram
     participant Payment as Payment Specialist
     participant Security as Security Engineer
     participant QA as QA Engineer
-    
+
     Designer->>Frontend: Design specs & assets
     Security->>Backend: Auth requirements
     Backend->>Payment: API integration specs
@@ -615,6 +660,7 @@ sequenceDiagram
 ### 3.4 Risk Mitigation & Dependencies
 
 **Critical Dependencies**:
+
 1. **Design System** → Frontend Development
 2. **Authentication System** → All API Development
 3. **Database Schema** → Backend Development
@@ -622,6 +668,7 @@ sequenceDiagram
 5. **Security Review** → Production Deployment
 
 **Risk Mitigation Strategies**:
+
 - **Parallel Development**: Independent components developed simultaneously
 - **Mock Services**: Use mocks during development to avoid blocking
 - **Regular Integration**: Daily builds with integration testing
@@ -631,18 +678,21 @@ sequenceDiagram
 ### 3.5 Communication Protocols
 
 **Daily Communication**:
+
 - Slack channels for team coordination
 - GitHub for code reviews and discussions
 - Figma for design collaboration
 - Notion for documentation and planning
 
 **Weekly Communication**:
+
 - Technical architecture reviews
 - Cross-team integration planning
 - Security and compliance checkpoints
 - Performance and testing reviews
 
 **Escalation Procedures**:
+
 - **Technical Issues**: Escalate to Project Architect
 - **Security Concerns**: Escalate to Security Engineer
 - **Timeline Risks**: Escalate to Project Manager
@@ -653,24 +703,28 @@ sequenceDiagram
 ### 4.1 Individual Performance Metrics
 
 **Frontend Engineer**:
+
 - Component reusability score (>80%)
 - Page load performance (< 3 seconds)
 - Accessibility compliance (WCAG 2.1 AA)
 - Code review feedback quality
 
 **Backend Engineer**:
+
 - API response times (< 500ms average)
 - Code coverage (>90% for business logic)
 - API security compliance
 - Database query performance
 
 **Payment Specialist**:
+
 - Payment success rate (>99%)
 - Webhook processing reliability
 - PCI compliance adherence
 - Payment dispute resolution time
 
 **Security Engineer**:
+
 - Security vulnerability resolution time
 - Authentication system uptime
 - Security audit completion rate
@@ -693,4 +747,6 @@ sequenceDiagram
 - [ ] Customer satisfaction scores >4.5/5
 - [ ] Template adoption rate targets met
 
-This comprehensive team structure ensures that each specialist role has clear responsibilities, deliverables, and integration points while maintaining effective collaboration and communication throughout the project lifecycle.
+This comprehensive team structure ensures that each specialist role has clear responsibilities,
+deliverables, and integration points while maintaining effective collaboration and communication
+throughout the project lifecycle.

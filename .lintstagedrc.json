@@ -1,0 +1,6 @@
+{
+  "*.{js,jsx,ts,tsx}": ["eslint --fix", "prettier --write", "cspell --no-progress --no-summary"],
+  "*.{md,mdx}": ["prettier --write", "cspell --no-progress --no-summary"],
+  "*.{json,yaml,yml}": ["prettier --write"],
+  "*.{ts,tsx}": ["bash -c 'tsc --noEmit --skipLibCheck'"]
+}

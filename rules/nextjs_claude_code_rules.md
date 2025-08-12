@@ -3,8 +3,9 @@
 ## 1. SessionStart Rules (Environment Setup)
 
 ### Rule 1.1: Project Context Loading
-**Execution Point:** `SessionStart`
-**Purpose:** Automatically load project context and validate environment
+
+**Execution Point:** `SessionStart` **Purpose:** Automatically load project context and validate
+environment
 
 ```bash
 # Auto-execute on session start
@@ -29,6 +30,7 @@ docker ps | grep postgres && echo "✅ PostgreSQL running" || echo "❌ PostgreS
 ```
 
 ### Rule 1.2: Development Tools Validation
+
 **Execution Point:** `SessionStart`
 
 ```bash
@@ -43,8 +45,8 @@ playwright --version || echo "❌ Playwright not found"
 ## 2. PreToolUse Rules (Before Code Changes)
 
 ### Rule 2.1: File Path Security Validation
-**Execution Point:** `PreToolUse`
-**Triggers:** Before `Read`, `Edit`, `Write`, `MultiEdit`
+
+**Execution Point:** `PreToolUse` **Triggers:** Before `Read`, `Edit`, `Write`, `MultiEdit`
 
 ```bash
 # Validate file paths for security
@@ -62,8 +64,8 @@ fi
 ```
 
 ### Rule 2.2: Pre-Edit Code Pattern Analysis
-**Execution Point:** `PreToolUse`
-**Triggers:** Before `Edit`, `MultiEdit`
+
+**Execution Point:** `PreToolUse` **Triggers:** Before `Edit`, `MultiEdit`
 
 ```bash
 # Check for existing patterns before editing
@@ -82,8 +84,8 @@ grep -q "zod\|schema\|validate" "$FILE_PATH" && echo "✅ Validation present" ||
 ## 3. PostToolUse Rules (After Code Changes)
 
 ### Rule 3.1: Automatic Code Quality Enforcement
-**Execution Point:** `PostToolUse`
-**Triggers:** After `Edit`, `Write`, `MultiEdit`
+
+**Execution Point:** `PostToolUse` **Triggers:** After `Edit`, `Write`, `MultiEdit`
 
 ```bash
 # Auto-format and lint after any code change
@@ -103,52 +105,52 @@ fi
 ```
 
 ### Rule 3.2: Stripe-Specific Validations
-**Execution Point:** `PostToolUse`
-**Triggers:** After editing Stripe-related files
+
+**Execution Point:** `PostToolUse` **Triggers:** After editing Stripe-related files
 
 ```bash
 # Check for Stripe best practices
 if [[ "$CHANGED_FILE" == *"stripe"* ]]; then
     echo "💳 Validating Stripe implementation..."
-    
+
     # Check for proper API version pinning
     grep -q "apiVersion.*2023-10-16" "$CHANGED_FILE" && echo "✅ API version pinned" || echo "⚠️  Pin Stripe API version"
-    
+
     # Check for webhook signature verification
     if [[ "$CHANGED_FILE" == *"webhook"* ]]; then
         grep -q "constructEvent\|verifyHeader" "$CHANGED_FILE" && echo "✅ Webhook signature verification" || echo "❌ Missing webhook signature verification"
     fi
-    
+
     # Check for proper error handling
     grep -q "StripeError\|try.*catch" "$CHANGED_FILE" && echo "✅ Stripe error handling" || echo "⚠️  Add Stripe error handling"
 fi
 ```
 
 ### Rule 3.3: Database Schema Validation
-**Execution Point:** `PostToolUse`
-**Triggers:** After editing Prisma schema files
+
+**Execution Point:** `PostToolUse` **Triggers:** After editing Prisma schema files
 
 ```bash
 if [[ "$CHANGED_FILE" == *"prisma"* ]]; then
     echo "🗄️  Validating Prisma schema..."
-    
+
     # Validate schema
     npx prisma validate || echo "❌ Prisma schema validation failed"
-    
+
     # Format schema
     npx prisma format
-    
+
     # Check for required fields
     grep -q "stripeCustomerId" "$CHANGED_FILE" && echo "✅ Stripe customer ID field present" || echo "⚠️  Consider adding stripeCustomerId field"
-    
+
     # Generate client if schema changed
     npx prisma generate
 fi
 ```
 
 ### Rule 3.4: Test Execution After Changes
-**Execution Point:** `PostToolUse`
-**Triggers:** After any code modification
+
+**Execution Point:** `PostToolUse` **Triggers:** After any code modification
 
 ```bash
 # Run relevant tests based on changed file
@@ -177,8 +179,8 @@ npx tsc --noEmit
 ## 4. Stop Rules (Task Completion)
 
 ### Rule 4.1: Comprehensive Quality Gate
-**Execution Point:** `Stop`
-**Purpose:** Final validation before task completion
+
+**Execution Point:** `Stop` **Purpose:** Final validation before task completion
 
 ```bash
 echo "🏁 Running comprehensive quality checks..."
@@ -225,6 +227,7 @@ echo "- Performance: ✅ Checked"
 ```
 
 ### Rule 4.2: Documentation Generation
+
 **Execution Point:** `Stop`
 
 ```bash
@@ -246,6 +249,7 @@ echo "📝 Updating README..."
 ## 5. Pattern-Based Rules (Using Grep and Glob)
 
 ### Rule 5.1: Code Pattern Enforcement
+
 **Usage:** Regular monitoring and validation
 
 ```bash
@@ -271,6 +275,7 @@ glob "src/app/**/error.tsx" | wc -l | awk '{if($1==0) print "⚠️  No error bo
 ```
 
 ### Rule 5.2: Security Pattern Validation
+
 ```bash
 # Security-focused pattern checks
 echo "🔒 Security pattern validation..."
@@ -295,6 +300,7 @@ done
 ## 6. Stripe-Specific Automated Rules
 
 ### Rule 6.1: Stripe Integration Validation
+
 **Execution Point:** `PostToolUse` (after Stripe file changes)
 
 ```bash
@@ -304,14 +310,14 @@ echo "💳 Stripe integration validation..."
 # Check webhook endpoint structure
 if [ -f "src/app/api/webhooks/stripe/route.ts" ]; then
     webhook_file="src/app/api/webhooks/stripe/route.ts"
-    
+
     # Must have signature verification
     grep -q "constructEvent\|verifyHeader" "$webhook_file" || echo "❌ Missing webhook signature verification"
-    
+
     # Must handle common events
     grep -q "payment_intent.succeeded" "$webhook_file" || echo "⚠️  Consider handling payment_intent.succeeded"
     grep -q "customer.subscription" "$webhook_file" || echo "⚠️  Consider handling subscription events"
-    
+
     # Must have proper error responses
     grep -q "return.*Response.*40" "$webhook_file" || echo "⚠️  Add proper error responses"
 fi
@@ -319,16 +325,17 @@ fi
 # Check for proper Stripe client initialization
 grep -r "new Stripe" src/ --include="*.ts" | while read line; do
     file=$(echo "$line" | cut -d: -f1)
-    
+
     # Must pin API version
     grep -q "apiVersion.*2023-10-16" "$file" || echo "⚠️  $file: Pin Stripe API version"
-    
+
     # Must use environment variable
     grep -q "process.env.STRIPE_SECRET_KEY" "$file" || echo "⚠️  $file: Use environment variable for API key"
 done
 ```
 
 ### Rule 6.2: Payment Flow Validation
+
 ```bash
 # Validate payment implementation
 echo "💰 Payment flow validation..."
@@ -349,6 +356,7 @@ done
 ## 7. Testing Automation Rules
 
 ### Rule 7.1: Test Coverage Enforcement
+
 **Execution Point:** `PostToolUse` (after adding new functions)
 
 ```bash
@@ -360,7 +368,7 @@ find src -name "*.ts" -o -name "*.tsx" | grep -v ".test." | while read file; do
     base_name=$(basename "$file" .ts)
     base_name=$(basename "$base_name" .tsx)
     dir_name=$(dirname "$file")
-    
+
     # Look for corresponding test file
     test_file_patterns=(
         "${dir_name}/${base_name}.test.ts"
@@ -368,7 +376,7 @@ find src -name "*.ts" -o -name "*.tsx" | grep -v ".test." | while read file; do
         "${dir_name}/__tests__/${base_name}.test.ts"
         "__tests__/${dir_name}/${base_name}.test.ts"
     )
-    
+
     found_test=false
     for pattern in "${test_file_patterns[@]}"; do
         if [ -f "$pattern" ]; then
@@ -376,7 +384,7 @@ find src -name "*.ts" -o -name "*.tsx" | grep -v ".test." | while read file; do
             break
         fi
     done
-    
+
     if [ "$found_test" = false ] && grep -q "export.*function" "$file"; then
         echo "⚠️  $file: No corresponding test file found"
     fi
@@ -384,6 +392,7 @@ done
 ```
 
 ### Rule 7.2: E2E Test Validation
+
 **Execution Point:** `Stop`
 
 ```bash
@@ -393,10 +402,10 @@ echo "🎭 E2E test validation..."
 if [ -f "playwright.config.ts" ]; then
     # Check for payment flow tests
     grep -r "payment\|checkout\|stripe" tests/e2e/ --include="*.spec.ts" || echo "⚠️  Add payment flow E2E tests"
-    
+
     # Check for authentication tests
     grep -r "login\|auth\|signin" tests/e2e/ --include="*.spec.ts" || echo "⚠️  Add authentication E2E tests"
-    
+
     # Check for admin dashboard tests
     grep -r "admin\|dashboard" tests/e2e/ --include="*.spec.ts" || echo "⚠️  Add admin dashboard E2E tests"
 fi
@@ -405,6 +414,7 @@ fi
 ## 8. Performance Monitoring Rules
 
 ### Rule 8.1: Bundle Size Monitoring
+
 **Execution Point:** `PostToolUse` (after dependency changes)
 
 ```bash
@@ -417,13 +427,14 @@ if [ -f "package.json" ]; then
     if [ "$large_deps" -gt 0 ]; then
         echo "⚠️  Large dependencies detected - consider alternatives"
     fi
-    
+
     # Check for duplicate dependencies
     npm ls --depth=0 2>&1 | grep -i "deduped" && echo "⚠️  Duplicate dependencies found"
 fi
 ```
 
 ### Rule 8.2: Database Query Optimization
+
 **Execution Point:** `PostToolUse` (after Prisma query changes)
 
 ```bash
@@ -433,7 +444,7 @@ echo "🗄️  Database query optimization..."
 # Look for potential N+1 queries
 grep -r "findMany\|findUnique" src/ --include="*.ts" | while read line; do
     file=$(echo "$line" | cut -d: -f1)
-    
+
     # Check if include/select is used
     if ! grep -q "include:\|select:" "$file"; then
         echo "⚠️  $file: Consider using select/include for query optimization"
@@ -449,6 +460,7 @@ fi
 ## 9. Deployment Readiness Rules
 
 ### Rule 9.1: Production Readiness Check
+
 **Execution Point:** `Stop` (before deployment)
 
 ```bash
@@ -478,6 +490,7 @@ grep -r "console.log\|debugger\|TODO\|FIXME" src/ --include="*.ts" --include="*.
 ## 10. Emergency Break Rules
 
 ### Rule 10.1: Critical Error Detection
+
 **Execution Point:** `PreToolUse` and `PostToolUse`
 
 ```bash
@@ -507,6 +520,7 @@ fi
 ## 11. Automated Fix Suggestions
 
 ### Rule 11.1: Smart Fix Recommendations
+
 **Execution Point:** `PostToolUse`
 
 ```bash
@@ -534,7 +548,8 @@ fi
 
 ## Implementation Summary
 
-These rules leverage Claude Code's execution points to create a comprehensive, automated development workflow:
+These rules leverage Claude Code's execution points to create a comprehensive, automated development
+workflow:
 
 1. **SessionStart**: Environment validation and context loading
 2. **PreToolUse**: Security checks and pattern analysis before changes
@@ -542,6 +557,7 @@ These rules leverage Claude Code's execution points to create a comprehensive, a
 4. **Stop**: Comprehensive validation before task completion
 
 The system automatically:
+
 - ✅ Validates code quality and security
 - ✅ Runs appropriate tests based on changed files
 - ✅ Enforces Stripe integration best practices
@@ -549,4 +565,5 @@ The system automatically:
 - ✅ Provides intelligent fix suggestions
 - ✅ Ensures production readiness
 
-This creates a robust development environment that maintains high code quality while preventing common security and performance issues specific to NextJS Stripe applications.
+This creates a robust development environment that maintains high code quality while preventing
+common security and performance issues specific to NextJS Stripe applications.

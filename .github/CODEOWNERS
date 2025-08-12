@@ -1,0 +1,53 @@
+# Global owners - these users will be requested for review when someone opens a pull request
+* @GabrielCodeProject
+
+# Documentation
+*.md @GabrielCodeProject
+docs/ @GabrielCodeProject
+README.md @GabrielCodeProject
+CONTRIBUTING.md @GabrielCodeProject
+
+# Configuration files
+*.json @GabrielCodeProject
+*.js @GabrielCodeProject
+*.mjs @GabrielCodeProject
+*.ts @GabrielCodeProject
+package.json @GabrielCodeProject
+package-lock.json @GabrielCodeProject
+tsconfig.json @GabrielCodeProject
+next.config.js @GabrielCodeProject
+tailwind.config.js @GabrielCodeProject
+
+# Environment and security
+.env* @GabrielCodeProject
+.gitignore @GabrielCodeProject
+.gitattributes @GabrielCodeProject
+
+# Stripe integration - requires payment specialist review
+src/app/api/webhooks/ @GabrielCodeProject
+src/lib/stripe* @GabrielCodeProject
+src/components/payment/ @GabrielCodeProject
+
+# Database schema - requires database specialist review
+prisma/ @GabrielCodeProject
+src/lib/db* @GabrielCodeProject
+
+# Security-sensitive files
+src/lib/auth* @GabrielCodeProject
+src/middleware.ts @GabrielCodeProject
+src/lib/env.ts @GabrielCodeProject
+
+# CI/CD and deployment
+.github/ @GabrielCodeProject
+Dockerfile @GabrielCodeProject
+docker-compose* @GabrielCodeProject
+
+# Testing configuration
+jest.config* @GabrielCodeProject
+playwright.config* @GabrielCodeProject
+cypress.config* @GabrielCodeProject
+
+# Linting and formatting
+.eslintrc* @GabrielCodeProject
+.prettierrc* @GabrielCodeProject
+.husky/ @GabrielCodeProject

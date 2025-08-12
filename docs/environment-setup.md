@@ -1,10 +1,12 @@
 # Environment Variables Setup Guide
 
-This guide explains how to configure environment variables for the Payment Integration Template built with Next.js App Router.
+This guide explains how to configure environment variables for the Payment Integration Template
+built with Next.js App Router.
 
 ## Quick Start
 
 1. Copy the example environment file:
+
    ```bash
    cp .env.example .env.local
    ```
@@ -74,7 +76,9 @@ RESEND_FROM_EMAIL="noreply@yourdomain.com"
 ## Environment Variable Types
 
 ### Server-Side Only Variables
+
 These are only available in:
+
 - API routes (`/api` folder)
 - Server Components
 - Server Actions
@@ -83,6 +87,7 @@ These are only available in:
 Examples: `DATABASE_URL`, `STRIPE_SECRET_KEY`, `BETTER_AUTH_SECRET`
 
 ### Client-Side Variables
+
 These are exposed to the browser and must be prefixed with `NEXT_PUBLIC_`:
 
 Examples: `NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY`, `NEXT_PUBLIC_APP_URL`
@@ -95,13 +100,13 @@ The project includes type-safe environment variable validation:
 
 ```typescript
 // Server-side usage
-import { getServerEnv } from '@/lib/env';
+import { getServerEnv } from "@/lib/env";
 
 const env = getServerEnv();
 const stripeSecret = env.STRIPE_SECRET_KEY; // ✅ Type-safe
 
 // Client-side usage
-import { getClientEnv } from '@/lib/env';
+import { getClientEnv } from "@/lib/env";
 
 const env = getClientEnv();
 const stripePublishable = env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY; // ✅ Type-safe
@@ -110,12 +115,14 @@ const stripePublishable = env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY; // ✅ Type-sa
 ## Development vs Production
 
 ### Development Environment
+
 - Use test API keys from Stripe
 - Enable debug mode: `NEXT_PUBLIC_DEBUG_MODE="true"`
 - Use local database
 - Detailed error logging enabled
 
 ### Production Environment
+
 - Use live API keys from Stripe
 - Disable debug mode: `NEXT_PUBLIC_DEBUG_MODE="false"`
 - Use production database
@@ -157,32 +164,35 @@ const stripePublishable = env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY; // ✅ Type-sa
 
 ## Environment Variable Reference
 
-| Variable | Type | Required | Description |
-|----------|------|----------|-------------|
-| `DATABASE_URL` | Server | Yes | Database connection string |
-| `BETTER_AUTH_SECRET` | Server | Yes | Secret for JWT signing (min 32 chars) |
-| `BETTER_AUTH_URL` | Server | Yes | Application base URL |
-| `STRIPE_SECRET_KEY` | Server | Yes | Stripe secret API key |
-| `NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY` | Client | Yes | Stripe publishable key |
-| `STRIPE_WEBHOOK_SECRET` | Server | No | Webhook signature verification |
-| `RESEND_API_KEY` | Server | No | Email service API key |
-| `NEXT_PUBLIC_APP_URL` | Client | Yes | Public application URL |
-| `NEXT_PUBLIC_DEBUG_MODE` | Client | No | Enable debug features |
+| Variable                             | Type   | Required | Description                           |
+| ------------------------------------ | ------ | -------- | ------------------------------------- |
+| `DATABASE_URL`                       | Server | Yes      | Database connection string            |
+| `BETTER_AUTH_SECRET`                 | Server | Yes      | Secret for JWT signing (min 32 chars) |
+| `BETTER_AUTH_URL`                    | Server | Yes      | Application base URL                  |
+| `STRIPE_SECRET_KEY`                  | Server | Yes      | Stripe secret API key                 |
+| `NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY` | Client | Yes      | Stripe publishable key                |
+| `STRIPE_WEBHOOK_SECRET`              | Server | No       | Webhook signature verification        |
+| `RESEND_API_KEY`                     | Server | No       | Email service API key                 |
+| `NEXT_PUBLIC_APP_URL`                | Client | Yes      | Public application URL                |
+| `NEXT_PUBLIC_DEBUG_MODE`             | Client | No       | Enable debug features                 |
 
 ## Getting API Keys
 
 ### Stripe
+
 1. Create account at [stripe.com](https://stripe.com)
 2. Go to Dashboard → Developers → API keys
 3. Copy "Publishable key" and "Secret key"
 4. For webhooks: Dashboard → Developers → Webhooks → Add endpoint
 
 ### Resend (Optional)
+
 1. Create account at [resend.com](https://resend.com)
 2. Go to Dashboard → API Keys
 3. Create new API key
 
 ### Database
+
 - **PostgreSQL**: Use services like Supabase, Neon, or Railway
 - **SQLite**: For development only - `file:./dev.db`
 

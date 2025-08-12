@@ -3,7 +3,7 @@ import { getServerEnv } from "./env";
 
 /**
  * Next-Safe-Action Configuration for Next.js App Router
- * 
+ *
  * This file configures server actions with proper error handling,
  * rate limiting, and environment-aware settings.
  */
@@ -28,7 +28,7 @@ export const actionClient = createSafeActionClient();
 export const authActionClient = actionClient.use(async ({ next }) => {
   // TODO: Implement authentication check with BetterAuth
   // This is a placeholder - replace with actual auth logic
-  
+
   // Example auth check (replace with BetterAuth implementation):
   // const session = await getServerSession();
   // if (!session?.user) {
@@ -37,12 +37,12 @@ export const authActionClient = actionClient.use(async ({ next }) => {
 
   // For now, we'll proceed without auth check
   // Remove this comment and implement proper auth when BetterAuth is configured
-  
+
   return next();
 });
 
 // =============================================================================
-// RATE LIMITED ACTION CLIENT  
+// RATE LIMITED ACTION CLIENT
 // =============================================================================
 
 /**
@@ -50,22 +50,22 @@ export const authActionClient = actionClient.use(async ({ next }) => {
  * Use this for actions that need rate limiting protection
  */
 export const rateLimitedActionClient = actionClient.use(async ({ next }) => {
-  const env = getServerEnv();
-  
+  const _env = getServerEnv();
+
   // TODO: Implement rate limiting logic
   // This could use Redis, in-memory store, or database-based rate limiting
-  
+
   // Example rate limiting check:
   // const clientIP = headers().get("x-forwarded-for") || "unknown";
   // const rateLimitKey = `rate_limit:${clientIP}`;
   // const currentRequests = await getRateLimitCount(rateLimitKey);
-  
+
   // if (currentRequests >= env.RATE_LIMIT_MAX_REQUESTS) {
   //   throw new Error("Rate limit exceeded. Please try again later.");
   // }
-  
+
   // await incrementRateLimitCount(rateLimitKey, env.RATE_LIMIT_WINDOW_MS);
-  
+
   return next();
 });
 
@@ -79,12 +79,12 @@ export const rateLimitedActionClient = actionClient.use(async ({ next }) => {
  */
 export const paymentActionClient = authActionClient.use(async ({ next }) => {
   const env = getServerEnv();
-  
+
   // Validate Stripe configuration
   if (!env.STRIPE_SECRET_KEY) {
     throw new Error("Stripe configuration is missing");
   }
-  
+
   // Additional payment-specific checks can go here
   return next();
 });
@@ -96,7 +96,10 @@ export const paymentActionClient = authActionClient.use(async ({ next }) => {
 /**
  * Type-safe action error creator
  */
-export function createActionError(message: string, type: "validation" | "server" = "server") {
+export function createActionError(
+  message: string,
+  type: "validation" | "server" = "server"
+) {
   return new Error(`[${type.toUpperCase()}] ${message}`);
 }
 

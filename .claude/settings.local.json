@@ -13,14 +13,20 @@
       "Bash(npm run build:*)",
       "Bash(timeout 10 npm run dev)",
       "Bash(true)",
-      "mcp__context7__resolve-library-id"
+      "mcp__context7__resolve-library-id",
+      "Bash(npm run validate:env:*)",
+      "Bash(npx husky init:*)",
+      "Bash(chmod:*)",
+      "Bash(npm run lint)",
+      "Bash(npm run lint:*)",
+      "Bash(npm run format:check:*)",
+      "Bash(npm run format:*)",
+      "Bash(npm run type-check:*)",
+      "Bash(git add:*)",
+      "Bash(npm run spell:check:*)",
+      "Bash(npm run quality:check:*)"
     ]
   },
   "enableAllProjectMcpServers": true,
-  "enabledMcpjsonServers": [
-    "shadcn-ui",
-    "sequential-thinking",
-    "context7",
-    "playwright"
-  ]
+  "enabledMcpjsonServers": ["shadcn-ui", "sequential-thinking", "context7", "playwright"]
 }
