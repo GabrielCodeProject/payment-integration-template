@@ -108,7 +108,15 @@
     "maxmemory",
     "allkeys",
     "nette",
-    "rediscommander"
+    "rediscommander",
+    "Signup",
+    "signup",
+    "Cancelation",
+    "cust",
+    "retryable",
+    "gtag",
+    "Luhn",
+    "luhn"
   ],
   "flagWords": [],
   "ignorePaths": [

@@ -50,7 +50,8 @@ export const authActionClient = actionClient.use(async ({ next }) => {
  * Use this for actions that need rate limiting protection
  */
 export const rateLimitedActionClient = actionClient.use(async ({ next }) => {
-  const _env = getServerEnv();
+  // Environment validation for rate limiting
+  getServerEnv();
 
   // TODO: Implement rate limiting logic
   // This could use Redis, in-memory store, or database-based rate limiting
@@ -109,7 +110,7 @@ export function createActionError(
 export type ActionSuccess<T> = {
   success: true;
   data: T;
-  message?: string;
+  message: string | undefined;
 };
 
 export type ActionError = {

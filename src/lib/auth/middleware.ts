@@ -9,8 +9,8 @@
  */
 
 import { NextRequest, NextResponse } from "next/server";
-import { auth } from "./config";
-import type { Session, User } from "./config";
+import { auth } from "@/auth/config";
+import type { Session, User } from "@/auth/config";
 
 // Types for middleware configuration
 export interface AuthConfig {
@@ -362,7 +362,7 @@ export function getClientIP(request: NextRequest): string {
   const cfIP = request.headers.get("cf-connecting-ip");
 
   if (cfIP) return cfIP;
-  if (forwarded) return forwarded.split(",")[0].trim();
+  if (forwarded) return forwarded.split(",")[0]?.trim() ?? "unknown";
   if (realIP) return realIP;
 
   return "unknown";

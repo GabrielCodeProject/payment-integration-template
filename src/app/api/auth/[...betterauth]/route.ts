@@ -10,7 +10,7 @@
  * - etc.
  */
 
-import { auth } from "@/lib/auth/config";
+import { auth } from "@/auth/config";
 
 export const GET = auth.handler;
 export const POST = auth.handler;

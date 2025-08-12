@@ -1,27 +1,151 @@
 {
   "compilerOptions": {
-    "target": "ES2017",
-    "lib": ["dom", "dom.iterable", "esnext"],
+    // =============================================================================
+    // COMPILATION TARGET AND LIBRARIES
+    // =============================================================================
+    "target": "ES2022", // Updated for better performance and modern features
+    "lib": ["dom", "dom.iterable", "esnext", "es2022"],
     "allowJs": true,
     "skipLibCheck": true,
+
+    // =============================================================================
+    // STRICT TYPE CHECKING (Enhanced for maximum type safety)
+    // =============================================================================
     "strict": true,
-    "noEmit": true,
-    "esModuleInterop": true,
+    "noImplicitAny": true,
+    "strictNullChecks": true,
+    "strictFunctionTypes": true,
+    "strictBindCallApply": true,
+    "strictPropertyInitialization": true,
+    "noImplicitThis": true,
+    "noImplicitReturns": true,
+    "noFallthroughCasesInSwitch": true,
+    "noUncheckedIndexedAccess": true,
+    "exactOptionalPropertyTypes": true,
+
+    // =============================================================================
+    // ADDITIONAL CHECKS (For code quality and reliability)
+    // =============================================================================
+    "noUnusedLocals": true,
+    "noUnusedParameters": true,
+    "noImplicitOverride": true,
+    "allowUnreachableCode": false,
+    "allowUnusedLabels": false,
+
+    // =============================================================================
+    // MODULE SYSTEM (Optimized for NextJS and Node.js)
+    // =============================================================================
     "module": "esnext",
     "moduleResolution": "bundler",
+    "allowSyntheticDefaultImports": true,
+    "esModuleInterop": true,
+    "forceConsistentCasingInFileNames": true,
     "resolveJsonModule": true,
     "isolatedModules": true,
+
+    // =============================================================================
+    // EMIT (Optimized for NextJS builds)
+    // =============================================================================
+    "noEmit": true,
+    "declaration": false,
+    "declarationMap": false,
+    "sourceMap": true,
+    "removeComments": false,
+    "importHelpers": true,
+    "downlevelIteration": true,
+
+    // =============================================================================
+    // JSX (NextJS React configuration)
+    // =============================================================================
     "jsx": "preserve",
+    "jsxImportSource": "react",
+
+    // =============================================================================
+    // PERFORMANCE (Build optimization)
+    // =============================================================================
     "incremental": true,
+    "tsBuildInfoFile": ".next/.tsbuildinfo",
+
+    // =============================================================================
+    // NEXTJS PLUGIN
+    // =============================================================================
     "plugins": [
       {
         "name": "next"
       }
     ],
+
+    // =============================================================================
+    // PATH ALIASES (Comprehensive import path mapping)
+    // =============================================================================
+    "baseUrl": ".",
     "paths": {
-      "@/*": ["./src/*"]
+      // Root level
+      "@/*": ["./src/*"],
+
+      // Core directories
+      "@/components/*": ["./src/components/*"],
+      "@/lib/*": ["./src/lib/*"],
+      "@/app/*": ["./src/app/*"],
+      "@/types/*": ["./src/types/*"],
+
+      // Feature-specific directories
+      "@/services/*": ["./src/services/*"],
+      "@/hooks/*": ["./src/hooks/*"],
+      "@/utils/*": ["./src/utils/*"],
+      "@/config/*": ["./src/config/*"],
+
+      // Auth-specific aliases
+      "@/auth": ["./src/lib/auth"],
+      "@/auth/*": ["./src/lib/auth/*"],
+
+      // UI and components
+      "@/ui": ["./src/components/ui"],
+      "@/ui/*": ["./src/components/ui/*"],
+      "@/components": ["./src/components"],
+
+      // API and server
+      "@/api/*": ["./src/app/api/*"],
+      "@/server/*": ["./src/server/*"],
+
+      // Data and database
+      "@/data/*": ["./src/data/*"],
+      "@/db/*": ["./src/db/*"],
+      "@/prisma/*": ["./prisma/*"],
+
+      // Styles and assets
+      "@/styles/*": ["./src/styles/*"],
+      "@/assets/*": ["./src/assets/*"],
+      "@/public/*": ["./public/*"],
+
+      // Payment and Stripe specific
+      "@/stripe/*": ["./src/lib/stripe/*"],
+      "@/payments/*": ["./src/lib/payments/*"]
     }
   },
-  "include": ["next-env.d.ts", "**/*.ts", "**/*.tsx", ".next/types/**/*.ts"],
-  "exclude": ["node_modules"]
+
+  // =============================================================================
+  // INCLUDE/EXCLUDE PATTERNS
+  // =============================================================================
+  "include": ["next-env.d.ts", "**/*.ts", "**/*.tsx", ".next/types/**/*.ts", "src/**/*"],
+  "exclude": [
+    "node_modules",
+    ".next",
+    "dist",
+    "build",
+    "coverage",
+    "**/*.test.ts",
+    "**/*.test.tsx",
+    "**/*.spec.ts",
+    "**/*.spec.tsx",
+    "prisma/seed.ts"
+  ],
+
+  // =============================================================================
+  // TYPE ACQUISITION (For better IntelliSense)
+  // =============================================================================
+  "typeAcquisition": {
+    "enable": true,
+    "include": ["node", "react", "next"]
+  }
 }

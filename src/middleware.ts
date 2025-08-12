@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { getClientEnv } from "./lib/env";
+import { getClientEnv } from "@/lib/env";
 import {
   validateRouteAccess,
   getClientIP,
@@ -7,7 +7,7 @@ import {
   checkRateLimit,
   defaultAuthConfig,
   type AuthConfig,
-} from "./lib/auth/middleware";
+} from "@/auth/middleware";
 
 /**
  * Next.js Middleware for Payment Integration Template

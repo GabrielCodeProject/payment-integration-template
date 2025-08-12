@@ -35,7 +35,8 @@
       "Bash(PGPASSWORD=31d1985182118f04d2be343e1bfedbb8 psql:*)",
       "Bash(npx prisma migrate reset:*)",
       "Bash(npx prisma generate:*)",
-      "Bash(npx prisma db seed:*)"
+      "Bash(npx prisma db seed:*)",
+      "Bash(npx tsc:*)"
     ]
   },
   "enableAllProjectMcpServers": true,
