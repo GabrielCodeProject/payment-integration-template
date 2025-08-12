@@ -33,6 +33,10 @@
   script for task 2.4
 - `docs/database-constraints-verification.md` - Database constraints verification report and
   documentation
+- `scripts/verify-index-performance.ts` - Database index performance verification script for task
+  2.5
+- `docs/database-index-strategy.md` - Database index strategy and performance optimization
+  documentation
 - `.env` - Environment variables for Docker development setup
 - `.env.example` - Environment variables template with database configuration
 - `.github/workflows/ci.yml` - GitHub Actions CI/CD pipeline
@@ -67,7 +71,7 @@
 - [x] 2.3 Complete Prisma Schema Creation (Users, Products, Orders, Subscriptions, PaymentMethods,
       DiscountCodes)
 - [x] 2.4 Database Relationships and Constraints Implementation
-- [ ] 2.5 Performance Indexes Creation for optimized queries
+- [x] 2.5 Performance Indexes Creation for optimized queries
 - [ ] 2.6 Audit Logging Tables and Triggers Setup
 - [ ] 2.7 Database Migration Files Creation
 - [ ] 2.8 Database Seeding Script Implementation

@@ -78,6 +78,7 @@ model Account {
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
   
   @@unique([provider, providerAccountId])
+  @@index([userId])
   @@map("accounts")
 }
 
@@ -89,6 +90,8 @@ model Session {
   
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
   
+  @@index([userId])
+  @@index([expires])
   @@map("sessions")
 }
 
@@ -147,6 +150,10 @@ model Product {
   @@index([stripePriceId])
   @@index([stripeProductId])
   @@index([createdAt])
+  // Composite indexes for product catalog performance
+  @@index([isActive, type])
+  @@index([isActive, createdAt])
+  @@index([type, isActive, createdAt])
   @@map("products")
 }
 
@@ -229,6 +236,12 @@ model Order {
   @@index([customerEmail])
   @@index([createdAt])
   @@index([stripePaymentIntentId])
+  @@index([paymentMethodId])
+  @@index([discountCodeId])
+  // Composite indexes for better query performance
+  @@index([userId, status])
+  @@index([customerEmail, createdAt])
+  @@index([status, paymentStatus])
   @@map("orders")
 }
 
@@ -341,6 +354,11 @@ model Subscription {
   @@index([stripeSubscriptionId])
   @@index([currentPeriodEnd])
   @@index([createdAt])
+  @@index([productId])
+  // Composite indexes for better query performance
+  @@index([userId, status])
+  @@index([stripeCustomerId, status])
+  @@index([status, currentPeriodEnd])
   @@map("subscriptions")
 }
 
@@ -394,6 +412,8 @@ model PaymentMethod {
   @@index([userId])
   @@index([stripePaymentMethodId])
   @@index([isDefault])
+  // Composite index for default payment method lookup
+  @@index([userId, isDefault])
   @@map("payment_methods")
 }
 
@@ -447,6 +467,8 @@ model DiscountCode {
   @@index([isActive])
   @@index([expiresAt])
   @@index([createdAt])
+  // Composite index for valid discount code lookup
+  @@index([isActive, expiresAt])
   @@map("discount_codes")
 }
 
