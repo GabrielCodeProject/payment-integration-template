@@ -35,9 +35,9 @@
 - [x] 1.1 Dependencies Installation (NextJS, TypeScript, Prisma, BetterAuth, Stripe, Shadcn UI, Zod,
       next-safe-action, Resend)
 - [x] 1.2 Environment Variables Setup (development and production templates)
-- [ ] 1.3 ESLint and Prettier Configuration with pre-commit hooks
-- [ ] 1.4 Git Configuration and repository initialization
-- [ ] 1.5 Docker Configuration for local development environment
+- [x] 1.3 ESLint and Prettier Configuration with pre-commit hooks
+- [x] 1.4 Git Configuration and repository initialization
+- [x] 1.5 Docker Configuration for local development environment
 - [ ] 1.6 Next.js Optimization (next.config.js with security headers)
 - [ ] 1.7 Database Setup (Prisma schema, migrations, client generation)
 - [ ] 1.8 Middleware Setup for authentication and route protection

@@ -24,7 +24,13 @@
       "Bash(npm run type-check:*)",
       "Bash(git add:*)",
       "Bash(npm run spell:check:*)",
-      "Bash(npm run quality:check:*)"
+      "Bash(npm run quality:check:*)",
+      "Bash(git config:*)",
+      "Bash(./scripts/docker-monitor.sh:*)",
+      "Bash(openssl rand:*)",
+      "Bash(docker-compose up:*)",
+      "Bash(docker exec:*)",
+      "Bash(docker-compose:*)"
     ]
   },
   "enableAllProjectMcpServers": true,

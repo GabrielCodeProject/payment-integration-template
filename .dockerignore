@@ -1,0 +1,139 @@
+# .dockerignore - NextJS Stripe Payment Template
+# Excludes files and directories from Docker build context
+
+# Git
+.git
+.gitignore
+.gitattributes
+
+# Documentation
+*.md
+README*
+CONTRIBUTING*
+CHANGELOG*
+docs/
+
+# Development files
+.env.local
+.env.*.local
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# Dependencies (will be installed in container)
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Next.js build artifacts
+.next/
+out/
+build/
+
+# TypeScript build info
+*.tsbuildinfo
+
+# Testing
+coverage/
+.nyc_output
+junit.xml
+test-results/
+playwright-report/
+test-results.xml
+
+# Logs
+logs/
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+lerna-debug.log*
+
+# Runtime data
+pids/
+*.pid
+*.seed
+*.pid.lock
+
+# Cache directories
+.cache/
+.parcel-cache/
+.eslintcache
+.stylelintcache
+
+# Temporary directories
+tmp/
+temp/
+
+# Editor directories and files
+.vscode/
+.idea/
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
+
+# OS generated files
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+# Docker files (avoid infinite recursion)
+Dockerfile*
+docker-compose*.yml
+.dockerignore
+
+# Local data directories (will be mounted as volumes)
+data/
+uploads/
+backups/
+
+# Environment files (except examples)
+.env
+.env.local
+.env.*.local
+
+# Include examples
+!.env.example
+!.env.production.example
+
+# Testing and development tools
+playwright/
+.playwright/
+
+# Build artifacts
+dist/
+*.tgz
+
+# Vercel
+.vercel
+
+# Husky
+.husky/_/
+
+# Local development scripts
+scripts/local-*
+
+# IDE specific files
+.vscode/settings.json
+.vscode/launch.json
+.vscode/extensions.json
+
+# MacOS
+.AppleDouble
+.LSOverride
+
+# Windows
+Desktop.ini
+$RECYCLE.BIN/
+
+# Linux
+*~

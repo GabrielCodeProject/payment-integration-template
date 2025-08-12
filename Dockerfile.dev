@@ -1,0 +1,77 @@
+# Development Dockerfile for NextJS Stripe Payment Template
+# Optimized for hot reload, debugging, and development workflow
+FROM node:18-alpine
+
+# Install additional development tools
+RUN apk add --no-cache \
+    libc6-compat \
+    curl \
+    git \
+    openssh \
+    bash \
+    vim \
+    nano \
+    && rm -rf /var/cache/apk/*
+
+# Set working directory
+WORKDIR /app
+
+# Install global development tools
+RUN npm install -g \
+    nodemon \
+    tsx \
+    @prisma/client \
+    prisma
+
+# Copy package files
+COPY package*.json ./
+
+# Install all dependencies (including dev dependencies)
+RUN npm ci --include=dev && npm cache clean --force
+
+# Copy Prisma schema for client generation
+COPY prisma ./prisma/
+
+# Generate Prisma client
+RUN npx prisma generate
+
+# Copy the entire codebase (this will be overridden by volume mount)
+COPY . .
+
+# Create necessary directories
+RUN mkdir -p uploads && \
+    mkdir -p .next && \
+    mkdir -p node_modules/.cache
+
+# Set environment variables for development
+ENV NODE_ENV=development
+ENV NEXT_TELEMETRY_DISABLED=1
+ENV WATCHPACK_POLLING=true
+ENV CHOKIDAR_USEPOLLING=true
+
+# Expose ports
+EXPOSE 3000
+EXPOSE 5555
+EXPOSE 9229
+
+# Add development user (optional, for debugging)
+RUN addgroup --system --gid 1001 devuser && \
+    adduser --system --uid 1001 --ingroup devuser devuser
+
+# Set proper permissions for development
+RUN chown -R devuser:devuser /app
+
+# Switch to development user
+USER devuser
+
+# Health check for development
+HEALTHCHECK --interval=60s --timeout=10s --start-period=60s --retries=2 \
+    CMD curl -f http://localhost:3000/api/health || exit 1
+
+# Default command for development
+CMD ["npm", "run", "dev"]
+
+# Add labels for development
+LABEL environment="development"
+LABEL maintainer="NextJS Stripe Template Development Team"
+LABEL description="Development container for NextJS Stripe Payment Template with hot reload"

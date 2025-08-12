@@ -1,0 +1,291 @@
+# Docker Compose configuration for NextJS Stripe Payment Template
+# Local development environment with PostgreSQL, Redis, and MailHog
+version: "3.8"
+
+services:
+  # ============================================================================
+  # APPLICATION SERVICE
+  # ============================================================================
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile.dev
+    ports:
+      - "3000:3000"
+    environment:
+      - NODE_ENV=development
+      - DATABASE_URL=postgresql://postgres:${POSTGRES_PASSWORD:-secure_dev_password_2024}@postgres:5432/payment_template_dev
+      - REDIS_URL=redis://:${REDIS_PASSWORD:-secure_redis_password_2024}@redis:6379
+      - STRIPE_SECRET_KEY=${STRIPE_SECRET_KEY:-sk_test_placeholder}
+      - STRIPE_PUBLISHABLE_KEY=${STRIPE_PUBLISHABLE_KEY:-pk_test_placeholder}
+      - STRIPE_WEBHOOK_SECRET=${STRIPE_WEBHOOK_SECRET:-whsec_placeholder}
+      - NEXTAUTH_SECRET=${NEXTAUTH_SECRET:-dev-secret-change-in-production}
+      - NEXTAUTH_URL=http://localhost:3000
+      - RESEND_API_KEY=${RESEND_API_KEY:-re_placeholder}
+      - RESEND_FROM=${RESEND_FROM:-noreply@localhost}
+      # Development email configuration (uses MailHog)
+      - SMTP_HOST=mailhog
+      - SMTP_PORT=1025
+      - SMTP_USER=""
+      - SMTP_PASSWORD=""
+      - SMTP_SECURE=false
+    volumes:
+      # Mount source code for hot reload
+      - .:/app
+      # Exclude node_modules and .next for performance
+      - /app/node_modules
+      - /app/.next
+      # Mount uploads directory for file storage
+      - ./uploads:/app/uploads
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    networks:
+      - app-network
+    command: npm run dev
+    restart: unless-stopped
+    # Resource limits to prevent DoS attacks
+    deploy:
+      resources:
+        limits:
+          cpus: "1.0"
+          memory: 1G
+        reservations:
+          cpus: "0.25"
+          memory: 256M
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:3000/api/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+
+  # ============================================================================
+  # POSTGRESQL DATABASE
+  # ============================================================================
+  postgres:
+    image: postgres:15-alpine
+    container_name: payment-template-postgres
+    environment:
+      POSTGRES_DB: payment_template_dev
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-secure_dev_password_2024}
+      POSTGRES_INITDB_ARGS: "--encoding=UTF-8 --lc-collate=C --lc-ctype=C"
+      # Enable logical replication for potential future needs
+      POSTGRES_REPLICA_USER: replica
+      POSTGRES_REPLICA_PASSWORD: ${POSTGRES_REPLICA_PASSWORD:-secure_replica_password_2024}
+    ports:
+      - "5433:5432"
+    volumes:
+      # Persistent data storage
+      - postgres_data:/var/lib/postgresql/data
+      # Initialization scripts
+      - ./database/init:/docker-entrypoint-initdb.d
+      # Configuration files
+      - ./database/postgresql.conf:/etc/postgresql/postgresql.conf:ro
+    networks:
+      - app-network
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d payment_template_dev"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+    # Optimize PostgreSQL for development
+    command: >
+      postgres 
+      -c shared_preload_libraries=pg_stat_statements
+      -c pg_stat_statements.track=all
+      -c max_connections=200
+      -c shared_buffers=256MB
+      -c effective_cache_size=1GB
+      -c maintenance_work_mem=64MB
+      -c checkpoint_completion_target=0.9
+      -c wal_buffers=16MB
+      -c default_statistics_target=100
+      -c random_page_cost=1.1
+      -c effective_io_concurrency=200
+      -c work_mem=4MB
+      -c min_wal_size=1GB
+      -c max_wal_size=4GB
+    # Resource limits to prevent resource exhaustion
+    deploy:
+      resources:
+        limits:
+          cpus: "1.0"
+          memory: 1G
+        reservations:
+          cpus: "0.25"
+          memory: 512M
+
+  # ============================================================================
+  # REDIS CACHE
+  # ============================================================================
+  redis:
+    image: redis:7-alpine
+    container_name: payment-template-redis
+    ports:
+      - "6379:6379"
+    volumes:
+      # Persistent storage for Redis
+      - redis_data:/data
+      # Redis configuration
+      - ./database/redis.conf:/etc/redis/redis.conf:ro
+    networks:
+      - app-network
+    restart: unless-stopped
+    # Redis configuration for development with persistence and authentication
+    command: >
+      redis-server /etc/redis/redis.conf
+      --requirepass ${REDIS_PASSWORD:-secure_redis_password_2024}
+      --appendonly yes
+      --appendfsync everysec
+      --save 900 1
+      --save 300 10
+      --save 60 10000
+      --maxmemory 256mb
+      --maxmemory-policy allkeys-lru
+    # Resource limits for Redis
+    deploy:
+      resources:
+        limits:
+          cpus: "0.5"
+          memory: 512M
+        reservations:
+          cpus: "0.1"
+          memory: 128M
+    healthcheck:
+      test:
+        [
+          "CMD",
+          "redis-cli",
+          "-a",
+          "${REDIS_PASSWORD:-secure_redis_password_2024}",
+          "ping",
+        ]
+      interval: 10s
+      timeout: 3s
+      retries: 5
+      start_period: 10s
+
+  # ============================================================================
+  # MAILHOG EMAIL TESTING
+  # ============================================================================
+  mailhog:
+    image: mailhog/mailhog:latest
+    container_name: payment-template-mailhog
+    ports:
+      - "1025:1025" # SMTP server
+      - "8025:8025" # Web interface
+    networks:
+      - app-network
+    restart: unless-stopped
+    healthcheck:
+      test:
+        [
+          "CMD",
+          "wget",
+          "--quiet",
+          "--tries=1",
+          "--spider",
+          "http://localhost:8025",
+        ]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+    # Resource limits for MailHog
+    deploy:
+      resources:
+        limits:
+          cpus: "0.25"
+          memory: 128M
+        reservations:
+          cpus: "0.05"
+          memory: 32M
+
+  # ============================================================================
+  # ADMINER DATABASE MANAGEMENT (OPTIONAL)
+  # ============================================================================
+  adminer:
+    image: adminer:latest
+    container_name: payment-template-adminer
+    ports:
+      - "8080:8080"
+    environment:
+      ADMINER_DEFAULT_SERVER: postgres
+      ADMINER_DESIGN: "nette"
+    networks:
+      - app-network
+    restart: unless-stopped
+    # Resource limits for Adminer
+    deploy:
+      resources:
+        limits:
+          cpus: "0.25"
+          memory: 128M
+        reservations:
+          cpus: "0.05"
+          memory: 32M
+    depends_on:
+      - postgres
+    profiles:
+      - tools # Only start with --profile tools
+
+  # ============================================================================
+  # REDIS COMMANDER (OPTIONAL)
+  # ============================================================================
+  redis-commander:
+    image: rediscommander/redis-commander:latest
+    container_name: payment-template-redis-commander
+    environment:
+      REDIS_HOSTS: "local:redis:6379:0:${REDIS_PASSWORD:-secure_redis_password_2024}"
+      HTTP_USER: ${REDIS_COMMANDER_USER:-admin}
+      HTTP_PASSWORD: ${REDIS_COMMANDER_PASSWORD:-secure_commander_password_2024}
+    ports:
+      - "8081:8081"
+    networks:
+      - app-network
+    restart: unless-stopped
+    # Resource limits for Redis Commander
+    deploy:
+      resources:
+        limits:
+          cpus: "0.25"
+          memory: 128M
+        reservations:
+          cpus: "0.05"
+          memory: 32M
+    depends_on:
+      - redis
+    profiles:
+      - tools # Only start with --profile tools
+
+# ============================================================================
+# VOLUMES
+# ============================================================================
+volumes:
+  postgres_data:
+    driver: local
+    driver_opts:
+      type: none
+      o: bind
+      device: ./data/postgres
+  redis_data:
+    driver: local
+    driver_opts:
+      type: none
+      o: bind
+      device: ./data/redis
+
+# ============================================================================
+# NETWORKS
+# ============================================================================
+networks:
+  app-network:
+    driver: bridge
+    ipam:
+      config:
+        - subnet: 172.20.0.0/16

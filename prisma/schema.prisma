@@ -1,0 +1,23 @@
+// This is a minimal Prisma schema file for Docker testing
+// The full schema will be implemented in Task 2.3
+// This file allows Docker containers to build successfully
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// Minimal User model for initial setup
+model User {
+  id        String   @id @default(cuid())
+  email     String   @unique
+  name      String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("users")
+}
