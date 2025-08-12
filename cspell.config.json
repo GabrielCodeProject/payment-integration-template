@@ -96,7 +96,19 @@
     "oneline",
     "cpus",
     "gabrieldev",
-    "requirepass"
+    "requirepass",
+    "tshirt",
+    "freeship",
+    "TSHIRT",
+    "FREESHIP",
+    "healthcheck",
+    "ctype",
+    "appendfsync",
+    "everysec",
+    "maxmemory",
+    "allkeys",
+    "nette",
+    "rediscommander"
   ],
   "flagWords": [],
   "ignorePaths": [

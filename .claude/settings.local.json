@@ -30,7 +30,12 @@
       "Bash(openssl rand:*)",
       "Bash(docker-compose up:*)",
       "Bash(docker exec:*)",
-      "Bash(docker-compose:*)"
+      "Bash(docker-compose:*)",
+      "Bash(npx prisma migrate dev:*)",
+      "Bash(PGPASSWORD=31d1985182118f04d2be343e1bfedbb8 psql:*)",
+      "Bash(npx prisma migrate reset:*)",
+      "Bash(npx prisma generate:*)",
+      "Bash(npx prisma db seed:*)"
     ]
   },
   "enableAllProjectMcpServers": true,

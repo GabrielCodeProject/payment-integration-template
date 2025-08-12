@@ -1,6 +1,5 @@
-// This is a minimal Prisma schema file for Docker testing
-// The full schema will be implemented in Task 2.3
-// This file allows Docker containers to build successfully
+// NextJS Stripe Payment Integration Template - Comprehensive Database Schema
+// Designed for security, scalability, and Stripe integration compatibility
 
 generator client {
   provider = "prisma-client-js"
@@ -11,13 +10,469 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-// Minimal User model for initial setup
+// User management with authentication and payment preferences
 model User {
-  id        String   @id @default(cuid())
-  email     String   @unique
-  name      String?
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-
+  id                String   @id @default(cuid())
+  email             String   @unique
+  name              String?
+  emailVerified     DateTime?
+  image             String?
+  phone             String?
+  
+  // Authentication & Security
+  hashedPassword    String?
+  twoFactorEnabled  Boolean  @default(false)
+  isActive          Boolean  @default(true)
+  role              UserRole @default(CUSTOMER)
+  
+  // Stripe Integration
+  stripeCustomerId  String?  @unique
+  
+  // Payment Preferences
+  preferredCurrency String   @default("usd")
+  timezone          String   @default("UTC")
+  
+  // Timestamps
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+  lastLoginAt       DateTime?
+  
+  // Relations
+  orders            Order[]
+  subscriptions     Subscription[]
+  paymentMethods    PaymentMethod[]
+  usedDiscountCodes UserDiscountCode[]
+  sessions          Session[]
+  accounts          Account[]
+  
+  // Indexes for performance
+  @@index([email])
+  @@index([stripeCustomerId])
+  @@index([role])
+  @@index([createdAt])
   @@map("users")
+}
+
+// User roles for authorization
+enum UserRole {
+  CUSTOMER
+  ADMIN
+  SUPPORT
+}
+
+// NextAuth.js compatibility models
+model Account {
+  id                String  @id @default(cuid())
+  userId            String
+  type              String
+  provider          String
+  providerAccountId String
+  refresh_token     String? @db.Text
+  access_token      String? @db.Text
+  expires_at        Int?
+  token_type        String?
+  scope             String?
+  id_token          String? @db.Text
+  session_state     String?
+  
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  @@unique([provider, providerAccountId])
+  @@map("accounts")
+}
+
+model Session {
+  id           String   @id @default(cuid())
+  sessionToken String   @unique
+  userId       String
+  expires      DateTime
+  
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  @@map("sessions")
+}
+
+// Products with flexible pricing and Stripe integration
+model Product {
+  id              String        @id @default(cuid())
+  name            String
+  description     String?       @db.Text
+  shortDescription String?
+  
+  // Pricing
+  price           Decimal       @db.Decimal(10, 2)
+  currency        String        @default("usd")
+  compareAtPrice  Decimal?      @db.Decimal(10, 2) // For showing discounts
+  
+  // Product management
+  sku             String?       @unique
+  isActive        Boolean       @default(true)
+  isDigital       Boolean       @default(false)
+  requiresShipping Boolean      @default(true)
+  
+  // Inventory
+  stockQuantity   Int?          // null = unlimited
+  lowStockThreshold Int?
+  
+  // SEO & Display
+  slug            String        @unique
+  metaTitle       String?
+  metaDescription String?
+  tags            String[]
+  
+  // Media
+  images          String[]
+  thumbnail       String?
+  
+  // Stripe Integration
+  stripePriceId   String?       @unique
+  stripeProductId String?       @unique
+  
+  // Product type for subscriptions
+  type            ProductType   @default(ONE_TIME)
+  billingInterval BillingInterval?
+  
+  // Timestamps
+  createdAt       DateTime      @default(now())
+  updatedAt       DateTime      @updatedAt
+  
+  // Relations
+  orderItems      OrderItem[]
+  subscriptions   Subscription[]
+  
+  // Indexes
+  @@index([isActive])
+  @@index([type])
+  @@index([slug])
+  @@index([stripePriceId])
+  @@index([stripeProductId])
+  @@index([createdAt])
+  @@map("products")
+}
+
+// Product types for different billing models
+enum ProductType {
+  ONE_TIME
+  SUBSCRIPTION
+  USAGE_BASED
+}
+
+// Billing intervals for subscriptions
+enum BillingInterval {
+  DAY
+  WEEK
+  MONTH
+  YEAR
+}
+
+// Orders for tracking purchases and payment processing
+model Order {
+  id                String      @id @default(cuid())
+  orderNumber       String      @unique
+  
+  // Customer information
+  userId            String?
+  customerEmail     String
+  customerName      String?
+  
+  // Pricing
+  subtotal          Decimal     @db.Decimal(10, 2)
+  taxAmount         Decimal     @db.Decimal(10, 2) @default(0)
+  shippingAmount    Decimal     @db.Decimal(10, 2) @default(0)
+  discountAmount    Decimal     @db.Decimal(10, 2) @default(0)
+  total             Decimal     @db.Decimal(10, 2)
+  currency          String      @default("usd")
+  
+  // Order status and fulfillment
+  status            OrderStatus @default(PENDING)
+  paymentStatus     PaymentStatus @default(PENDING)
+  fulfillmentStatus FulfillmentStatus @default(UNFULFILLED)
+  
+  // Shipping information
+  shippingAddress   Json?       // Flexible address structure
+  billingAddress    Json?       // Flexible address structure
+  shippingMethod    String?
+  trackingNumber    String?
+  
+  // Payment information
+  stripePaymentIntentId String? @unique
+  stripeChargeId        String?
+  paymentMethodId       String?
+  
+  // Discount codes
+  discountCodeId    String?
+  
+  // Notes and metadata
+  notes             String?     @db.Text
+  internalNotes     String?     @db.Text
+  metadata          Json?
+  
+  // Timestamps
+  createdAt         DateTime    @default(now())
+  updatedAt         DateTime    @updatedAt
+  paidAt            DateTime?
+  shippedAt         DateTime?
+  deliveredAt       DateTime?
+  cancelledAt       DateTime?
+  
+  // Relations
+  user              User?       @relation(fields: [userId], references: [id])
+  orderItems        OrderItem[]
+  paymentMethod     PaymentMethod? @relation(fields: [paymentMethodId], references: [id])
+  discountCode      DiscountCode? @relation(fields: [discountCodeId], references: [id])
+  
+  // Indexes
+  @@index([orderNumber])
+  @@index([userId])
+  @@index([status])
+  @@index([paymentStatus])
+  @@index([customerEmail])
+  @@index([createdAt])
+  @@index([stripePaymentIntentId])
+  @@map("orders")
+}
+
+// Order status enum
+enum OrderStatus {
+  PENDING
+  CONFIRMED
+  PROCESSING
+  SHIPPED
+  DELIVERED
+  CANCELLED
+  REFUNDED
+}
+
+// Payment status enum
+enum PaymentStatus {
+  PENDING
+  AUTHORIZED
+  PAID
+  PARTIALLY_PAID
+  FAILED
+  CANCELLED
+  REFUNDED
+  PARTIALLY_REFUNDED
+}
+
+// Fulfillment status enum
+enum FulfillmentStatus {
+  UNFULFILLED
+  PARTIALLY_FULFILLED
+  FULFILLED
+  RETURNED
+}
+
+// Order items for tracking individual products in orders
+model OrderItem {
+  id              String  @id @default(cuid())
+  orderId         String
+  productId       String
+  
+  // Product snapshot at time of order
+  productName     String
+  productSku      String?
+  productImage    String?
+  
+  // Pricing
+  unitPrice       Decimal @db.Decimal(10, 2)
+  quantity        Int
+  totalPrice      Decimal @db.Decimal(10, 2)
+  
+  // Metadata for product variants or customizations
+  metadata        Json?
+  
+  // Relations
+  order           Order   @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  product         Product @relation(fields: [productId], references: [id])
+  
+  // Indexes
+  @@index([orderId])
+  @@index([productId])
+  @@map("order_items")
+}
+
+// Subscriptions for recurring billing
+model Subscription {
+  id                    String             @id @default(cuid())
+  userId                String
+  productId             String
+  
+  // Stripe Integration
+  stripeSubscriptionId  String             @unique
+  stripeCustomerId      String
+  stripePriceId         String
+  
+  // Subscription details
+  status                SubscriptionStatus @default(ACTIVE)
+  billingInterval       BillingInterval
+  
+  // Pricing
+  unitPrice             Decimal            @db.Decimal(10, 2)
+  quantity              Int                @default(1)
+  currency              String             @default("usd")
+  
+  // Billing dates
+  currentPeriodStart    DateTime
+  currentPeriodEnd      DateTime
+  cancelAtPeriodEnd     Boolean            @default(false)
+  
+  // Trial information
+  trialStart            DateTime?
+  trialEnd              DateTime?
+  
+  // Timestamps
+  createdAt             DateTime           @default(now())
+  updatedAt             DateTime           @updatedAt
+  startedAt             DateTime           @default(now())
+  endedAt               DateTime?
+  cancelledAt           DateTime?
+  
+  // Metadata
+  metadata              Json?
+  
+  // Relations
+  user                  User               @relation(fields: [userId], references: [id])
+  product               Product            @relation(fields: [productId], references: [id])
+  
+  // Indexes
+  @@index([userId])
+  @@index([status])
+  @@index([stripeSubscriptionId])
+  @@index([currentPeriodEnd])
+  @@index([createdAt])
+  @@map("subscriptions")
+}
+
+// Subscription status enum
+enum SubscriptionStatus {
+  INCOMPLETE
+  INCOMPLETE_EXPIRED
+  TRIALING
+  ACTIVE
+  PAST_DUE
+  CANCELLED
+  UNPAID
+  PAUSED
+}
+
+// Payment methods for saved payment information
+model PaymentMethod {
+  id                  String            @id @default(cuid())
+  userId              String
+  
+  // Stripe Integration
+  stripePaymentMethodId String          @unique
+  
+  // Payment method details
+  type                PaymentMethodType
+  brand               String?           // e.g., "visa", "mastercard"
+  last4               String?           // Last 4 digits for cards
+  expiryMonth         Int?
+  expiryYear          Int?
+  
+  // Metadata
+  fingerprint         String?           // Unique identifier for deduplication
+  isDefault           Boolean           @default(false)
+  nickname            String?           // User-defined name
+  
+  // Billing address
+  billingAddress      Json?
+  
+  // Status
+  isActive            Boolean           @default(true)
+  
+  // Timestamps
+  createdAt           DateTime          @default(now())
+  updatedAt           DateTime          @updatedAt
+  
+  // Relations
+  user                User              @relation(fields: [userId], references: [id], onDelete: Cascade)
+  orders              Order[]
+  
+  // Indexes
+  @@index([userId])
+  @@index([stripePaymentMethodId])
+  @@index([isDefault])
+  @@map("payment_methods")
+}
+
+// Payment method types
+enum PaymentMethodType {
+  CARD
+  BANK_ACCOUNT
+  PAYPAL
+  APPLE_PAY
+  GOOGLE_PAY
+  OTHER
+}
+
+// Discount codes for promotions and marketing
+model DiscountCode {
+  id                String             @id @default(cuid())
+  code              String             @unique
+  name              String?            // Internal name for management
+  description       String?
+  
+  // Discount configuration
+  type              DiscountType
+  value             Decimal            @db.Decimal(10, 2) // Amount or percentage
+  currency          String?            // Required for fixed amount discounts
+  
+  // Usage limits
+  maxUses           Int?               // null = unlimited
+  maxUsesPerCustomer Int?              // null = unlimited per customer
+  currentUses       Int                @default(0)
+  
+  // Minimum requirements
+  minimumOrderAmount Decimal?          @db.Decimal(10, 2)
+  
+  // Validity period
+  startsAt          DateTime?
+  expiresAt         DateTime?
+  
+  // Status
+  isActive          Boolean            @default(true)
+  
+  // Timestamps
+  createdAt         DateTime           @default(now())
+  updatedAt         DateTime           @updatedAt
+  
+  // Relations
+  orders            Order[]
+  userUsages        UserDiscountCode[]
+  
+  // Indexes
+  @@index([code])
+  @@index([isActive])
+  @@index([expiresAt])
+  @@index([createdAt])
+  @@map("discount_codes")
+}
+
+// Discount types
+enum DiscountType {
+  PERCENTAGE
+  FIXED_AMOUNT
+  FREE_SHIPPING
+}
+
+// Tracking discount code usage per user
+model UserDiscountCode {
+  id             String       @id @default(cuid())
+  userId         String
+  discountCodeId String
+  usageCount     Int          @default(0)
+  firstUsedAt    DateTime     @default(now())
+  lastUsedAt     DateTime     @updatedAt
+  
+  // Relations
+  user           User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+  discountCode   DiscountCode @relation(fields: [discountCodeId], references: [id], onDelete: Cascade)
+  
+  // Unique constraint
+  @@unique([userId, discountCodeId])
+  @@index([userId])
+  @@index([discountCodeId])
+  @@map("user_discount_codes")
 }

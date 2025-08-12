@@ -70,6 +70,15 @@ const eslintConfig = [
     },
   },
 
+  // Prisma seed files
+  {
+    files: ["prisma/seed.ts", "prisma/seeds/**/*.ts"],
+    rules: {
+      "no-console": "off", // Allow console logs in seed scripts
+      "@typescript-eslint/no-unused-vars": "off", // Seed data variables are intentionally unused
+    },
+  },
+
   // Layout and page files
   {
     files: [
