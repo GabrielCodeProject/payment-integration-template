@@ -36,7 +36,9 @@
       "Bash(npx prisma migrate reset:*)",
       "Bash(npx prisma generate:*)",
       "Bash(npx prisma db seed:*)",
-      "Bash(npx tsc:*)"
+      "Bash(npx tsc:*)",
+      "Bash(npx prisma:*)",
+      "Bash(npm run:*)"
     ]
   },
   "enableAllProjectMcpServers": true,
