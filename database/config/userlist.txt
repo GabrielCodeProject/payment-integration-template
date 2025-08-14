@@ -1,0 +1,14 @@
+# PgBouncer User Authentication File
+# Generated SCRAM-SHA-256 hashes for secure authentication
+# Format: "username" "SCRAM-SHA-256$iterations:salt$storedkey:serverkey"
+
+"app_readwrite" "SCRAM-SHA-256$4096:rn7hNwHD2vraIpk9LsvVbg==$O60n0ZKDR1lt27XpWNEKQHSOme/0GOch6IpJAgBKXy8=:TxTjPDDcwTaUcRIRF9BffXXLmmzG/K/Fzh5Zn6uty/4="
+"app_readonly" "SCRAM-SHA-256$4096:60O/WijZC899HKHc1jmUAQ==$9hsGfDr0f0yVpgrMpayMiict1iaZc5dgdN2WaCHGvEQ=:o60xu66cBSoxSyXprKLQeeEbjk/KleU2nXu44eujykM="
+"pgbouncer_admin" "SCRAM-SHA-256$4096:8FlX0203EroZB/Gi1z0szQ==$IJCP16640HMk8qoSGrqbORJMIMW/z1RqCSCT651dlG4=:N2tPP6wfUMRybHwDPp6hxe55fqvwie7ck/kqtC0P4/Y="
+"pgbouncer_monitor" "SCRAM-SHA-256$4096:Wh9MLob4YfZzkK8aW9cyng==$m7WlBJm8/tlu2u/ccwKQJSOZBnqhhnO/NBeg4K4qXRw=:LiELOUCkG1Z7QL0TrV5Sa64db6u1bZbZ/ndrVzogWUM="
+
+# SECURITY NOTES:
+# 1. Store this file with 600 permissions (readable only by owner)
+# 2. Keep passwords secure and rotate regularly
+# 3. Use environment variables for passwords in production
+# 4. Monitor authentication logs for security events

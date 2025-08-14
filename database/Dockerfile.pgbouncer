@@ -1,0 +1,46 @@
+# PgBouncer Docker Image for Secure Connection Pooling
+# Optimized for production security and PCI DSS compliance
+
+FROM alpine:3.19
+
+# Install PgBouncer and security essentials
+RUN apk add --no-cache \
+    pgbouncer \
+    postgresql-client \
+    ca-certificates \
+    openssl \
+    && rm -rf /var/cache/apk/*
+
+# Create non-root user for security
+RUN addgroup -g 1000 pgbouncer && \
+    adduser -u 1000 -G pgbouncer -s /bin/sh -D pgbouncer
+
+# Create necessary directories
+RUN mkdir -p /etc/pgbouncer /var/log/pgbouncer /var/run/pgbouncer && \
+    chown -R pgbouncer:pgbouncer /etc/pgbouncer /var/log/pgbouncer /var/run/pgbouncer
+
+# Copy configuration files
+COPY config/pgbouncer.ini /etc/pgbouncer/pgbouncer.ini
+COPY config/userlist.txt /etc/pgbouncer/userlist.txt
+
+# Set secure permissions
+RUN chmod 600 /etc/pgbouncer/userlist.txt && \
+    chmod 644 /etc/pgbouncer/pgbouncer.ini && \
+    chown pgbouncer:pgbouncer /etc/pgbouncer/userlist.txt /etc/pgbouncer/pgbouncer.ini
+
+# Health check script
+COPY scripts/pgbouncer-healthcheck.sh /usr/local/bin/healthcheck.sh
+RUN chmod +x /usr/local/bin/healthcheck.sh
+
+# Switch to non-root user
+USER pgbouncer
+
+# Expose PgBouncer port
+EXPOSE 6432
+
+# Health check for container orchestration
+HEALTHCHECK --interval=30s --timeout=5s --start-period=5s --retries=3 \
+    CMD /usr/local/bin/healthcheck.sh
+
+# Start PgBouncer
+CMD ["pgbouncer", "-u", "pgbouncer", "/etc/pgbouncer/pgbouncer.ini"]

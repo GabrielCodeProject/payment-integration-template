@@ -14,7 +14,7 @@ services:
       - "3000:3000"
     environment:
       - NODE_ENV=development
-      - DATABASE_URL=postgresql://postgres:${POSTGRES_PASSWORD:-secure_dev_password_2024}@postgres:5432/payment_template_dev
+      - DATABASE_URL=postgresql://app_readwrite:${APP_DB_PASSWORD:-secure_app_password_2024}@pgbouncer:6432/payment_template_dev
       - REDIS_URL=redis://:${REDIS_PASSWORD:-secure_redis_password_2024}@redis:6379
       - STRIPE_SECRET_KEY=${STRIPE_SECRET_KEY:-sk_test_placeholder}
       - STRIPE_PUBLISHABLE_KEY=${STRIPE_PUBLISHABLE_KEY:-pk_test_placeholder}
@@ -38,7 +38,7 @@ services:
       # Mount uploads directory for file storage
       - ./uploads:/app/uploads
     depends_on:
-      postgres:
+      pgbouncer:
         condition: service_healthy
       redis:
         condition: service_healthy
@@ -76,8 +76,9 @@ services:
       # Enable logical replication for potential future needs
       POSTGRES_REPLICA_USER: replica
       POSTGRES_REPLICA_PASSWORD: ${POSTGRES_REPLICA_PASSWORD:-secure_replica_password_2024}
-    ports:
-      - "5433:5432"
+    # Remove direct port exposure - only accessible through PgBouncer
+    expose:
+      - "5432"
     volumes:
       # Persistent data storage
       - postgres_data:/var/lib/postgresql/data
@@ -85,6 +86,9 @@ services:
       - ./database/init:/docker-entrypoint-initdb.d
       # Configuration files
       - ./database/postgresql.conf:/etc/postgresql/postgresql.conf:ro
+      - ./database/pg_hba.conf:/etc/postgresql/pg_hba.conf:ro
+      # SSL certificates for encrypted connections
+      - ./database/ssl:/etc/ssl/private:ro
       # Backup storage directories
       - ./data/backups:/var/lib/postgresql/backups
       # Backup scripts access
@@ -102,6 +106,7 @@ services:
     command: >
       postgres 
       -c config_file=/etc/postgresql/postgresql.conf
+      -c hba_file=/etc/postgresql/pg_hba.conf
       -c shared_preload_libraries=pg_stat_statements
       -c pg_stat_statements.track=all
       -c max_connections=200
@@ -131,6 +136,48 @@ services:
         reservations:
           cpus: "0.25"
           memory: 512M
+
+  # ============================================================================
+  # PGBOUNCER CONNECTION POOLING
+  # ============================================================================
+  pgbouncer:
+    build:
+      context: ./database
+      dockerfile: Dockerfile.pgbouncer
+    container_name: payment-template-pgbouncer
+    environment:
+      - PGBOUNCER_DATABASE=payment_template_dev
+      - PGBOUNCER_HOST=localhost
+      - PGBOUNCER_PORT=6432
+      - HEALTH_CHECK_TIMEOUT=5
+    ports:
+      - "6432:6432"
+    volumes:
+      # SSL certificates for TLS encryption
+      - ./database/ssl:/etc/ssl/private:ro
+      # Logs for security monitoring
+      - ./data/logs/pgbouncer:/var/log/pgbouncer
+    networks:
+      - app-network
+    restart: unless-stopped
+    depends_on:
+      postgres:
+        condition: service_healthy
+    healthcheck:
+      test: ["/usr/local/bin/healthcheck.sh"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 10s
+    # Resource limits for PgBouncer
+    deploy:
+      resources:
+        limits:
+          cpus: "0.5"
+          memory: 256M
+        reservations:
+          cpus: "0.1"
+          memory: 64M
 
   # ============================================================================
   # REDIS CACHE
