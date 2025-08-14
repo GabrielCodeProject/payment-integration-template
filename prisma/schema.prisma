@@ -501,7 +501,7 @@ model UserDiscountCode {
 
 // Comprehensive audit logging for security and compliance
 model AuditLog {
-  id            String   @id @default(cuid())
+  id            String   @id @default(dbgenerated("((('audit-'::text || (EXTRACT(epoch FROM now()))::text) || '-'::text) || (floor((random() * (10000)::double precision)))::text)"))
   tableName     String
   recordId      String
   action        String   // CREATE, UPDATE, DELETE

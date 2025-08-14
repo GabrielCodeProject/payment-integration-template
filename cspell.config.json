@@ -116,7 +116,8 @@
     "retryable",
     "gtag",
     "Luhn",
-    "luhn"
+    "luhn",
+    "datamodel"
   ],
   "flagWords": [],
   "ignorePaths": [
