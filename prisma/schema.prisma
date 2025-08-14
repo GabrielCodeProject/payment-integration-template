@@ -498,3 +498,34 @@ model UserDiscountCode {
   @@index([discountCodeId])
   @@map("user_discount_codes")
 }
+
+// Comprehensive audit logging for security and compliance
+model AuditLog {
+  id            String   @id @default(cuid())
+  tableName     String
+  recordId      String
+  action        String   // CREATE, UPDATE, DELETE
+  userId        String?
+  userEmail     String?
+  ipAddress     String?
+  userAgent     String?
+  oldValues     Json?
+  newValues     Json?
+  changedFields String[]
+  timestamp     DateTime @default(now())
+  sessionId     String?
+  requestId     String?
+  metadata      Json?
+  
+  // Performance indexes
+  @@index([tableName, recordId])
+  @@index([userId])
+  @@index([timestamp])
+  @@index([action])
+  @@index([tableName, action])
+  @@index([userId, timestamp])
+  // Composite index for efficient audit trail queries
+  @@index([tableName, recordId, timestamp])
+  @@index([userId, action, timestamp])
+  @@map("audit_logs")
+}

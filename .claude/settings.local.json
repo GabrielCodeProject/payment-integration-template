@@ -39,9 +39,16 @@
       "Bash(npx tsc:*)",
       "Bash(npx prisma:*)",
       "Bash(npm run:*)",
-      "Bash(npx tsx:*)"
+      "Bash(npx tsx:*)",
+      "Bash(node:*)",
+      "Bash(grep:*)"
     ]
   },
   "enableAllProjectMcpServers": true,
-  "enabledMcpjsonServers": ["shadcn-ui", "sequential-thinking", "context7", "playwright"]
+  "enabledMcpjsonServers": [
+    "shadcn-ui",
+    "sequential-thinking",
+    "context7",
+    "playwright"
+  ]
 }
