@@ -56,13 +56,13 @@ export async function enhancedDatabaseSeed(config?: Partial<SeedConfig>): Promis
     }
     
     // Create discount codes
-    const discountCodeIds = await seedDiscountCodes(prisma, finalConfig);
+    await seedDiscountCodes(prisma, finalConfig);
     
     // Phase 3: Payment infrastructure
     console.log('\n💳 Phase 3: Creating payment infrastructure...');
     
     // Create payment methods for customers
-    const paymentMethodIds = await seedPaymentMethods(prisma, finalConfig);
+    await seedPaymentMethods(prisma, finalConfig);
     
     // Create additional test payment scenarios
     await seedTestPaymentMethods(prisma, finalConfig);
@@ -71,7 +71,7 @@ export async function enhancedDatabaseSeed(config?: Partial<SeedConfig>): Promis
     console.log('\n📋 Phase 4: Creating transaction data...');
     
     // Create orders with realistic scenarios
-    const orderIds = await seedOrders(prisma, finalConfig);
+    await seedOrders(prisma, finalConfig);
     
     // Create user discount code usage records
     await seedUserDiscountCodes(prisma, finalConfig);
@@ -80,7 +80,7 @@ export async function enhancedDatabaseSeed(config?: Partial<SeedConfig>): Promis
     console.log('\n📊 Phase 5: Creating subscription data...');
     
     // Create subscriptions
-    const subscriptionIds = await seedSubscriptions(prisma, finalConfig);
+    await seedSubscriptions(prisma, finalConfig);
     
     // Create additional subscription test scenarios
     await seedTestSubscriptionScenarios(prisma, finalConfig);

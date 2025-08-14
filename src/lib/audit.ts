@@ -190,8 +190,8 @@ export class AuditService {
     } = options;
 
     try {
-      let whereConditions: string[] = [];
-      let parameters: unknown[] = [];
+      const whereConditions: string[] = [];
+      const parameters: unknown[] = [];
 
       if (startDate) {
         whereConditions.push(`timestamp >= $${parameters.length + 1}`);
@@ -255,8 +255,8 @@ export class AuditService {
     endDate?: Date
   ): Promise<AuditTrailSummary> {
     try {
-      let whereConditions: string[] = [];
-      let parameters: unknown[] = [];
+      const whereConditions: string[] = [];
+      const parameters: unknown[] = [];
 
       if (startDate) {
         whereConditions.push(`timestamp >= $${parameters.length + 1}`);

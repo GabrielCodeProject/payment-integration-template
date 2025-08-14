@@ -50,8 +50,8 @@ const DISCOUNT_CODE_TEMPLATES: DiscountCodeSeedData[] = [
     description: 'Free shipping on orders over $50',
     type: 'FREE_SHIPPING',
     value: 0.0,
-    maxUses: undefined, // Unlimited
-    maxUsesPerCustomer: undefined,
+    maxUses: null, // Unlimited
+    maxUsesPerCustomer: null,
     currentUses: 234,
     minimumOrderAmount: 50.0,
     startsAtDaysAgo: 20,
@@ -65,7 +65,7 @@ const DISCOUNT_CODE_TEMPLATES: DiscountCodeSeedData[] = [
     description: 'Free shipping on any order for premium customers',
     type: 'FREE_SHIPPING',
     value: 0.0,
-    maxUses: undefined,
+    maxUses: null,
     maxUsesPerCustomer: 10,
     currentUses: 89,
     minimumOrderAmount: 1.0,
@@ -162,8 +162,8 @@ const DISCOUNT_CODE_TEMPLATES: DiscountCodeSeedData[] = [
     description: '15% off for students and educators',
     type: 'PERCENTAGE',
     value: 15.0,
-    maxUses: undefined, // Unlimited for qualifying users
-    maxUsesPerCustomer: undefined,
+    maxUses: null, // Unlimited for qualifying users
+    maxUsesPerCustomer: null,
     currentUses: 145,
     minimumOrderAmount: 15.0,
     startsAtDaysAgo: 60,

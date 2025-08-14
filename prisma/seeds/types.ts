@@ -114,8 +114,8 @@ export interface DiscountCodeSeedData {
   type: 'PERCENTAGE' | 'FIXED_AMOUNT' | 'FREE_SHIPPING';
   value: number;
   currency?: string;
-  maxUses?: number;
-  maxUsesPerCustomer?: number;
+  maxUses?: number | null;
+  maxUsesPerCustomer?: number | null;
   currentUses: number;
   minimumOrderAmount?: number;
   startsAtDaysAgo?: number;
