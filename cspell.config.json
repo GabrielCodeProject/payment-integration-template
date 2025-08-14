@@ -119,7 +119,13 @@
     "luhn",
     "datamodel",
     "TENOFF",
-    "MAXEDOUT"
+    "MAXEDOUT",
+    "basebackup",
+    "runbooks",
+    "pgbackrest",
+    "pitr",
+    "PITR",
+    "datname"
   ],
   "flagWords": [],
   "ignorePaths": [
