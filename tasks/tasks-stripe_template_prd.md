@@ -109,7 +109,7 @@
 - [x] 3.1 BetterAuth Configuration (database adapter, email provider)
 - [x] 3.2 User Registration (form validation, email verification, welcome emails)
 - [x] 3.3 Login/Logout (secure authentication with rate limiting)
-- [ ] 3.4 Password Reset Flow (email verification, strength validation)
+- [x] 3.4 Password Reset Flow (email verification, strength validation)
 - [ ] 3.5 Role-Based Access Control (Admin, Customer, Support roles)
 - [ ] 3.6 Profile Management (editing, image upload, email changes)
 - [ ] 3.7 Session Management (refresh, concurrent limits)

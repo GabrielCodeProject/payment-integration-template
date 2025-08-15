@@ -11,7 +11,7 @@
 import { betterAuth } from "better-auth";
 import { prismaAdapter } from "better-auth/adapters/prisma";
 import { db } from "@/lib/db";
-import { sendEmailVerification } from "@/lib/email";
+import { sendEmailVerification, sendPasswordReset } from "@/lib/email";
 
 export const auth = betterAuth({
   // Database configuration
@@ -73,6 +73,13 @@ export const auth = betterAuth({
   emailVerification: {
     sendVerificationEmail: async ({ user, url }) => {
       await sendEmailVerification(user.email, url);
+    },
+  },
+
+  // Password reset configuration
+  forgetPassword: {
+    sendResetPassword: async ({ user, url }) => {
+      await sendPasswordReset(user.email, url);
     },
   },
 
