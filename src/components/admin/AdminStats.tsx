@@ -42,32 +42,83 @@ export function AdminStats() {
   const [stats, setStats] = useState<UserStats | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [retryCount, setRetryCount] = useState(0);
 
   useEffect(() => {
     fetchStats();
   }, []);
 
-  const fetchStats = async () => {
+  const fetchStats = async (isRetry = false) => {
     try {
       setIsLoading(true);
       setError(null);
 
-      const response = await fetch("/api/admin/users?stats=true");
+      if (isRetry) {
+        setRetryCount(prev => prev + 1);
+      }
+
+      const response = await fetch("/api/admin/users?stats=true", {
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        credentials: 'include', // Include cookies for auth
+      });
       
       if (!response.ok) {
-        throw new Error(`Failed to fetch stats: ${response.status}`);
+        if (response.status === 403) {
+          throw new Error("You don't have permission to view these statistics");
+        } else if (response.status === 401) {
+          throw new Error("Please log in to view statistics");
+        } else {
+          throw new Error(`Failed to fetch stats (${response.status})`);
+        }
       }
 
       const data = await response.json();
       
-      if (data.success) {
-        setStats(data.data);
+      if (data.success && data.data) {
+        // Validate and sanitize the data before setting
+        const sanitizedStats: UserStats = {
+          totalUsers: Number(data.data.totalUsers) || 0,
+          activeUsers: Number(data.data.activeUsers) || 0,
+          newUsersToday: Number(data.data.newUsersToday) || 0,
+          newUsersThisWeek: Number(data.data.newUsersThisWeek) || 0,
+          roleDistribution: data.data.roleDistribution || {
+            ADMIN: 0,
+            SUPPORT: 0,
+            CUSTOMER: 0,
+          },
+          recentActivity: {
+            totalActions: Number(data.data.recentActivity?.totalActions) || 0,
+            failedLogins: Number(data.data.recentActivity?.failedLogins) || 0,
+            successfulLogins: Number(data.data.recentActivity?.successfulLogins) || 0,
+          },
+        };
+        setStats(sanitizedStats);
       } else {
-        throw new Error(data.error || "Failed to fetch statistics");
+        throw new Error(data.error || "Invalid response format");
       }
     } catch (err) {
       console.error("Error fetching admin stats:", err);
       setError(err instanceof Error ? err.message : "Failed to load statistics");
+      
+      // Set fallback empty stats to prevent further errors
+      setStats({
+        totalUsers: 0,
+        activeUsers: 0,
+        newUsersToday: 0,
+        newUsersThisWeek: 0,
+        roleDistribution: {
+          ADMIN: 0,
+          SUPPORT: 0,
+          CUSTOMER: 0,
+        },
+        recentActivity: {
+          totalActions: 0,
+          failedLogins: 0,
+          successfulLogins: 0,
+        },
+      });
     } finally {
       setIsLoading(false);
     }
@@ -83,13 +134,34 @@ export function AdminStats() {
           </div>
           <p className="text-sm text-muted-foreground mt-2">{error}</p>
           <button
-            onClick={fetchStats}
-            className="mt-3 text-sm text-primary hover:underline"
+            onClick={() => fetchStats(true)}
+            className="mt-3 text-sm text-primary hover:underline disabled:opacity-50"
+            disabled={isLoading}
           >
-            Try again
+            {isLoading ? "Retrying..." : `Try again${retryCount > 0 ? ` (${retryCount})` : ""}`}
           </button>
         </CardContent>
       </Card>
+    );
+  }
+
+  // Show loading state for all cards
+  if (isLoading && !stats) {
+    return (
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+        {Array.from({ length: 4 }).map((_, index) => (
+          <Card key={index}>
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <Skeleton className="h-4 w-20" />
+              <Skeleton className="h-4 w-4" />
+            </CardHeader>
+            <CardContent>
+              <Skeleton className="h-8 w-16 mb-2" />
+              <Skeleton className="h-4 w-24" />
+            </CardContent>
+          </Card>
+        ))}
+      </div>
     );
   }
 
@@ -105,7 +177,9 @@ export function AdminStats() {
           {isLoading ? (
             <Skeleton className="h-8 w-16" />
           ) : (
-            <div className="text-2xl font-bold">{stats?.totalUsers.toLocaleString()}</div>
+            <div className="text-2xl font-bold">
+              {stats?.totalUsers?.toLocaleString() ?? '0'}
+            </div>
           )}
           <div className="flex items-center gap-2 mt-2">
             {isLoading ? (
@@ -113,9 +187,9 @@ export function AdminStats() {
             ) : (
               <>
                 <Badge variant="secondary" className="text-xs">
-                  {stats?.activeUsers} active
+                  {stats?.activeUsers ?? 0} active
                 </Badge>
-                {stats && stats.activeUsers > 0 && (
+                {stats && stats.activeUsers > 0 && stats.totalUsers > 0 && (
                   <div className="text-xs text-muted-foreground">
                     {Math.round((stats.activeUsers / stats.totalUsers) * 100)}% active
                   </div>
@@ -136,7 +210,7 @@ export function AdminStats() {
           {isLoading ? (
             <Skeleton className="h-8 w-12" />
           ) : (
-            <div className="text-2xl font-bold">{stats?.newUsersToday}</div>
+            <div className="text-2xl font-bold">{stats?.newUsersToday ?? 0}</div>
           )}
           <div className="flex items-center gap-2 mt-2">
             {isLoading ? (
@@ -145,7 +219,7 @@ export function AdminStats() {
               <>
                 <TrendingUp className="size-3 text-green-500" />
                 <span className="text-xs text-muted-foreground">
-                  {stats?.newUsersThisWeek} this week
+                  {stats?.newUsersThisWeek ?? 0} this week
                 </span>
               </>
             )}
@@ -168,16 +242,20 @@ export function AdminStats() {
             </div>
           ) : (
             <div className="space-y-2">
-              {stats?.roleDistribution && Object.entries(stats.roleDistribution).map(([role, count]) => (
-                <div key={role} className="flex items-center justify-between">
-                  <RoleBadge 
-                    role={role as UserRole} 
-                    size="sm" 
-                    showPermissionTooltip={false}
-                  />
-                  <span className="text-sm font-medium">{count}</span>
-                </div>
-              ))}
+              {stats?.roleDistribution ? (
+                Object.entries(stats.roleDistribution).map(([role, count]) => (
+                  <div key={role} className="flex items-center justify-between">
+                    <RoleBadge 
+                      role={role as UserRole} 
+                      size="sm" 
+                      showPermissionTooltip={false}
+                    />
+                    <span className="text-sm font-medium">{count ?? 0}</span>
+                  </div>
+                ))
+              ) : (
+                <div className="text-sm text-muted-foreground">No role data available</div>
+              )}
             </div>
           )}
         </CardContent>
@@ -205,7 +283,7 @@ export function AdminStats() {
                     <span className="text-muted-foreground">Successful logins</span>
                   </div>
                   <span className="text-sm font-medium">
-                    {stats?.recentActivity.successfulLogins}
+                    {stats?.recentActivity?.successfulLogins ?? 0}
                   </span>
                 </div>
                 
@@ -215,7 +293,7 @@ export function AdminStats() {
                     <span className="text-muted-foreground">Failed attempts</span>
                   </div>
                   <span className="text-sm font-medium">
-                    {stats?.recentActivity.failedLogins}
+                    {stats?.recentActivity?.failedLogins ?? 0}
                   </span>
                 </div>
                 
@@ -225,7 +303,7 @@ export function AdminStats() {
                     <span className="text-muted-foreground">Total actions</span>
                   </div>
                   <span className="text-sm font-medium">
-                    {stats?.recentActivity.totalActions}
+                    {stats?.recentActivity?.totalActions ?? 0}
                   </span>
                 </div>
               </div>
