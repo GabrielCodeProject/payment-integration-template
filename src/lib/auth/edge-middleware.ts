@@ -6,6 +6,7 @@
  */
 
 import { NextRequest, NextResponse } from "next/server";
+import { getCookieCache, getSessionCookie } from "better-auth/cookies";
 
 // Types for Edge Runtime middleware
 export interface EdgeAuthConfig {
@@ -34,17 +35,6 @@ export interface EdgeSession {
   };
 }
 
-// JWT payload interface
-interface TokenPayload {
-  sub: string;
-  email: string;
-  name: string;
-  role?: string;
-  isActive?: boolean;
-  sessionId: string;
-  exp: number;
-  iat: number;
-}
 
 /**
  * Default auth configuration for Edge Runtime
@@ -66,37 +56,56 @@ export const edgeAuthConfig: EdgeAuthConfig = {
 
 /**
  * Get session from request (Edge Runtime compatible)
+ * Uses Better Auth's cookie cache for session validation
  */
 export async function getEdgeSession(
   request: NextRequest
 ): Promise<EdgeSession | null> {
   try {
-    const sessionToken = request.cookies.get("better-auth.session_token")?.value;
+    // First, try to get session from cookie cache (if enabled)
+    const cachedSession = await getCookieCache(request);
     
-    if (!sessionToken) {
-      return null;
+    if (cachedSession) {
+      return {
+        user: {
+          id: cachedSession.user.id,
+          email: cachedSession.user.email,
+          name: cachedSession.user.name,
+          role: cachedSession.user.role || "CUSTOMER",
+          isActive: cachedSession.user.isActive !== false,
+        },
+        session: {
+          id: cachedSession.session.id,
+          userId: cachedSession.session.userId,
+          expiresAt: cachedSession.session.expiresAt,
+        },
+      };
     }
 
-    const payload = await validateTokenFormat(sessionToken);
+    // Fallback: Check if session cookie exists (for optimistic redirects)
+    // This is not secure but allows for basic route protection
+    const sessionCookie = getSessionCookie(request);
     
-    if (!payload || payload.exp * 1000 < Date.now()) {
-      return null;
+    if (sessionCookie) {
+      // We have a session cookie but no cache data
+      // Return minimal session info to allow access, but API routes should do full validation
+      return {
+        user: {
+          id: "unknown", // Will be validated in API routes
+          email: "unknown",
+          name: "unknown",
+          role: "CUSTOMER",
+          isActive: true,
+        },
+        session: {
+          id: "unknown",
+          userId: "unknown", 
+          expiresAt: new Date(Date.now() + 24 * 60 * 60 * 1000), // 24 hours from now
+        },
+      };
     }
 
-    return {
-      user: {
-        id: payload.sub,
-        email: payload.email,
-        name: payload.name,
-        role: payload.role || "CUSTOMER",
-        isActive: payload.isActive !== false,
-      },
-      session: {
-        id: payload.sessionId,
-        userId: payload.sub,
-        expiresAt: new Date(payload.exp * 1000),
-      },
-    };
+    return null;
   } catch (error) {
     if (process.env.NODE_ENV === "development") {
       // eslint-disable-next-line no-console
@@ -106,34 +115,6 @@ export async function getEdgeSession(
   }
 }
 
-/**
- * Validate JWT token format (Edge Runtime compatible)
- */
-async function validateTokenFormat(token: string): Promise<TokenPayload | null> {
-  try {
-    const parts = token.split(".");
-    if (parts.length !== 3) {
-      return null;
-    }
-
-    const payloadPart = parts[1];
-    if (!payloadPart) {
-      return null;
-    }
-    
-    const payload = JSON.parse(
-      Buffer.from(payloadPart, "base64url").toString("utf-8")
-    );
-
-    if (!payload.sub || !payload.email || !payload.exp) {
-      return null;
-    }
-
-    return payload as TokenPayload;
-  } catch (_error) {
-    return null;
-  }
-}
 
 /**
  * Route checking functions (Edge Runtime compatible)
