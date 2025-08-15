@@ -32,6 +32,23 @@
 - `src/lib/audit.ts` - TypeScript audit logging service with context management and query utilities
 - `src/lib/audit-middleware.ts` - Next.js middleware integration for automatic audit logging in API
   routes and Server Actions
+- `src/lib/auth/config.ts` - BetterAuth configuration with email provider integration
+- `src/lib/auth/client.ts` - BetterAuth React client for frontend authentication
+- `src/lib/auth/edge-middleware.ts` - Edge-compatible authentication middleware
+- `src/lib/auth/edge-session.ts` - Edge-compatible session utilities
+- `src/lib/auth/server-session.ts` - Server-side session validation utilities
+- `src/lib/email.ts` - Email service with Resend integration and templates
+- `src/app/api/auth/[...betterauth]/route.ts` - BetterAuth API handler for all auth endpoints
+- `src/app/(auth)/layout.tsx` - Authentication pages layout
+- `src/app/(auth)/register/page.tsx` - User registration page with email verification
+- `src/app/(auth)/login/page.tsx` - User login page with security features
+- `src/app/(auth)/verify-email/page.tsx` - Email verification handling page
+- `src/components/auth/RegistrationForm.tsx` - Registration form with validation
+- `src/components/auth/LoginForm.tsx` - Login form with rate limiting protection
+- `src/components/auth/PasswordStrengthIndicator.tsx` - Password strength validation component
+- `src/components/auth/EmailVerificationStatus.tsx` - Email verification status handling
+- `src/components/auth/LogoutButton.tsx` - Logout functionality component
+- `src/components/auth/UserMenu.tsx` - User menu with session management
 - `database/postgresql.conf` - PostgreSQL configuration optimized for development
 - `database/redis.conf` - Redis configuration for caching and sessions
 - `scripts/db-health-check.sh` - PostgreSQL database health check and verification script
