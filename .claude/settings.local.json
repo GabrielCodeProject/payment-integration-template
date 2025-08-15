@@ -41,7 +41,11 @@
       "Bash(npm run:*)",
       "Bash(npx tsx:*)",
       "Bash(node:*)",
-      "Bash(grep:*)"
+      "Bash(grep:*)",
+      "mcp__shadcn-ui__get_component",
+      "mcp__context7__get-library-docs",
+      "Bash(npx @better-auth/cli generate:*)",
+      "Bash(npm test)"
     ]
   },
   "enableAllProjectMcpServers": true,

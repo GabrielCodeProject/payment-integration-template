@@ -11,32 +11,28 @@ datasource db {
 }
 
 // User management with authentication and payment preferences
+
 model User {
-  id                String   @id @default(cuid())
-  email             String   @unique
+  id                String             @id @default(cuid())
+  email             String             @unique
   name              String?
-  emailVerified     DateTime?
+  emailVerified     Boolean            @default(false)
   image             String?
   phone             String?
-  
   // Authentication & Security
   hashedPassword    String?
-  twoFactorEnabled  Boolean  @default(false)
-  isActive          Boolean  @default(true)
-  role              UserRole @default(CUSTOMER)
-  
+  twoFactorEnabled  Boolean            @default(false)
+  isActive          Boolean            @default(true)
+  role              UserRole           @default(CUSTOMER)
   // Stripe Integration
-  stripeCustomerId  String?  @unique
-  
+  stripeCustomerId  String?            @unique
   // Payment Preferences
-  preferredCurrency String   @default("usd")
-  timezone          String   @default("UTC")
-  
+  preferredCurrency String             @default("usd")
+  timezone          String             @default("UTC")
   // Timestamps
-  createdAt         DateTime @default(now())
-  updatedAt         DateTime @updatedAt
+  createdAt         DateTime           @default(now())
+  updatedAt         DateTime           @updatedAt
   lastLoginAt       DateTime?
-  
   // Relations
   orders            Order[]
   subscriptions     Subscription[]
@@ -44,7 +40,6 @@ model User {
   usedDiscountCodes UserDiscountCode[]
   sessions          Session[]
   accounts          Account[]
-  
   // Indexes for performance
   @@index([email])
   @@index([stripeCustomerId])
@@ -54,6 +49,7 @@ model User {
 }
 
 // User roles for authorization
+
 enum UserRole {
   CUSTOMER
   ADMIN
@@ -61,96 +57,93 @@ enum UserRole {
 }
 
 // NextAuth.js compatibility models
+
 model Account {
-  id                String  @id @default(cuid())
-  userId            String
-  type              String
-  provider          String
-  providerAccountId String
-  refresh_token     String? @db.Text
-  access_token      String? @db.Text
-  expires_at        Int?
-  token_type        String?
-  scope             String?
-  id_token          String? @db.Text
-  session_state     String?
+  id                    String    @id @default(cuid())
+  userId                String
+  accountId             String
+  providerId            String
+  accessToken           String?
+  refreshToken          String?
+  idToken               String?
+  accessTokenExpiresAt  DateTime?
+  refreshTokenExpiresAt DateTime?
+  scope                 String?
+  password              String?
+  createdAt             DateTime
+  updatedAt             DateTime
   
-  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
-  
-  @@unique([provider, providerAccountId])
+  user                  User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([providerId, accountId])
   @@index([userId])
   @@map("accounts")
 }
 
 model Session {
   id           String   @id @default(cuid())
-  sessionToken String   @unique
+  token        String   @unique
   userId       String
-  expires      DateTime
+  expiresAt    DateTime
+  createdAt    DateTime
+  updatedAt    DateTime
+  ipAddress    String?
+  userAgent    String?
   
-  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
-  
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
   @@index([userId])
-  @@index([expires])
+  @@index([expiresAt])
   @@map("sessions")
 }
 
 // Products with flexible pricing and Stripe integration
+
 model Product {
-  id              String        @id @default(cuid())
-  name            String
-  description     String?       @db.Text
-  shortDescription String?
-  
+  id                String           @id @default(cuid())
+  name              String
+  description       String?          @db.Text
+  shortDescription  String?
   // Pricing
-  price           Decimal       @db.Decimal(10, 2)
-  currency        String        @default("usd")
-  compareAtPrice  Decimal?      @db.Decimal(10, 2) // For showing discounts
-  
+  price             Decimal          @db.Decimal(10, 2)
+  currency          String           @default("usd")
+  compareAtPrice    Decimal?         @db.Decimal(10, 2) // For showing discounts
   // Product management
-  sku             String?       @unique
-  isActive        Boolean       @default(true)
-  isDigital       Boolean       @default(false)
-  requiresShipping Boolean      @default(true)
-  
+  sku               String?          @unique
+  isActive          Boolean          @default(true)
+  isDigital         Boolean          @default(false)
+  requiresShipping  Boolean          @default(true)
   // Inventory
-  stockQuantity   Int?          // null = unlimited
+  stockQuantity     Int? // null = unlimited
   lowStockThreshold Int?
-  
   // SEO & Display
-  slug            String        @unique
-  metaTitle       String?
-  metaDescription String?
-  tags            String[]
-  
+  slug              String           @unique
+  metaTitle         String?
+  metaDescription   String?
+  tags              String[]
   // Media
-  images          String[]
-  thumbnail       String?
-  
+  images            String[]
+  thumbnail         String?
   // Stripe Integration
-  stripePriceId   String?       @unique
-  stripeProductId String?       @unique
-  
+  stripePriceId     String?          @unique
+  stripeProductId   String?          @unique
   // Product type for subscriptions
-  type            ProductType   @default(ONE_TIME)
-  billingInterval BillingInterval?
-  
+  type              ProductType      @default(ONE_TIME)
+  billingInterval   BillingInterval?
   // Timestamps
-  createdAt       DateTime      @default(now())
-  updatedAt       DateTime      @updatedAt
-  
+  createdAt         DateTime         @default(now())
+  updatedAt         DateTime         @updatedAt
   // Relations
-  orderItems      OrderItem[]
-  subscriptions   Subscription[]
-  
+  orderItems        OrderItem[]
+  subscriptions     Subscription[]
   // Indexes
+  // Composite indexes for product catalog performance
   @@index([isActive])
   @@index([type])
   @@index([slug])
   @@index([stripePriceId])
   @@index([stripeProductId])
   @@index([createdAt])
-  // Composite indexes for product catalog performance
   @@index([isActive, type])
   @@index([isActive, createdAt])
   @@index([type, isActive, createdAt])
@@ -158,6 +151,7 @@ model Product {
 }
 
 // Product types for different billing models
+
 enum ProductType {
   ONE_TIME
   SUBSCRIPTION
@@ -165,6 +159,7 @@ enum ProductType {
 }
 
 // Billing intervals for subscriptions
+
 enum BillingInterval {
   DAY
   WEEK
@@ -173,62 +168,54 @@ enum BillingInterval {
 }
 
 // Orders for tracking purchases and payment processing
+
 model Order {
-  id                String      @id @default(cuid())
-  orderNumber       String      @unique
-  
+  id                    String            @id @default(cuid())
+  orderNumber           String            @unique
   // Customer information
-  userId            String?
-  customerEmail     String
-  customerName      String?
-  
+  userId                String?
+  customerEmail         String
+  customerName          String?
   // Pricing
-  subtotal          Decimal     @db.Decimal(10, 2)
-  taxAmount         Decimal     @db.Decimal(10, 2) @default(0)
-  shippingAmount    Decimal     @db.Decimal(10, 2) @default(0)
-  discountAmount    Decimal     @db.Decimal(10, 2) @default(0)
-  total             Decimal     @db.Decimal(10, 2)
-  currency          String      @default("usd")
-  
+  subtotal              Decimal           @db.Decimal(10, 2)
+  taxAmount             Decimal           @db.Decimal(10, 2) @default(0)
+  shippingAmount        Decimal           @db.Decimal(10, 2) @default(0)
+  discountAmount        Decimal           @db.Decimal(10, 2) @default(0)
+  total                 Decimal           @db.Decimal(10, 2)
+  currency              String            @default("usd")
   // Order status and fulfillment
-  status            OrderStatus @default(PENDING)
-  paymentStatus     PaymentStatus @default(PENDING)
-  fulfillmentStatus FulfillmentStatus @default(UNFULFILLED)
-  
+  status                OrderStatus       @default(PENDING)
+  paymentStatus         PaymentStatus     @default(PENDING)
+  fulfillmentStatus     FulfillmentStatus @default(UNFULFILLED)
   // Shipping information
-  shippingAddress   Json?       // Flexible address structure
-  billingAddress    Json?       // Flexible address structure
-  shippingMethod    String?
-  trackingNumber    String?
-  
+  shippingAddress       Json? // Flexible address structure
+  billingAddress        Json? // Flexible address structure
+  shippingMethod        String?
+  trackingNumber        String?
   // Payment information
-  stripePaymentIntentId String? @unique
+  stripePaymentIntentId String?           @unique
   stripeChargeId        String?
   paymentMethodId       String?
-  
   // Discount codes
-  discountCodeId    String?
-  
+  discountCodeId        String?
   // Notes and metadata
-  notes             String?     @db.Text
-  internalNotes     String?     @db.Text
-  metadata          Json?
-  
+  notes                 String?           @db.Text
+  internalNotes         String?           @db.Text
+  metadata              Json?
   // Timestamps
-  createdAt         DateTime    @default(now())
-  updatedAt         DateTime    @updatedAt
-  paidAt            DateTime?
-  shippedAt         DateTime?
-  deliveredAt       DateTime?
-  cancelledAt       DateTime?
-  
+  createdAt             DateTime          @default(now())
+  updatedAt             DateTime          @updatedAt
+  paidAt                DateTime?
+  shippedAt             DateTime?
+  deliveredAt           DateTime?
+  cancelledAt           DateTime?
   // Relations
-  user              User?       @relation(fields: [userId], references: [id])
-  orderItems        OrderItem[]
-  paymentMethod     PaymentMethod? @relation(fields: [paymentMethodId], references: [id])
-  discountCode      DiscountCode? @relation(fields: [discountCodeId], references: [id])
-  
+  user                  User?             @relation(fields: [userId], references: [id])
+  orderItems            OrderItem[]
+  paymentMethod         PaymentMethod?    @relation(fields: [paymentMethodId], references: [id])
+  discountCode          DiscountCode?     @relation(fields: [discountCodeId], references: [id])
   // Indexes
+  // Composite indexes for better query performance
   @@index([orderNumber])
   @@index([userId])
   @@index([status])
@@ -238,7 +225,6 @@ model Order {
   @@index([stripePaymentIntentId])
   @@index([paymentMethodId])
   @@index([discountCodeId])
-  // Composite indexes for better query performance
   @@index([userId, status])
   @@index([customerEmail, createdAt])
   @@index([status, paymentStatus])
@@ -246,6 +232,7 @@ model Order {
 }
 
 // Order status enum
+
 enum OrderStatus {
   PENDING
   CONFIRMED
@@ -257,6 +244,7 @@ enum OrderStatus {
 }
 
 // Payment status enum
+
 enum PaymentStatus {
   PENDING
   AUTHORIZED
@@ -269,6 +257,7 @@ enum PaymentStatus {
 }
 
 // Fulfillment status enum
+
 enum FulfillmentStatus {
   UNFULFILLED
   PARTIALLY_FULFILLED
@@ -277,28 +266,24 @@ enum FulfillmentStatus {
 }
 
 // Order items for tracking individual products in orders
+
 model OrderItem {
-  id              String  @id @default(cuid())
-  orderId         String
-  productId       String
-  
+  id           String  @id @default(cuid())
+  orderId      String
+  productId    String
   // Product snapshot at time of order
-  productName     String
-  productSku      String?
-  productImage    String?
-  
+  productName  String
+  productSku   String?
+  productImage String?
   // Pricing
-  unitPrice       Decimal @db.Decimal(10, 2)
-  quantity        Int
-  totalPrice      Decimal @db.Decimal(10, 2)
-  
+  unitPrice    Decimal @db.Decimal(10, 2)
+  quantity     Int
+  totalPrice   Decimal @db.Decimal(10, 2)
   // Metadata for product variants or customizations
-  metadata        Json?
-  
+  metadata     Json?
   // Relations
-  order           Order   @relation(fields: [orderId], references: [id], onDelete: Cascade)
-  product         Product @relation(fields: [productId], references: [id])
-  
+  order        Order   @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  product      Product @relation(fields: [productId], references: [id])
   // Indexes
   @@index([orderId])
   @@index([productId])
@@ -306,56 +291,48 @@ model OrderItem {
 }
 
 // Subscriptions for recurring billing
+
 model Subscription {
-  id                    String             @id @default(cuid())
-  userId                String
-  productId             String
-  
+  id                   String             @id @default(cuid())
+  userId               String
+  productId            String
   // Stripe Integration
-  stripeSubscriptionId  String             @unique
-  stripeCustomerId      String
-  stripePriceId         String
-  
+  stripeSubscriptionId String             @unique
+  stripeCustomerId     String
+  stripePriceId        String
   // Subscription details
-  status                SubscriptionStatus @default(ACTIVE)
-  billingInterval       BillingInterval
-  
+  status               SubscriptionStatus @default(ACTIVE)
+  billingInterval      BillingInterval
   // Pricing
-  unitPrice             Decimal            @db.Decimal(10, 2)
-  quantity              Int                @default(1)
-  currency              String             @default("usd")
-  
+  unitPrice            Decimal            @db.Decimal(10, 2)
+  quantity             Int                @default(1)
+  currency             String             @default("usd")
   // Billing dates
-  currentPeriodStart    DateTime
-  currentPeriodEnd      DateTime
-  cancelAtPeriodEnd     Boolean            @default(false)
-  
+  currentPeriodStart   DateTime
+  currentPeriodEnd     DateTime
+  cancelAtPeriodEnd    Boolean            @default(false)
   // Trial information
-  trialStart            DateTime?
-  trialEnd              DateTime?
-  
+  trialStart           DateTime?
+  trialEnd             DateTime?
   // Timestamps
-  createdAt             DateTime           @default(now())
-  updatedAt             DateTime           @updatedAt
-  startedAt             DateTime           @default(now())
-  endedAt               DateTime?
-  cancelledAt           DateTime?
-  
+  createdAt            DateTime           @default(now())
+  updatedAt            DateTime           @updatedAt
+  startedAt            DateTime           @default(now())
+  endedAt              DateTime?
+  cancelledAt          DateTime?
   // Metadata
-  metadata              Json?
-  
+  metadata             Json?
   // Relations
-  user                  User               @relation(fields: [userId], references: [id])
-  product               Product            @relation(fields: [productId], references: [id])
-  
+  user                 User               @relation(fields: [userId], references: [id])
+  product              Product            @relation(fields: [productId], references: [id])
   // Indexes
+  // Composite indexes for better query performance
   @@index([userId])
   @@index([status])
   @@index([stripeSubscriptionId])
   @@index([currentPeriodEnd])
   @@index([createdAt])
   @@index([productId])
-  // Composite indexes for better query performance
   @@index([userId, status])
   @@index([stripeCustomerId, status])
   @@index([status, currentPeriodEnd])
@@ -363,6 +340,7 @@ model Subscription {
 }
 
 // Subscription status enum
+
 enum SubscriptionStatus {
   INCOMPLETE
   INCOMPLETE_EXPIRED
@@ -375,49 +353,43 @@ enum SubscriptionStatus {
 }
 
 // Payment methods for saved payment information
+
 model PaymentMethod {
-  id                  String            @id @default(cuid())
-  userId              String
-  
+  id                    String            @id @default(cuid())
+  userId                String
   // Stripe Integration
-  stripePaymentMethodId String          @unique
-  
+  stripePaymentMethodId String            @unique
   // Payment method details
-  type                PaymentMethodType
-  brand               String?           // e.g., "visa", "mastercard"
-  last4               String?           // Last 4 digits for cards
-  expiryMonth         Int?
-  expiryYear          Int?
-  
+  type                  PaymentMethodType
+  brand                 String? // e.g., "visa", "mastercard"
+  last4                 String? // Last 4 digits for cards
+  expiryMonth           Int?
+  expiryYear            Int?
   // Metadata
-  fingerprint         String?           // Unique identifier for deduplication
-  isDefault           Boolean           @default(false)
-  nickname            String?           // User-defined name
-  
+  fingerprint           String? // Unique identifier for deduplication
+  isDefault             Boolean           @default(false)
+  nickname              String? // User-defined name
   // Billing address
-  billingAddress      Json?
-  
+  billingAddress        Json?
   // Status
-  isActive            Boolean           @default(true)
-  
+  isActive              Boolean           @default(true)
   // Timestamps
-  createdAt           DateTime          @default(now())
-  updatedAt           DateTime          @updatedAt
-  
+  createdAt             DateTime          @default(now())
+  updatedAt             DateTime          @updatedAt
   // Relations
-  user                User              @relation(fields: [userId], references: [id], onDelete: Cascade)
-  orders              Order[]
-  
+  user                  User              @relation(fields: [userId], references: [id], onDelete: Cascade)
+  orders                Order[]
   // Indexes
+  // Composite index for default payment method lookup
   @@index([userId])
   @@index([stripePaymentMethodId])
   @@index([isDefault])
-  // Composite index for default payment method lookup
   @@index([userId, isDefault])
   @@map("payment_methods")
 }
 
 // Payment method types
+
 enum PaymentMethodType {
   CARD
   BANK_ACCOUNT
@@ -428,51 +400,45 @@ enum PaymentMethodType {
 }
 
 // Discount codes for promotions and marketing
+
 model DiscountCode {
-  id                String             @id @default(cuid())
-  code              String             @unique
-  name              String?            // Internal name for management
-  description       String?
-  
+  id                 String             @id @default(cuid())
+  code               String             @unique
+  name               String? // Internal name for management
+  description        String?
   // Discount configuration
-  type              DiscountType
-  value             Decimal            @db.Decimal(10, 2) // Amount or percentage
-  currency          String?            // Required for fixed amount discounts
-  
+  type               DiscountType
+  value              Decimal            @db.Decimal(10, 2) // Amount or percentage
+  currency           String? // Required for fixed amount discounts
   // Usage limits
-  maxUses           Int?               // null = unlimited
-  maxUsesPerCustomer Int?              // null = unlimited per customer
-  currentUses       Int                @default(0)
-  
+  maxUses            Int? // null = unlimited
+  maxUsesPerCustomer Int? // null = unlimited per customer
+  currentUses        Int                @default(0)
   // Minimum requirements
-  minimumOrderAmount Decimal?          @db.Decimal(10, 2)
-  
+  minimumOrderAmount Decimal?           @db.Decimal(10, 2)
   // Validity period
-  startsAt          DateTime?
-  expiresAt         DateTime?
-  
+  startsAt           DateTime?
+  expiresAt          DateTime?
   // Status
-  isActive          Boolean            @default(true)
-  
+  isActive           Boolean            @default(true)
   // Timestamps
-  createdAt         DateTime           @default(now())
-  updatedAt         DateTime           @updatedAt
-  
+  createdAt          DateTime           @default(now())
+  updatedAt          DateTime           @updatedAt
   // Relations
-  orders            Order[]
-  userUsages        UserDiscountCode[]
-  
+  orders             Order[]
+  userUsages         UserDiscountCode[]
   // Indexes
+  // Composite index for valid discount code lookup
   @@index([code])
   @@index([isActive])
   @@index([expiresAt])
   @@index([createdAt])
-  // Composite index for valid discount code lookup
   @@index([isActive, expiresAt])
   @@map("discount_codes")
 }
 
 // Discount types
+
 enum DiscountType {
   PERCENTAGE
   FIXED_AMOUNT
@@ -480,6 +446,7 @@ enum DiscountType {
 }
 
 // Tracking discount code usage per user
+
 model UserDiscountCode {
   id             String       @id @default(cuid())
   userId         String
@@ -487,11 +454,9 @@ model UserDiscountCode {
   usageCount     Int          @default(0)
   firstUsedAt    DateTime     @default(now())
   lastUsedAt     DateTime     @updatedAt
-  
   // Relations
   user           User         @relation(fields: [userId], references: [id], onDelete: Cascade)
   discountCode   DiscountCode @relation(fields: [discountCodeId], references: [id], onDelete: Cascade)
-  
   // Unique constraint
   @@unique([userId, discountCodeId])
   @@index([userId])
@@ -500,11 +465,12 @@ model UserDiscountCode {
 }
 
 // Comprehensive audit logging for security and compliance
+
 model AuditLog {
   id            String   @id @default(dbgenerated("((('audit-'::text || (EXTRACT(epoch FROM now()))::text) || '-'::text) || (floor((random() * (10000)::double precision)))::text)"))
   tableName     String
   recordId      String
-  action        String   // CREATE, UPDATE, DELETE
+  action        String // CREATE, UPDATE, DELETE
   userId        String?
   userEmail     String?
   ipAddress     String?
@@ -516,16 +482,26 @@ model AuditLog {
   sessionId     String?
   requestId     String?
   metadata      Json?
-  
   // Performance indexes
+  // Composite index for efficient audit trail queries
   @@index([tableName, recordId])
   @@index([userId])
   @@index([timestamp])
   @@index([action])
   @@index([tableName, action])
   @@index([userId, timestamp])
-  // Composite index for efficient audit trail queries
   @@index([tableName, recordId, timestamp])
   @@index([userId, action, timestamp])
   @@map("audit_logs")
+}
+
+model Verification {
+  id         String    @id
+  identifier String
+  value      String
+  expiresAt  DateTime
+  createdAt  DateTime?
+  updatedAt  DateTime?
+
+  @@map("verification")
 }

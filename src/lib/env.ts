@@ -16,11 +16,11 @@ const serverEnvSchema = z.object({
   DIRECT_URL: z.string().url("Invalid direct database URL").optional(),
 
   // Authentication
-  BETTER_AUTH_SECRET: z
+  AUTH_SECRET: z
     .string()
     .min(32, "Auth secret must be at least 32 characters"),
-  BETTER_AUTH_URL: z.string().url("Invalid auth URL"),
-  BETTER_AUTH_TRUSTED_ORIGINS: z.string().default("http://localhost:3000"),
+  BETTER_AUTH_URL: z.string().url("Invalid auth URL").optional(),
+  BETTER_AUTH_TRUSTED_ORIGINS: z.string().default("http://localhost:3000").optional(),
 
   // Stripe Server-side
   STRIPE_SECRET_KEY: z.string().startsWith("sk_", "Invalid Stripe secret key"),
@@ -29,12 +29,14 @@ const serverEnvSchema = z.object({
     .startsWith("whsec_", "Invalid webhook secret")
     .optional(),
 
-  // Email
+  // Email (required for email verification)
   RESEND_API_KEY: z
     .string()
-    .startsWith("re_", "Invalid Resend API key")
-    .optional(),
-  RESEND_FROM_EMAIL: z.string().email("Invalid from email").optional(),
+    .startsWith("re_", "Invalid Resend API key"),
+  FROM_EMAIL: z
+    .string()
+    .email("Invalid from email")
+    .default("noreply@yourapp.com"),
 
   // Security
   RATE_LIMIT_MAX_REQUESTS: z.coerce.number().default(100),

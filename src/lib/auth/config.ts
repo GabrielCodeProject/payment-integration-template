@@ -11,6 +11,7 @@
 import { betterAuth } from "better-auth";
 import { prismaAdapter } from "better-auth/adapters/prisma";
 import { db } from "@/lib/db";
+import { sendEmailVerification } from "@/lib/email";
 
 export const auth = betterAuth({
   // Database configuration
@@ -23,6 +24,7 @@ export const auth = betterAuth({
   trustedOrigins: [
     process.env.NEXT_PUBLIC_APP_URL as string,
     "http://localhost:3000", // Development
+    "http://localhost:3001", // Development (alternative port)
   ],
 
   // Session configuration optimized for middleware
@@ -61,16 +63,37 @@ export const auth = betterAuth({
     },
   },
 
+  // Email and password configuration
+  emailAndPassword: {
+    enabled: true,
+    requireEmailVerification: true,
+  },
+
+  // Email verification configuration
+  emailVerification: {
+    sendVerificationEmail: async ({ user, url }) => {
+      await sendEmailVerification(user.email, url);
+    },
+  },
+
   // Advanced security settings
   advanced: {
-    generateId: () => {
-      // Use crypto for secure ID generation
-      return crypto.randomUUID();
+    database: {
+      generateId: () => {
+        // Use crypto for secure ID generation
+        return crypto.randomUUID();
+      },
     },
     crossSubDomainCookies: {
       enabled: false, // Disable for security unless needed
     },
     disableCSRFCheck: false, // Keep CSRF protection enabled
+  },
+
+  // Rate limiting configuration
+  rateLimit: {
+    window: 15 * 60, // 15 minutes
+    max: 5, // max 5 attempts per window
   },
 
   // Plugin configuration

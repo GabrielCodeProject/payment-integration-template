@@ -1,13 +1,14 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getClientEnv } from "@/lib/env";
 import {
-  validateRouteAccess,
+  validateEdgeRouteAccess,
   getClientIP,
   logAuthEvent,
   checkRateLimit,
-  defaultAuthConfig,
-  type AuthConfig,
-} from "@/auth/middleware";
+  edgeAuthConfig,
+  createAuthRedirect,
+  type EdgeAuthConfig,
+} from "@/lib/auth/edge-middleware";
 
 /**
  * Next.js Middleware for Payment Integration Template
@@ -25,17 +26,17 @@ import {
 // MIDDLEWARE CONFIGURATION
 // =============================================================================
 
-// Custom auth configuration for payment template
-const authConfig: AuthConfig = {
-  ...defaultAuthConfig,
+// Custom auth configuration for payment template (Edge Runtime compatible)
+const authConfig: EdgeAuthConfig = {
+  ...edgeAuthConfig,
   protectedRoutes: ["/dashboard", "/profile", "/billing", "/checkout"],
   adminRoutes: ["/admin"],
   authRoutes: [
-    "/auth/signin",
-    "/auth/signup",
-    "/auth/forgot-password",
-    "/auth/verify-email",
-    "/auth/reset-password",
+    "/login",
+    "/register",
+    "/forgot-password",
+    "/verify-email",
+    "/reset-password",
   ],
   apiProtectedRoutes: [
     "/api/protected",
@@ -61,22 +62,49 @@ export async function middleware(request: NextRequest) {
   // AUTHENTICATION AND AUTHORIZATION
   // =============================================================================
 
-  // Validate route access and get session
-  const { isAllowed, session, redirect } = await validateRouteAccess(
+  // Validate route access and get session (Edge Runtime compatible)
+  const { isAllowed, session, reason } = await validateEdgeRouteAccess(
     request,
     authConfig
   );
 
-  if (!isAllowed && redirect) {
+  // Handle unauthorized access
+  if (!isAllowed) {
     // Log blocked access attempt
     logAuthEvent("blocked", {
       pathname,
       ip: clientIP,
       userAgent: request.headers.get("user-agent") || "",
-      reason: "Access denied",
+      reason: reason || "Access denied",
     });
-    return redirect;
+
+    // Create appropriate redirect/response
+    if (pathname.startsWith("/api/")) {
+      return new NextResponse(
+        JSON.stringify({
+          error: "Unauthorized",
+          message: reason || "Access denied",
+          timestamp: new Date().toISOString(),
+        }),
+        {
+          status: reason === "Already authenticated" ? 400 : 401,
+          headers: { "Content-Type": "application/json" },
+        }
+      );
+    } else {
+      // Redirect to appropriate page
+      const redirectTo = reason === "Already authenticated" 
+        ? "/dashboard" 
+        : reason === "Admin access required"
+        ? "/unauthorized"
+        : "/login";
+      
+      return createAuthRedirect(request, redirectTo);
+    }
   }
+
+  // Continue with rest of middleware logic
+  // Note: requiresFullValidation can be used by API routes for database validation
 
   // Log successful authentication for protected routes
   if (
@@ -98,7 +126,7 @@ export async function middleware(request: NextRequest) {
   // =============================================================================
 
   // Rate limit authentication endpoints
-  if (pathname.startsWith("/api/auth/") || pathname.startsWith("/auth/")) {
+  if (pathname.startsWith("/api/auth/") || pathname.startsWith("/login") || pathname.startsWith("/register")) {
     const rateLimitResult = checkRateLimit(`auth:${clientIP}`, 10, 60000); // 10 requests per minute
 
     if (!rateLimitResult.allowed) {
@@ -164,6 +192,9 @@ export async function middleware(request: NextRequest) {
   const nonce = generateNonce();
   response.headers.set("X-Nonce", nonce);
 
+  // Check if we're in development mode
+  const isDevelopment = process.env.NODE_ENV === 'development';
+
   // Content Security Policy for payment pages
   if (
     pathname.startsWith("/checkout") ||
@@ -172,11 +203,11 @@ export async function middleware(request: NextRequest) {
   ) {
     const cspHeader = [
       "default-src 'self'",
-      `script-src 'self' 'nonce-${nonce}' https://js.stripe.com https://checkout.stripe.com`,
+      `script-src 'self' 'nonce-${nonce}' ${isDevelopment ? "'unsafe-eval'" : ""} https://js.stripe.com https://checkout.stripe.com`,
       "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
       "font-src 'self' https://fonts.gstatic.com",
       "img-src 'self' data: https: blob:",
-      "connect-src 'self' https://api.stripe.com https://*.stripe.com https://checkout.stripe.com",
+      `connect-src 'self' ${isDevelopment ? "ws: wss:" : ""} https://api.stripe.com https://*.stripe.com https://checkout.stripe.com`,
       "frame-src 'self' https://js.stripe.com https://hooks.stripe.com https://checkout.stripe.com",
       "form-action 'self'",
       "base-uri 'self'",
@@ -191,11 +222,11 @@ export async function middleware(request: NextRequest) {
   else {
     const cspHeader = [
       "default-src 'self'",
-      `script-src 'self' 'nonce-${nonce}'`,
+      `script-src 'self' 'nonce-${nonce}' ${isDevelopment ? "'unsafe-eval'" : ""}`,
       "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
       "font-src 'self' https://fonts.gstatic.com",
       "img-src 'self' data: https:",
-      "connect-src 'self'",
+      `connect-src 'self' ${isDevelopment ? "ws: wss:" : ""}`,
       "frame-src 'none'",
       "form-action 'self'",
       "base-uri 'self'",

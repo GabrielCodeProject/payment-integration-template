@@ -63,21 +63,20 @@ function validateEnvironment() {
         val && (val.startsWith("postgresql://") || val.startsWith("file:")),
       message: "Must be a valid database URL (postgresql:// or file:)",
     },
-    BETTER_AUTH_SECRET: {
+    AUTH_SECRET: {
       required: true,
       validator: (val) => val && val.length >= 32,
       message: "Must be at least 32 characters long",
-    },
-    BETTER_AUTH_URL: {
-      required: true,
-      validator: (val) =>
-        val && (val.startsWith("http://") || val.startsWith("https://")),
-      message: "Must be a valid URL",
     },
     STRIPE_SECRET_KEY: {
       required: true,
       validator: (val) => val && val.startsWith("sk_"),
       message: 'Must start with "sk_" (Stripe secret key)',
+    },
+    RESEND_API_KEY: {
+      required: true,
+      validator: (val) => val && val.startsWith("re_"),
+      message: 'Must start with "re_" (required for email verification)',
     },
   };
 
@@ -103,15 +102,15 @@ function validateEnvironment() {
       validator: (val) => !val || val.startsWith("whsec_"),
       message: 'If provided, must start with "whsec_"',
     },
-    RESEND_API_KEY: {
-      required: false,
-      validator: (val) => !val || val.startsWith("re_"),
-      message: 'If provided, must start with "re_"',
-    },
-    RESEND_FROM_EMAIL: {
+    FROM_EMAIL: {
       required: false,
       validator: (val) => !val || val.includes("@"),
       message: "If provided, must be a valid email address",
+    },
+    BETTER_AUTH_URL: {
+      required: false,
+      validator: (val) => !val || (val.startsWith("http://") || val.startsWith("https://")),
+      message: "If provided, must be a valid URL",
     },
   };
 
