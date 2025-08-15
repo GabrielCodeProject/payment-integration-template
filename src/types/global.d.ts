@@ -56,8 +56,9 @@ declare global {
       REDIS_URL?: string;
 
       // Authentication
-      AUTH_SECRET: string;
-      NEXTAUTH_URL?: string;
+      BETTER_AUTH_SECRET: string;
+      BETTER_AUTH_URL?: string;
+      BETTER_AUTH_TRUSTED_ORIGINS?: string;
 
       // Stripe
       STRIPE_SECRET_KEY: string;

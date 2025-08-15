@@ -63,7 +63,7 @@ function validateEnvironment() {
         val && (val.startsWith("postgresql://") || val.startsWith("file:")),
       message: "Must be a valid database URL (postgresql:// or file:)",
     },
-    AUTH_SECRET: {
+    BETTER_AUTH_SECRET: {
       required: true,
       validator: (val) => val && val.length >= 32,
       message: "Must be at least 32 characters long",

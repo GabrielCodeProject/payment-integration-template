@@ -20,7 +20,7 @@ export const auth = betterAuth({
   }),
 
   // Security configuration
-  secret: process.env.AUTH_SECRET || "fallback-secret-for-development",
+  secret: process.env.BETTER_AUTH_SECRET || "fallback-secret-for-development",
   trustedOrigins: [
     process.env.NEXT_PUBLIC_APP_URL as string,
     "http://localhost:3000", // Development
@@ -75,14 +75,14 @@ export const auth = betterAuth({
 
   // Email verification configuration
   emailVerification: {
-    sendVerificationEmail: async ({ user, url }) => {
+    sendVerificationEmail: async ({ user, url }: { user: { email: string }; url: string }) => {
       await sendEmailVerification(user.email, url);
     },
   },
 
   // Password reset configuration
   forgetPassword: {
-    sendResetPassword: async ({ user, url }) => {
+    sendResetPassword: async ({ user, url }: { user: { email: string }; url: string }) => {
       await sendPasswordReset(user.email, url);
     },
   },

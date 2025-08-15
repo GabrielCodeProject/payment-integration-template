@@ -62,8 +62,18 @@ export async function getEdgeSession(
   request: NextRequest
 ): Promise<EdgeSession | null> {
   try {
+    // Get the secret from environment variable
+    const secret = process.env.BETTER_AUTH_SECRET;
+    if (!secret) {
+      if (process.env.NODE_ENV === "development") {
+        // eslint-disable-next-line no-console
+        console.warn("BETTER_AUTH_SECRET not found, session validation will be limited");
+      }
+      return null;
+    }
+
     // First, try to get session from cookie cache (if enabled)
-    const cachedSession = await getCookieCache(request);
+    const cachedSession = await getCookieCache(request, { secret });
     
     if (cachedSession) {
       return {

@@ -16,9 +16,9 @@ const serverEnvSchema = z.object({
   DIRECT_URL: z.string().url("Invalid direct database URL").optional(),
 
   // Authentication
-  AUTH_SECRET: z
+  BETTER_AUTH_SECRET: z
     .string()
-    .min(32, "Auth secret must be at least 32 characters"),
+    .min(32, "Better Auth secret must be at least 32 characters"),
   BETTER_AUTH_URL: z.string().url("Invalid auth URL").optional(),
   BETTER_AUTH_TRUSTED_ORIGINS: z.string().default("http://localhost:3000").optional(),
 
