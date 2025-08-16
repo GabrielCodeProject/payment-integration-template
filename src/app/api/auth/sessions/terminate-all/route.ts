@@ -160,7 +160,7 @@ export async function POST(request: NextRequest) {
       metadata: {
         operation: 'bulkTerminationAnalysis',
         totalSessions: totalSessionCount,
-        sessionesToTerminate: terminationCount,
+        sessionsToTerminate: terminationCount,
         filters: {
           excludeCurrentSession,
           deviceFilter,
