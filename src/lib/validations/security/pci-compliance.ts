@@ -1,10 +1,8 @@
 import { z } from 'zod';
 import {
   cuidSchema,
-  emailSchema,
   ipAddressSchema,
   userAgentSchema,
-  addressSchema,
 } from '../base/common';
 
 /**

@@ -15,10 +15,7 @@ import { PermissionGuard } from "./PermissionGuard";
 import { PERMISSIONS } from "@/lib/permissions";
 import {
   Search,
-  Filter,
-  MoreHorizontal,
   Eye,
-  Edit,
   UserX,
   UserCheck,
   RefreshCcw,

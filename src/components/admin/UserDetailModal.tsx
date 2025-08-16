@@ -19,9 +19,6 @@ import { PermissionGuard } from "./PermissionGuard";
 import { PERMISSIONS } from "@/lib/permissions";
 import {
   User,
-  Mail,
-  Phone,
-  Calendar,
   Shield,
   Activity,
   CreditCard,

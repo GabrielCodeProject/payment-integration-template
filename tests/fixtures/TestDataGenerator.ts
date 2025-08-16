@@ -1,6 +1,5 @@
 import { faker } from '@faker-js/faker';
 import { PrismaClient, UserRole, ProductType, BillingInterval, DiscountType } from '@prisma/client';
-import { v4 as uuidv4 } from 'uuid';
 
 export class TestDataGenerator {
   private prisma: PrismaClient;

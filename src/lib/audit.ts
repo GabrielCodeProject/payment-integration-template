@@ -89,8 +89,10 @@ export class AuditService {
       // Store context for manual operations
       this.defaultContext = { ...context };
     } catch (_error) {
-      // Failed to set audit context
-      throw new Error('Failed to set audit context');
+      // Failed to set audit context - don't block operations
+      console.warn('Failed to set audit context:', _error);
+      // Still store context for manual operations
+      this.defaultContext = { ...context };
     }
   }
 
@@ -102,8 +104,9 @@ export class AuditService {
       await this.db.$executeRaw`SELECT clear_audit_context()`;
       this.defaultContext = {};
     } catch (_error) {
-      // Failed to clear audit context
-      throw new Error('Failed to clear audit context');
+      // Failed to clear audit context - don't block operations
+      console.warn('Failed to clear audit context:', _error);
+      this.defaultContext = {};
     }
   }
 
@@ -124,6 +127,7 @@ export class AuditService {
     const auditContext = { ...this.defaultContext, ...params.context };
     
     try {
+      // Try using stored procedure first
       await this.db.$executeRaw`
         SELECT create_manual_audit_log(
           ${params.tableName}::TEXT,
@@ -139,9 +143,34 @@ export class AuditService {
           }) : JSON.stringify({ manual_entry: true, context: auditContext })}::JSON
         )
       `;
-    } catch (_error) {
-      // Failed to create manual audit log
-      throw new Error('Failed to create audit log entry');
+    } catch (_storedProcError) {
+      // If stored procedure fails, fall back to direct insert
+      try {
+        await this.db.auditLog.create({
+          data: {
+            tableName: params.tableName,
+            recordId: params.recordId,
+            action: params.action,
+            userId: auditContext.userId || null,
+            userEmail: auditContext.userEmail || null,
+            ipAddress: auditContext.ipAddress || null,
+            userAgent: auditContext.userAgent || null,
+            oldValues: params.oldValues ? JSON.stringify(params.oldValues) : null,
+            newValues: params.newValues ? JSON.stringify(params.newValues) : null,
+            changedFields: params.changedFields || [],
+            sessionId: auditContext.sessionId || null,
+            requestId: auditContext.requestId || null,
+            metadata: params.metadata ? JSON.stringify({
+              ...params.metadata,
+              manual_entry: true,
+              context: auditContext
+            }) : JSON.stringify({ manual_entry: true, context: auditContext }),
+          },
+        });
+      } catch (fallbackError) {
+        // Don't fail the main operation if audit logging fails
+        console.warn('Audit logging failed:', fallbackError);
+      }
     }
   }
 

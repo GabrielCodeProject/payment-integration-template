@@ -84,7 +84,7 @@ describe('Authentication and Authorization Security Tests', () => {
       const user = await testDataGenerator.createTestUser();
       
       // Create expired session
-      const expiredSession = await prisma.session.create({
+      const _expiredSession = await prisma.session.create({
         data: {
           sessionToken: 'expired_token_123',
           userId: user.id,
@@ -93,7 +93,7 @@ describe('Authentication and Authorization Security Tests', () => {
       });
       
       // Create valid session
-      const validSession = await prisma.session.create({
+      const _validSession = await prisma.session.create({
         data: {
           sessionToken: 'valid_token_456',
           userId: user.id,
@@ -279,11 +279,11 @@ describe('Authentication and Authorization Security Tests', () => {
     
     it('should validate role-based data access', async () => {
       const customer = await testDataGenerator.createTestUser({ role: 'CUSTOMER' });
-      const admin = await testDataGenerator.createTestUser({ role: 'ADMIN' });
+      const _admin = await testDataGenerator.createTestUser({ role: 'ADMIN' });
       
       // Create customer's data
       const customerOrder = await testDataGenerator.createTestOrder(customer.id);
-      const customerPaymentMethod = await testDataGenerator.createTestPaymentMethod(customer.id);
+      const _customerPaymentMethod = await testDataGenerator.createTestPaymentMethod(customer.id);
       
       // Admin should be able to query all users (simulated)
       const allUsers = await prisma.user.findMany({
@@ -308,7 +308,7 @@ describe('Authentication and Authorization Security Tests', () => {
     });
     
     it('should validate administrative privileges', async () => {
-      const admin = await testDataGenerator.createTestUser({ 
+      const _admin = await testDataGenerator.createTestUser({ 
         role: 'ADMIN',
         email: 'admin@example.com'
       });

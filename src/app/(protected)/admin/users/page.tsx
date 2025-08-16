@@ -64,7 +64,7 @@ export default function AdminUsersPage() {
               <AlertTriangle className="size-16 text-muted-foreground mx-auto mb-4" />
               <h3 className="text-xl font-medium mb-2">Access Restricted</h3>
               <p className="text-muted-foreground mb-4">
-                You don't have permission to view user management interface.
+                You don&apos;t have permission to view user management interface.
               </p>
               <p className="text-sm text-muted-foreground">
                 Contact a system administrator to request USER_READ permissions.

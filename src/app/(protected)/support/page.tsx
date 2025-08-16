@@ -119,7 +119,7 @@ export default function SupportDashboardPage() {
                   <AlertTriangle className="size-12 text-muted-foreground mx-auto mb-4" />
                   <h3 className="text-lg font-medium mb-2">Access Restricted</h3>
                   <p className="text-muted-foreground">
-                    You don't have permission to view customer data. Please contact an administrator.
+                    You don&apos;t have permission to view customer data. Please contact an administrator.
                   </p>
                 </CardContent>
               </Card>

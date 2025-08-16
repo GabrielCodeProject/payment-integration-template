@@ -4,7 +4,7 @@ import { PrismaClient } from '@prisma/client';
 import { exec } from 'child_process';
 import { promisify } from 'util';
 
-const execAsync = promisify(exec);
+const _execAsync = promisify(exec);
 
 describe('Database Migration Integrity Tests', () => {
   let prisma: PrismaClient;
@@ -136,7 +136,7 @@ describe('Database Migration Integrity Tests', () => {
       expect(uniqueEmails.size).toBe(emails.length);
       
       // Test foreign key constraints
-      const product = await testDataGenerator.createTestProduct();
+      const _product = await testDataGenerator.createTestProduct();
       const ordersWithValidReferences = await Promise.all(
         users.map(user => testDataGenerator.createTestOrder(user.id))
       );

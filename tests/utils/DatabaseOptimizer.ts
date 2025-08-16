@@ -1,5 +1,4 @@
 import { PrismaClient } from '@prisma/client';
-import { performance } from 'perf_hooks';
 
 export interface OptimizationRecommendation {
   type: 'INDEX' | 'QUERY' | 'SCHEMA' | 'CONFIGURATION';

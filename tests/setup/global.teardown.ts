@@ -67,8 +67,8 @@ async function generatePerformanceReport() {
   
   // Write detailed report to file if needed
   if (process.env.WRITE_PERFORMANCE_REPORT === 'true') {
-    const fs = require('fs');
-    const path = require('path');
+    const fs = await import('fs');
+    const path = await import('path');
     
     const reportPath = path.join(process.cwd(), 'test-performance-report.json');
     fs.writeFileSync(reportPath, JSON.stringify({

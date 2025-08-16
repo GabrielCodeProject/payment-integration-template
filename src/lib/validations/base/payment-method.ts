@@ -95,7 +95,7 @@ export const createPaymentMethodSchema = z.object({
   nickname: nameSchema.optional(),
   isDefault: z.boolean().default(false),
   billingAddress: addressSchema.optional(),
-}).superRefine(async (data, ctx) => {
+}).superRefine(async (_data, _ctx) => {
   // Note: Additional validation against Stripe API would happen in the service layer
   // This is just basic structural validation
 });

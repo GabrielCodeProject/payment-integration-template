@@ -110,7 +110,7 @@ describe('User Model Tests', () => {
     });
     
     it('should sort users by creation date using index', async () => {
-      const users = await Promise.all([
+      const _users = await Promise.all([
         testDataGenerator.createTestUser({ email: 'first@example.com' }),
         testDataGenerator.createTestUser({ email: 'second@example.com' }),
         testDataGenerator.createTestUser({ email: 'third@example.com' })

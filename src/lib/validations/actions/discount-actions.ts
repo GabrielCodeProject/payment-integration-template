@@ -12,7 +12,6 @@ import {
 import {
   cuidSchema,
   limitSchema,
-  offsetSchema,
   pageSchema,
   sortDirectionSchema,
 } from '../base/common';

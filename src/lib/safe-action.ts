@@ -25,20 +25,38 @@ export const actionClient = createSafeActionClient();
  * Action client that requires user authentication
  * Use this for actions that require a logged-in user
  */
-export const authActionClient = actionClient.use(async ({ next }) => {
-  // TODO: Implement authentication check with BetterAuth
-  // This is a placeholder - replace with actual auth logic
+export const authActionClient = actionClient.use(async ({ next, ctx }) => {
+  const { auth } = await import("@/lib/auth/config");
+  const { headers } = await import("next/headers");
+  
+  try {
+    // Get headers for the current request
+    const headersList = await headers();
+    
+    const session = await auth.api.getSession({
+      headers: headersList,
+    });
+    
+    if (!session?.user) {
+      throw new Error("Authentication required");
+    }
 
-  // Example auth check (replace with BetterAuth implementation):
-  // const session = await getServerSession();
-  // if (!session?.user) {
-  //   throw new Error("Authentication required");
-  // }
+    if (session.user.isActive === false) {
+      throw new Error("Account is deactivated");
+    }
 
-  // For now, we'll proceed without auth check
-  // Remove this comment and implement proper auth when BetterAuth is configured
-
-  return next();
+    // Add session context to the action
+    return next({
+      ctx: {
+        ...ctx,
+        user: session.user,
+        session: session,
+      }
+    });
+  } catch (error) {
+    console.error("Auth action client error:", error);
+    throw new Error("Authentication failed");
+  }
 });
 
 // =============================================================================

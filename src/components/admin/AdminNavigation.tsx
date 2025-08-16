@@ -16,7 +16,6 @@ import {
   BarChart3,
   Activity,
   FileText,
-  AlertTriangle,
   ChevronRight,
 } from "lucide-react";
 import { cn } from "@/lib/utils";

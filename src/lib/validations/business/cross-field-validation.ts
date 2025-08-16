@@ -88,7 +88,7 @@ export const orderCrossFieldValidationSchema = z.object({
   // Cross-field Rule 4: Shipping address validation
   if (!data.shippingAddress) {
     // Check if any items require shipping
-    const requiresShipping = data.items.some(item => {
+    const requiresShipping = data.items.some(_item => {
       // This would typically check product properties from database
       // For now, assume all items require shipping unless proven otherwise
       return true;

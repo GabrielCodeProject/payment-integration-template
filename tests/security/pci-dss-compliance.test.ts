@@ -81,7 +81,7 @@ describe('PCI DSS Compliance Security Tests', () => {
     it('should validate payment data access restrictions', async () => {
       const user = await testDataGenerator.createTestUser();
       const paymentMethod = await testDataGenerator.createTestPaymentMethod(user.id);
-      const order = await testDataGenerator.createTestOrder(user.id, {
+      const _order = await testDataGenerator.createTestOrder(user.id, {
         paymentMethodId: paymentMethod.id,
         stripePaymentIntentId: 'pi_test_123456'
       });
@@ -312,7 +312,7 @@ describe('PCI DSS Compliance Security Tests', () => {
     });
     
     it('should test for SQL injection vulnerabilities', async () => {
-      const user = await testDataGenerator.createTestUser({
+      const _user = await testDataGenerator.createTestUser({
         email: 'sqli-test@example.com'
       });
       

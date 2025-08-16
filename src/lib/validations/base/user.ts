@@ -337,6 +337,48 @@ export const deactivateUserSchema = z.object({
 });
 
 // =============================================================================
+// PROFILE MANAGEMENT SCHEMAS
+// =============================================================================
+
+/**
+ * Profile update schema (excluding email which should be immutable)
+ */
+export const updateProfileSchema = z.object({
+  name: nameSchema.optional(),
+  phone: phoneSchema,
+  timezone: timezoneSchema.optional(),
+  preferredCurrency: currencySchema.optional(),
+}).partial();
+
+/**
+ * Profile image upload schema
+ */
+export const profileImageUploadSchema = z.object({
+  image: z.instanceof(File, { message: 'Invalid file' })
+    .refine((file) => file.size <= 5 * 1024 * 1024, 'File size must be less than 5MB')
+    .refine(
+      (file) => ['image/jpeg', 'image/jpg', 'image/png', 'image/webp'].includes(file.type),
+      'File must be a valid image (JPEG, PNG, or WebP)'
+    ),
+});
+
+/**
+ * Profile image URL schema for validation
+ */
+export const profileImageUrlSchema = z.object({
+  imageUrl: z.string().url('Invalid image URL').optional(),
+});
+
+/**
+ * Complete profile schema (for fetching user profile)
+ */
+export const profileResponseSchema = userSchema.omit({
+  hashedPassword: true,
+}).extend({
+  hasStripeCustomer: z.boolean(),
+});
+
+// =============================================================================
 // TYPE EXPORTS
 // =============================================================================
 
@@ -354,3 +396,7 @@ export type LoginCredentials = z.infer<typeof loginSchema>;
 export type Account = z.infer<typeof accountSchema>;
 export type Session = z.infer<typeof sessionSchema>;
 export type CreateSession = z.infer<typeof createSessionSchema>;
+export type UpdateProfile = z.infer<typeof updateProfileSchema>;
+export type ProfileImageUpload = z.infer<typeof profileImageUploadSchema>;
+export type ProfileImageUrl = z.infer<typeof profileImageUrlSchema>;
+export type ProfileResponse = z.infer<typeof profileResponseSchema>;

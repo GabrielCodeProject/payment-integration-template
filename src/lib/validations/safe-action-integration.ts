@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import { actionClient, authActionClient, paymentActionClient } from '../safe-action';
+import { actionClient } from '../safe-action';
 import { createValidationError, createBusinessLogicError, createPaymentError } from './errors/error-responses';
 
 /**
@@ -16,7 +16,7 @@ import { createValidationError, createBusinessLogicError, createPaymentError } f
 /**
  * Enhanced action client with comprehensive error handling
  */
-export const enhancedActionClient = actionClient.use(async ({ next, clientInput, bindArgsClientInputs }) => {
+export const enhancedActionClient = actionClient.use(async ({ next, clientInput: _clientInput, bindArgsClientInputs: _bindArgsClientInputs }) => {
   try {
     const result = await next();
     
@@ -26,7 +26,7 @@ export const enhancedActionClient = actionClient.use(async ({ next, clientInput,
     }
     
     // Transform errors into standardized format
-    const error = result.serverError || result.validationErrors;
+    const _error = result.serverError || result.validationErrors;
     
     if (result.validationErrors) {
       return {
@@ -75,7 +75,7 @@ export const enhancedAuthActionClient = enhancedActionClient.use(async ({ next }
 /**
  * Enhanced payment action client with PCI compliance checks
  */
-export const enhancedPaymentActionClient = enhancedAuthActionClient.use(async ({ next, clientInput }) => {
+export const enhancedPaymentActionClient = enhancedAuthActionClient.use(async ({ next, clientInput: _clientInput }) => {
   try {
     // Add PCI compliance checks here
     const result = await next();

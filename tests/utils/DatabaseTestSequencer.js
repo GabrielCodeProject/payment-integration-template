@@ -1,4 +1,4 @@
-const Sequencer = require('@jest/test-sequencer').default;
+import Sequencer from '@jest/test-sequencer';
 
 /**
  * Custom test sequencer to optimize database test execution order
@@ -47,4 +47,4 @@ class DatabaseTestSequencer extends Sequencer {
   }
 }
 
-module.exports = DatabaseTestSequencer;
+export default DatabaseTestSequencer;

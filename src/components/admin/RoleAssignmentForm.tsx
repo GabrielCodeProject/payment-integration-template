@@ -175,7 +175,7 @@ export function RoleAssignmentForm({
           <DialogHeader>
             <DialogTitle>Insufficient Permissions</DialogTitle>
             <DialogDescription>
-              You don't have permission to assign roles to users.
+              You don&apos;t have permission to assign roles to users.
             </DialogDescription>
           </DialogHeader>
           <DialogFooter>
@@ -389,7 +389,7 @@ export function RoleAssignmentForm({
             <Alert className="border-destructive">
               <AlertTriangle className="size-4" />
               <AlertDescription className="text-destructive">
-                You don't have permission to assign the {selectedRole} role.
+                You don&apos;t have permission to assign the {selectedRole} role.
               </AlertDescription>
             </Alert>
           )}

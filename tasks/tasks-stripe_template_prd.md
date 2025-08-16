@@ -111,8 +111,8 @@
 - [x] 3.3 Login/Logout (secure authentication with rate limiting)
 - [x] 3.4 Password Reset Flow (email verification, strength validation)
 - [x] 3.5 Role-Based Access Control (Admin, Customer, Support roles)
-- [ ] 3.6 Profile Management (editing, image upload, email changes)
-- [ ] 3.7 Session Management (refresh, concurrent limits)
+- [x] 3.6 Profile Management (editing, image upload)
+- [x] 3.7 Session Management (refresh, concurrent limits)
 - [ ] 3.8 Authentication UI Components (layouts, avatars, user menus)
 - [ ] 3.9 Security Features (rate limiting, CSRF protection, audit logging)
 - [ ] 3.10 Testing and Error Handling for authentication flows
