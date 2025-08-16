@@ -46,7 +46,16 @@
       "mcp__context7__get-library-docs",
       "Bash(npx @better-auth/cli generate:*)",
       "Bash(npm test)",
-      "mcp__shadcn-ui__list_components"
+      "mcp__shadcn-ui__list_components",
+      "Bash(curl:*)",
+      "Bash(find:*)",
+      "mcp__playwright__browser_navigate",
+      "mcp__playwright__browser_install",
+      "Bash(cat:*)",
+      "mcp__playwright__browser_type",
+      "mcp__playwright__browser_click",
+      "mcp__playwright__browser_snapshot",
+      "mcp__playwright__browser_close"
     ]
   },
   "enableAllProjectMcpServers": true,

@@ -207,7 +207,7 @@ export async function middleware(request: NextRequest) {
       "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
       "font-src 'self' https://fonts.gstatic.com",
       "img-src 'self' data: https: blob:",
-      `connect-src 'self' ${isDevelopment ? "ws: wss:" : ""} https://api.stripe.com https://*.stripe.com https://checkout.stripe.com`,
+      `connect-src 'self' ${isDevelopment ? "ws: wss: http://localhost:3000 http://127.0.0.1:3000" : ""} https://api.stripe.com https://*.stripe.com https://checkout.stripe.com`,
       "frame-src 'self' https://js.stripe.com https://hooks.stripe.com https://checkout.stripe.com",
       "form-action 'self'",
       "base-uri 'self'",
@@ -226,7 +226,7 @@ export async function middleware(request: NextRequest) {
       "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
       "font-src 'self' https://fonts.gstatic.com",
       "img-src 'self' data: https:",
-      `connect-src 'self' ${isDevelopment ? "ws: wss:" : ""}`,
+      `connect-src 'self' ${isDevelopment ? "ws: wss: http://localhost:3000 http://127.0.0.1:3000" : ""}`,
       "frame-src 'none'",
       "form-action 'self'",
       "base-uri 'self'",
@@ -248,6 +248,25 @@ export async function middleware(request: NextRequest) {
       }
     }
 
+    // Environment-aware allowed origins configuration
+    const getAllowedOrigins = () => {
+      const origins = [clientEnv.NEXT_PUBLIC_APP_URL];
+      
+      // Add development origins only in development environment
+      if (isDevelopment) {
+        origins.push(
+          "http://localhost:3000",
+          "http://localhost:3001",
+          "http://127.0.0.1:3000",
+          "http://127.0.0.1:3001"
+        );
+      }
+      
+      return Array.from(new Set(origins)); // Remove duplicates
+    };
+
+    const allowedOrigins = getAllowedOrigins();
+
     // CSRF protection for non-GET requests
     if (request.method !== "GET" && request.method !== "OPTIONS") {
       const origin = request.headers.get("origin");
@@ -257,10 +276,6 @@ export async function middleware(request: NextRequest) {
         return new NextResponse("Missing origin header", { status: 403 });
       }
 
-      const allowedOrigins = [
-        clientEnv.NEXT_PUBLIC_APP_URL,
-        "http://localhost:3000",
-      ];
       const isValidOrigin = origin && allowedOrigins.includes(origin);
       const isValidReferer =
         referer &&
@@ -271,12 +286,17 @@ export async function middleware(request: NextRequest) {
       }
     }
 
-    // CORS for API routes
+    // CORS for API routes with dynamic origin handling
     if (request.method === "OPTIONS") {
+      const origin = request.headers.get("origin");
+      const allowedOrigin = origin && allowedOrigins.includes(origin) 
+        ? origin 
+        : clientEnv.NEXT_PUBLIC_APP_URL;
+
       return new NextResponse(null, {
         status: 200,
         headers: {
-          "Access-Control-Allow-Origin": clientEnv.NEXT_PUBLIC_APP_URL,
+          "Access-Control-Allow-Origin": allowedOrigin,
           "Access-Control-Allow-Methods": "GET, POST, PUT, DELETE, OPTIONS",
           "Access-Control-Allow-Headers":
             "Content-Type, Authorization, stripe-signature, X-Requested-With",
@@ -285,6 +305,16 @@ export async function middleware(request: NextRequest) {
         },
       });
     }
+
+    // Add CORS headers to all API responses
+    const origin = request.headers.get("origin");
+    const allowedOrigin = origin && allowedOrigins.includes(origin) 
+      ? origin 
+      : clientEnv.NEXT_PUBLIC_APP_URL;
+
+    response.headers.set("Access-Control-Allow-Origin", allowedOrigin);
+    response.headers.set("Access-Control-Allow-Credentials", "true");
+    response.headers.set("Vary", "Origin");
 
     // Add rate limiting headers to API responses
     const rateLimitHeaders = {
