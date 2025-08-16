@@ -23,7 +23,7 @@ model User {
   hashedPassword    String?
   twoFactorEnabled  Boolean            @default(false)
   isActive          Boolean            @default(true)
-  role              UserRole           @default(CUSTOMER)
+  role              String             @default("CUSTOMER")
   // Stripe Integration
   stripeCustomerId  String?            @unique
   // Payment Preferences
