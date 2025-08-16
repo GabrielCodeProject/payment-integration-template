@@ -22,8 +22,8 @@ export interface SessionInfo {
   expiresAt: Date;
   createdAt: Date;
   updatedAt: Date;
-  ipAddress?: string;
-  userAgent?: string;
+  ipAddress?: string | undefined;
+  userAgent?: string | undefined;
   lastActivityAt?: Date;
   deviceType?: string;
   browser?: string;
@@ -57,7 +57,7 @@ export interface SessionLimits {
 
 export interface RefreshResult {
   success: boolean;
-  newToken?: string;
+  newToken?: string | undefined;
   expiresAt?: Date;
   rotated: boolean;
   error?: string;
@@ -126,8 +126,8 @@ export class SessionManager {
         expiresAt: session.expiresAt,
         createdAt: session.createdAt,
         updatedAt: session.updatedAt,
-        ipAddress: session.ipAddress || undefined,
-        userAgent: session.userAgent || undefined,
+        ipAddress: session.ipAddress ?? undefined,
+        userAgent: session.userAgent ?? undefined,
         lastActivityAt: session.updatedAt,
         deviceType: this.parseDeviceType(session.userAgent),
         browser: this.parseBrowser(session.userAgent),
@@ -203,7 +203,7 @@ export class SessionManager {
       }
 
       // Update session
-      const _updatedSession = await this.db.session.update({
+      await this.db.session.update({
         where: { id: sessionId },
         data: {
           token: newToken,
@@ -232,7 +232,7 @@ export class SessionManager {
           expiryExtended: extendExpiry,
           userId: session.userId,
         },
-        context: options.auditContext,
+        ...(options.auditContext && { context: options.auditContext }),
       });
 
       return {
@@ -289,7 +289,7 @@ export class SessionManager {
           reason: options.reason || 'manual_termination',
           userId: session.userId,
         },
-        context: options.auditContext,
+        ...(options.auditContext && { context: options.auditContext }),
       });
 
       return true;
@@ -341,7 +341,7 @@ export class SessionManager {
             userAgent: s.userAgent,
           })),
         },
-        context: options.auditContext,
+        ...(options.auditContext && { context: options.auditContext }),
       });
 
       return result.count;
@@ -394,7 +394,7 @@ export class SessionManager {
         for (const session of sessionsToDisplace) {
           await this.terminateSession(session.id, {
             reason: 'session_limit_enforcement',
-            auditContext,
+            ...(auditContext && { auditContext }),
           });
           displacedSessions++;
         }
@@ -407,7 +407,7 @@ export class SessionManager {
           if (security.suspicious && security.riskScore > 0.7) {
             await this.terminateSession(session.id, {
               reason: 'suspicious_activity',
-              auditContext,
+              ...(auditContext && { auditContext }),
             });
             suspiciousSessions++;
           }
@@ -431,7 +431,7 @@ export class SessionManager {
           limits: effectiveLimits,
           result,
         },
-        context: auditContext,
+        ...(auditContext && { context: auditContext }),
       });
 
       return result;
@@ -453,17 +453,15 @@ export class SessionManager {
         activeSessions,
         expiredSessions,
         recentLogins,
-        avgDurationResult
       ] = await Promise.all([
         this.db.session.count({ where: { userId } }),
         this.db.session.count({ where: { userId, expiresAt: { gt: now } } }),
         this.db.session.count({ where: { userId, expiresAt: { lte: now } } }),
         this.db.session.count({ where: { userId, createdAt: { gte: last24Hours } } }),
-        this.db.session.aggregate({
-          where: { userId },
-          _avg: { updatedAt: true },
-        }),
       ]);
+
+      // Calculate average session duration properly
+      const averageSessionDuration = await this.calculateProperAverageSessionDuration(userId);
 
       return {
         totalSessions,
@@ -471,7 +469,7 @@ export class SessionManager {
         expiredSessions,
         recentLogins,
         concurrentLimit: this.defaultLimits.maxConcurrentSessions,
-        averageSessionDuration: this.calculateAverageSessionDuration(avgDurationResult._avg.updatedAt),
+        averageSessionDuration,
       };
     } catch (error) {
       throw new Error(`Failed to get session stats: ${error instanceof Error ? error.message : 'Unknown error'}`);
@@ -498,8 +496,10 @@ export class SessionManager {
           token,
           userId,
           expiresAt,
-          ipAddress: options.ipAddress,
-          userAgent: options.userAgent,
+          ...(options.ipAddress && { ipAddress: options.ipAddress }),
+          ...(options.userAgent && { userAgent: options.userAgent }),
+          createdAt: now,
+          updatedAt: now,
         },
       });
 
@@ -532,8 +532,8 @@ export class SessionManager {
         expiresAt: session.expiresAt,
         createdAt: session.createdAt,
         updatedAt: session.updatedAt,
-        ipAddress: session.ipAddress || undefined,
-        userAgent: session.userAgent || undefined,
+        ipAddress: session.ipAddress ?? undefined,
+        userAgent: session.userAgent ?? undefined,
         lastActivityAt: session.updatedAt,
         deviceType: this.parseDeviceType(options.userAgent),
         browser: this.parseBrowser(options.userAgent),
@@ -704,13 +704,60 @@ export class SessionManager {
   }
 
   /**
-   * Calculate average session duration
+   * Calculate proper average session duration for a user
    */
-  private calculateAverageSessionDuration(avgUpdatedAt?: Date | null): number {
-    // This is a simplified calculation
-    // In production, you might track actual session start/end times
-    return avgUpdatedAt ? Math.floor(Date.now() - avgUpdatedAt.getTime()) / 1000 : 0;
+  private async calculateProperAverageSessionDuration(userId: string): Promise<number> {
+    try {
+      // Get sessions that have been used (have both createdAt and updatedAt)
+      const sessions = await this.db.session.findMany({
+        where: { 
+          userId,
+        },
+        select: {
+          createdAt: true,
+          updatedAt: true,
+          expiresAt: true,
+        },
+        take: 100, // Limit to recent 100 sessions for performance
+        orderBy: { updatedAt: 'desc' },
+      });
+
+      if (sessions.length === 0) {
+        return 0;
+      }
+
+      // Calculate duration for each session
+      const durations = sessions
+        .map(session => {
+          // Calculate session duration based on activity
+          const now = new Date();
+          
+          // If session is expired, use the expiry time or last activity time
+          const sessionEndTime = session.expiresAt < now 
+            ? session.expiresAt 
+            : session.updatedAt;
+          
+          const durationMs = sessionEndTime.getTime() - session.createdAt.getTime();
+          
+          // Only include sessions that have meaningful duration (at least 1 minute)
+          return durationMs > 60000 ? durationMs : null;
+        })
+        .filter((duration): duration is number => duration !== null);
+
+      // Calculate average duration in seconds
+      if (durations.length === 0) {
+        return 0;
+      }
+      
+      const averageDurationMs = durations.reduce((sum, duration) => sum + duration, 0) / durations.length;
+      return Math.floor(averageDurationMs / 1000); // Convert to seconds
+    } catch (_error) {
+      // Return 0 if calculation fails
+      // console.warn('Failed to calculate average session duration:', _error);
+      return 0;
+    }
   }
+
 }
 
 // Rate limiting for session operations
@@ -772,7 +819,7 @@ export const sessionManager = new SessionManager();
 // Helper function to get current session from headers
 export async function getCurrentSession(): Promise<SessionInfo | null> {
   try {
-    const headersList = headers();
+    const headersList = await headers();
     const authHeader = headersList.get('authorization');
     const cookieHeader = headersList.get('cookie');
 
@@ -785,10 +832,10 @@ export async function getCurrentSession(): Promise<SessionInfo | null> {
       // Parse session token from cookie (BetterAuth format)
       const sessionCookie = cookieHeader
         .split(';')
-        .find(c => c.trim().startsWith('better-auth.session_token='));
+        .find((c: string) => c.trim().startsWith('better-auth.session_token='));
       
       if (sessionCookie) {
-        sessionToken = sessionCookie.split('=')[1];
+        sessionToken = sessionCookie.split('=')[1] ?? null;
       }
     }
 
@@ -813,8 +860,8 @@ export async function getCurrentSession(): Promise<SessionInfo | null> {
       expiresAt: session.expiresAt,
       createdAt: session.createdAt,
       updatedAt: session.updatedAt,
-      ipAddress: session.ipAddress || undefined,
-      userAgent: session.userAgent || undefined,
+      ipAddress: session.ipAddress ?? undefined,
+      userAgent: session.userAgent ?? undefined,
       lastActivityAt: session.updatedAt,
       isCurrent: true,
     };
@@ -823,13 +870,4 @@ export async function getCurrentSession(): Promise<SessionInfo | null> {
   }
 }
 
-// Export types for external use
-export type {
-  SessionInfo,
-  SessionSecurity,
-  SessionStats,
-  SessionLimits,
-  RefreshResult,
-  SessionCreationOptions,
-  SessionCleanupResult,
-};
+// Types are already exported above - no need to re-export

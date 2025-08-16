@@ -22,7 +22,7 @@ export async function POST(request: NextRequest) {
   try {
     // Get authenticated session
     const session = await auth.api.getSession({
-      headers: new Headers(request.headers),
+      headers: request.headers,
     });
 
     if (!session?.user) {
@@ -257,7 +257,7 @@ export async function GET(request: NextRequest) {
   try {
     // Get authenticated session
     const session = await auth.api.getSession({
-      headers: new Headers(request.headers),
+      headers: request.headers,
     });
 
     if (!session?.user) {

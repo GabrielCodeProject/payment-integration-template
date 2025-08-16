@@ -199,11 +199,11 @@ export function ActiveSessionsList({
           {/* Filters */}
           <div className="grid gap-4 md:grid-cols-4">
             <Select
-              value={filters.deviceType?.[0] || ''}
+              value={filters.deviceType?.[0] || 'all-devices'}
               onValueChange={(value) => 
                 setFilters(prev => ({ 
                   ...prev, 
-                  deviceType: value ? [value] : undefined 
+                  deviceType: (value && value !== 'all-devices') ? [value] : undefined 
                 }))
               }
             >
@@ -211,7 +211,7 @@ export function ActiveSessionsList({
                 <SelectValue placeholder="Device Type" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="">All Devices</SelectItem>
+                <SelectItem value="all-devices">All Devices</SelectItem>
                 {deviceTypes.map(type => (
                   <SelectItem key={type} value={type}>{type}</SelectItem>
                 ))}
@@ -219,11 +219,11 @@ export function ActiveSessionsList({
             </Select>
 
             <Select
-              value={filters.browser?.[0] || ''}
+              value={filters.browser?.[0] || 'all-browsers'}
               onValueChange={(value) => 
                 setFilters(prev => ({ 
                   ...prev, 
-                  browser: value ? [value] : undefined 
+                  browser: (value && value !== 'all-browsers') ? [value] : undefined 
                 }))
               }
             >
@@ -231,7 +231,7 @@ export function ActiveSessionsList({
                 <SelectValue placeholder="Browser" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="">All Browsers</SelectItem>
+                <SelectItem value="all-browsers">All Browsers</SelectItem>
                 {browsers.map(browser => (
                   <SelectItem key={browser} value={browser}>{browser}</SelectItem>
                 ))}
@@ -239,11 +239,11 @@ export function ActiveSessionsList({
             </Select>
 
             <Select
-              value={filters.trustLevel?.[0] || ''}
+              value={filters.trustLevel?.[0] || 'all-levels'}
               onValueChange={(value) => 
                 setFilters(prev => ({ 
                   ...prev, 
-                  trustLevel: value ? [value as any] : undefined 
+                  trustLevel: (value && value !== 'all-levels') ? [value as any] : undefined 
                 }))
               }
             >
@@ -251,7 +251,7 @@ export function ActiveSessionsList({
                 <SelectValue placeholder="Trust Level" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="">All Levels</SelectItem>
+                <SelectItem value="all-levels">All Levels</SelectItem>
                 <SelectItem value="trusted">Trusted</SelectItem>
                 <SelectItem value="unknown">Unknown</SelectItem>
                 <SelectItem value="suspicious">Suspicious</SelectItem>

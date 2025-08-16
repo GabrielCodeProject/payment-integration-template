@@ -30,7 +30,7 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
 
     // Get authenticated session
     const session = await auth.api.getSession({
-      headers: new Headers(request.headers),
+      headers: request.headers,
     });
 
     if (!session?.user) {
@@ -156,7 +156,7 @@ export async function PUT(request: NextRequest, { params }: RouteParams) {
 
     // Get authenticated session
     const session = await auth.api.getSession({
-      headers: new Headers(request.headers),
+      headers: request.headers,
     });
 
     if (!session?.user) {
@@ -348,7 +348,7 @@ export async function DELETE(request: NextRequest, { params }: RouteParams) {
 
     // Get authenticated session
     const session = await auth.api.getSession({
-      headers: new Headers(request.headers),
+      headers: request.headers,
     });
 
     if (!session?.user) {

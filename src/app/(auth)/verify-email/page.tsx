@@ -7,18 +7,20 @@ export const metadata: Metadata = {
 };
 
 interface VerifyEmailPageProps {
-  searchParams: {
+  searchParams: Promise<{
     token?: string;
     email?: string;
-  };
+  }>;
 }
 
-export default function VerifyEmailPage({ searchParams }: VerifyEmailPageProps) {
+export default async function VerifyEmailPage({ searchParams }: VerifyEmailPageProps) {
+  const resolvedParams = await searchParams;
+  
   return (
     <div className="space-y-6">
       <EmailVerificationStatus 
-        token={searchParams.token}
-        email={searchParams.email}
+        token={resolvedParams.token}
+        email={resolvedParams.email}
       />
     </div>
   );
