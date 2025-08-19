@@ -49,7 +49,7 @@ export class ProfileService {
       maxImageSize: 5 * 1024 * 1024, // 5MB
       allowedImageTypes: ['image/jpeg', 'image/jpg', 'image/png', 'image/webp'],
       uploadDirectory: path.join(process.cwd(), 'public', 'uploads', 'profiles'),
-      baseUrl: process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000',
+      baseUrl: process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000',
       ...config,
     };
   }
@@ -327,7 +327,7 @@ export class ProfileService {
       const uniqueId = crypto.randomUUID();
       const fileName = `${userId}-${uniqueId}${fileExtension}`;
       const filePath = path.join(this.config.uploadDirectory, fileName);
-      const imageUrl = `/uploads/profiles/${fileName}`;
+      const imageUrl = `${this.config.baseUrl}/uploads/profiles/${fileName}`;
 
       // Convert File to Buffer and save
       const arrayBuffer = await imageFile.arrayBuffer();
