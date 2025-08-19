@@ -334,6 +334,10 @@ export function logAuthEvent(
 
 /**
  * Rate limiting (Edge Runtime compatible)
+ * 
+ * Note: This is a simple Edge Runtime compatible version.
+ * For production use, the enhanced rate limiting in /lib/rate-limiting.ts
+ * provides Redis support and better persistence.
  */
 const rateLimitCache = new Map<string, { count: number; resetTime: number }>();
 

@@ -99,6 +99,24 @@ export const auth = betterAuth({
       enabled: false, // Disable for security unless needed
     },
     disableCSRFCheck: false, // Keep CSRF protection enabled
+    // Enhanced cookie security configuration
+    useSecureCookies: process.env.NODE_ENV === "production",
+    defaultCookieAttributes: {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === "production",
+      sameSite: "lax",
+      path: "/",
+    },
+    cookies: {
+      session_token: {
+        attributes: {
+          httpOnly: true,
+          secure: process.env.NODE_ENV === "production",
+          sameSite: "lax",
+          path: "/",
+        },
+      },
+    },
   },
 
   // Rate limiting configuration

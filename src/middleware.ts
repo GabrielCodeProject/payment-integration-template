@@ -9,6 +9,16 @@ import {
   createAuthRedirect,
   type EdgeAuthConfig,
 } from "@/lib/auth/edge-middleware";
+import { 
+  checkAuthRateLimit, 
+  checkPaymentRateLimit, 
+  createRateLimitResponse 
+} from "@/lib/rate-limiting";
+import {
+  applyCSRFProtection,
+  defaultCSRFConfig,
+  sensitiveCSRFConfig
+} from "@/lib/csrf-protection";
 
 /**
  * Next.js Middleware for Payment Integration Template
@@ -125,51 +135,75 @@ export async function middleware(request: NextRequest) {
   // RATE LIMITING
   // =============================================================================
 
-  // Rate limit authentication endpoints
+  // Rate limit authentication endpoints with enhanced Redis-based limiting
   if (pathname.startsWith("/api/auth/") || pathname.startsWith("/login") || pathname.startsWith("/register")) {
-    const rateLimitResult = checkRateLimit(`auth:${clientIP}`, 10, 60000); // 10 requests per minute
+    try {
+      const rateLimitResult = await checkAuthRateLimit(request);
 
-    if (!rateLimitResult.allowed) {
-      logAuthEvent("blocked", {
-        pathname,
-        ip: clientIP,
-        reason: "Rate limit exceeded",
-      });
+      if (!rateLimitResult.allowed) {
+        logAuthEvent("blocked", {
+          pathname,
+          ip: clientIP,
+          reason: "Rate limit exceeded",
+        });
 
-      return new NextResponse("Too Many Requests", {
-        status: 429,
-        headers: {
-          "X-RateLimit-Limit": "10",
-          "X-RateLimit-Remaining": "0",
-          "X-RateLimit-Reset": new Date(
-            rateLimitResult.resetTime
-          ).toISOString(),
-          "Retry-After": Math.ceil(
-            (rateLimitResult.resetTime - Date.now()) / 1000
-          ).toString(),
-        },
-      });
+        return createRateLimitResponse(rateLimitResult);
+      }
+    } catch (error) {
+      // Fallback to simple edge rate limiting if enhanced fails
+      const rateLimitResult = checkRateLimit(`auth:${clientIP}`, 10, 60000);
+
+      if (!rateLimitResult.allowed) {
+        logAuthEvent("blocked", {
+          pathname,
+          ip: clientIP,
+          reason: "Rate limit exceeded",
+        });
+
+        return new NextResponse("Too Many Requests", {
+          status: 429,
+          headers: {
+            "X-RateLimit-Limit": "10",
+            "X-RateLimit-Remaining": "0",
+            "X-RateLimit-Reset": new Date(
+              rateLimitResult.resetTime
+            ).toISOString(),
+            "Retry-After": Math.ceil(
+              (rateLimitResult.resetTime - Date.now()) / 1000
+            ).toString(),
+          },
+        });
+      }
     }
   }
 
-  // Rate limit payment and webhook endpoints
+  // Rate limit payment and webhook endpoints with enhanced limiting
   if (
     pathname.startsWith("/api/payments") ||
     pathname.startsWith("/api/webhooks")
   ) {
-    const rateLimitResult = checkRateLimit(`payment:${clientIP}`, 30, 60000); // 30 requests per minute
+    try {
+      const rateLimitResult = await checkPaymentRateLimit(request);
 
-    if (!rateLimitResult.allowed) {
-      return new NextResponse("Payment rate limit exceeded", {
-        status: 429,
-        headers: {
-          "X-RateLimit-Limit": "30",
-          "X-RateLimit-Remaining": "0",
-          "X-RateLimit-Reset": new Date(
-            rateLimitResult.resetTime
-          ).toISOString(),
-        },
-      });
+      if (!rateLimitResult.allowed) {
+        return createRateLimitResponse(rateLimitResult);
+      }
+    } catch (error) {
+      // Fallback to simple edge rate limiting if enhanced fails
+      const rateLimitResult = checkRateLimit(`payment:${clientIP}`, 30, 60000);
+
+      if (!rateLimitResult.allowed) {
+        return new NextResponse("Payment rate limit exceeded", {
+          status: 429,
+          headers: {
+            "X-RateLimit-Limit": "30",
+            "X-RateLimit-Remaining": "0",
+            "X-RateLimit-Reset": new Date(
+              rateLimitResult.resetTime
+            ).toISOString(),
+          },
+        });
+      }
     }
   }
 
@@ -237,6 +271,49 @@ export async function middleware(request: NextRequest) {
   }
 
   // =============================================================================
+  // ENHANCED CSRF PROTECTION
+  // =============================================================================
+  
+  // Apply enhanced CSRF protection for sensitive endpoints
+  const isSensitiveEndpoint = pathname.includes("/payment") ||
+                             pathname.includes("/admin") ||
+                             pathname.includes("/billing") ||
+                             (pathname.startsWith("/api/") && 
+                              !pathname.startsWith("/api/auth") && 
+                              !pathname.startsWith("/api/stripe/webhook") && 
+                              !pathname.startsWith("/api/health"));
+
+  if (isSensitiveEndpoint) {
+    const csrfResponse = applyCSRFProtection(request, response, sensitiveCSRFConfig);
+    
+    // If CSRF protection failed, return the error response
+    if (csrfResponse.status === 403) {
+      return csrfResponse;
+    }
+    
+    // Update response with CSRF token if needed
+    if (csrfResponse !== response) {
+      // Copy headers from CSRF response to our response
+      csrfResponse.headers.forEach((value, key) => {
+        response.headers.set(key, value);
+      });
+    }
+  } else {
+    // Apply default CSRF protection for other routes
+    const csrfResponse = applyCSRFProtection(request, response, defaultCSRFConfig);
+    
+    if (csrfResponse.status === 403) {
+      return csrfResponse;
+    }
+    
+    if (csrfResponse !== response) {
+      csrfResponse.headers.forEach((value, key) => {
+        response.headers.set(key, value);
+      });
+    }
+  }
+
+  // =============================================================================
   // API ROUTE PROTECTION
   // =============================================================================
   if (pathname.startsWith("/api/")) {
@@ -267,11 +344,30 @@ export async function middleware(request: NextRequest) {
 
     const allowedOrigins = getAllowedOrigins();
 
-    // CSRF protection for non-GET requests
+    // Enhanced CSRF protection for non-GET requests
     if (request.method !== "GET" && request.method !== "OPTIONS") {
       const origin = request.headers.get("origin");
       const referer = request.headers.get("referer");
+      const secFetchSite = request.headers.get("sec-fetch-site");
+      
+      // Enhanced Sec-Fetch-Site header validation
+      if (secFetchSite) {
+        // For sensitive operations, ensure the request is from the same origin
+        const isSensitiveEndpoint = pathname.includes("/payment") || 
+                                  pathname.includes("/admin") ||
+                                  pathname.includes("/auth/");
+        
+        if (isSensitiveEndpoint && secFetchSite !== "same-origin" && secFetchSite !== "same-site") {
+          return new NextResponse("Invalid request site", { status: 403 });
+        }
+        
+        // Block clearly cross-site requests for all API endpoints
+        if (secFetchSite === "cross-site") {
+          return new NextResponse("Cross-site requests not allowed", { status: 403 });
+        }
+      }
 
+      // Traditional origin/referer validation
       if (!origin && !referer) {
         return new NextResponse("Missing origin header", { status: 403 });
       }

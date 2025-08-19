@@ -48,11 +48,6 @@ const nextConfig: NextConfig = {
             key: "X-Content-Type-Options",
             value: "nosniff",
           },
-          // Enable XSS protection
-          {
-            key: "X-XSS-Protection",
-            value: "1; mode=block",
-          },
           // Referrer policy for privacy
           {
             key: "Referrer-Policy",
@@ -61,7 +56,12 @@ const nextConfig: NextConfig = {
           // Permissions policy
           {
             key: "Permissions-Policy",
-            value: "camera=(), microphone=(), geolocation=()",
+            value: "camera=(), microphone=(), geolocation=(), payment=()",
+          },
+          // Certificate Transparency enforcement
+          {
+            key: "Expect-CT",
+            value: "max-age=86400, enforce",
           },
         ],
       },
