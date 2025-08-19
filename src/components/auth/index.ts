@@ -14,7 +14,23 @@ export { LogoutButton } from './LogoutButton';
 export { PasswordStrengthIndicator } from './PasswordStrengthIndicator';
 export { RegistrationForm } from './RegistrationForm';
 export { ResetPasswordForm } from './ResetPasswordForm';
-export { UserMenu } from './UserMenu';
+export { UserMenu, UserInfo } from './UserMenu';
+
+// Enhanced UI components
+export { 
+  UserAvatar, 
+  SimpleAvatar, 
+  AvatarGroup 
+} from './Avatar';
+export { 
+  SessionIndicator, 
+  SessionStatus, 
+  ConnectionIndicator 
+} from './SessionIndicator';
+export { 
+  ProfileCard, 
+  ProfileCardSkeleton 
+} from './ProfileCard';
 
 // Session management components
 export { SessionCard } from './SessionCard';
