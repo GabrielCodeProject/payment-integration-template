@@ -41,7 +41,11 @@ export const authActionClient = actionClient.use(async ({ next, ctx }) => {
       throw new Error("Authentication required");
     }
 
-    if (session.user.isActive === false) {
+    // Type assertion for additional fields from BetterAuth
+    const user = session.user as any;
+    
+    // Check if user account is active
+    if (user.isActive === false) {
       throw new Error("Account is deactivated");
     }
 
@@ -49,12 +53,20 @@ export const authActionClient = actionClient.use(async ({ next, ctx }) => {
     return next({
       ctx: {
         ...ctx,
-        user: session.user,
+        user: user,
         session: session,
       }
     });
   } catch (error) {
-    console.error("Auth action client error:", error);
+    // Log error details for debugging (only in development)
+    if (process.env.NODE_ENV === "development") {
+      console.error("Authentication error:", {
+        message: error instanceof Error ? error.message : 'Unknown error',
+        headers: Array.from(headersList.keys()),
+      });
+    }
+    
+    // Return a generic authentication error
     throw new Error("Authentication failed");
   }
 });
