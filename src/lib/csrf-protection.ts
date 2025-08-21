@@ -140,6 +140,19 @@ export function validateCSRFProtection(
     return { isValid: true };
   }
 
+  // Skip validation for Next.js Server Actions
+  // Server actions are POST requests with specific characteristics
+  if (request.method === 'POST') {
+    const contentType = request.headers.get('content-type') || '';
+    const nextAction = request.headers.get('next-action');
+    const nextRouter = request.headers.get('next-router-state-tree');
+    
+    // Check if this is a Next.js server action request
+    if (nextAction || nextRouter || contentType.includes('text/plain;action=')) {
+      return { isValid: true };
+    }
+  }
+
   const cookieToken = getCSRFTokenFromCookies(request);
   const headerToken = getCSRFTokenFromHeaders(request);
   

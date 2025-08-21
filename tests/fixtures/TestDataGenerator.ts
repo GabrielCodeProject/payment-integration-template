@@ -15,7 +15,6 @@ export class TestDataGenerator {
       email: faker.internet.email(),
       name: faker.person.fullName(),
       phone: faker.phone.number(),
-      hashedPassword: faker.internet.password(),
       twoFactorEnabled: faker.datatype.boolean(),
       isActive: true,
       role: faker.helpers.arrayElement(Object.values(UserRole)),

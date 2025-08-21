@@ -1,5 +1,5 @@
 /**
- * User seeding module - Creates users with different roles and realistic data
+ * User seeding module - Creates users with BetterAuth authentication
  */
 
 import { PrismaClient } from '@prisma/client';
@@ -259,12 +259,12 @@ export async function seedUsers(prisma: PrismaClient, config: SeedConfig): Promi
   for (const userData of baseUsers) {
     const hashedPassword = await bcrypt.hash(userData.password, 12);
     
+    // Create user without hashedPassword (using BetterAuth only)
     const user = await prisma.user.create({
       data: {
         id: userData.id,
         email: userData.email,
         name: userData.name,
-        hashedPassword,
         role: userData.role,
         stripeCustomerId: userData.stripeCustomerId,
         phone: userData.phone,
@@ -274,6 +274,18 @@ export async function seedUsers(prisma: PrismaClient, config: SeedConfig): Promi
         emailVerified: userData.emailVerified || false,
         isActive: userData.isActive !== false,
         lastLoginAt: userData.isActive ? daysAgo(Math.floor(Math.random() * 30)) : null
+      }
+    });
+    
+    // Create BetterAuth account for each user
+    await prisma.account.create({
+      data: {
+        userId: user.id,
+        accountId: user.email,
+        providerId: 'credential',
+        password: hashedPassword,
+        createdAt: new Date(),
+        updatedAt: new Date()
       }
     });
     
@@ -309,12 +321,12 @@ export async function seedUsers(prisma: PrismaClient, config: SeedConfig): Promi
       
       const hashedPassword = await bcrypt.hash(userData.password, 12);
       
+      // Create user without hashedPassword (using BetterAuth only)
       const user = await prisma.user.create({
         data: {
           id,
           email,
           name: userData.name,
-          hashedPassword,
           role: userData.role,
           stripeCustomerId,
           phone: userData.phone,
@@ -324,6 +336,18 @@ export async function seedUsers(prisma: PrismaClient, config: SeedConfig): Promi
           emailVerified: userData.emailVerified || false,
           isActive: userData.isActive !== false,
           lastLoginAt: userData.isActive ? daysAgo(Math.floor(Math.random() * 30)) : null
+        }
+      });
+      
+      // Create BetterAuth account for each user
+      await prisma.account.create({
+        data: {
+          userId: user.id,
+          accountId: email,
+          providerId: 'credential',
+          password: hashedPassword,
+          createdAt: new Date(),
+          updatedAt: new Date()
         }
       });
       

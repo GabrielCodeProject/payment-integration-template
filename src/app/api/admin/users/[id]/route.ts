@@ -71,7 +71,6 @@ export async function GET(
 
         // Remove sensitive information from response
         const {
-          hashedPassword: _hashedPassword,
           stripeCustomerId: _stripeCustomerId,
           ...safeUserData
         } = user;
@@ -179,7 +178,6 @@ export async function PUT(
 
         // Remove sensitive information from response
         const {
-          hashedPassword: _hashedPassword,
           stripeCustomerId: _stripeCustomerId,
           ...safeUserData
         } = updatedUser;
@@ -261,7 +259,6 @@ export async function DELETE(
 
         // Remove sensitive information from response
         const {
-          hashedPassword: _hashedPassword,
           stripeCustomerId: _stripeCustomerId,
           ...safeUserData
         } = deactivatedUser;
@@ -344,7 +341,6 @@ export async function PATCH(
 
         // Remove sensitive information from response
         const {
-          hashedPassword: _hashedPassword,
           stripeCustomerId: _stripeCustomerId,
           ...safeUserData
         } = activatedUser;

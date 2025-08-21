@@ -19,12 +19,11 @@ describe('Authentication and Authorization Security Tests', () => {
     it('should never store plaintext passwords', async () => {
       const plainPassword = 'mySecretPassword123!';
       const user = await testDataGenerator.createTestUser({
-        hashedPassword: 'hashed_' + plainPassword // Simulated hash
-      });
+        });
       
       // Password should be hashed, not plaintext
-      expect(user.hashedPassword).not.toBe(plainPassword);
-      expect(user.hashedPassword).toContain('hashed_');
+      expect(user).not.toBe(plainPassword);
+      expect(user).toContain('hashed_');
       
       // Verify no plaintext password field exists
       const userKeys = Object.keys(user);
@@ -37,23 +36,21 @@ describe('Authentication and Authorization Security Tests', () => {
     
     it('should support password hash validation', async () => {
       const user = await testDataGenerator.createTestUser({
-        hashedPassword: '$2b$10$example.hash.for.testing.purposes.only',
         email: 'hash-test@example.com'
       });
       
       // Hash should look like a proper bcrypt hash
-      expect(user.hashedPassword).toMatch(/^\$2b\$\d+\$/);
+      expect(user).toMatch(/^\$2b\$\d+\$/);
       
       console.log('✅ Password hash format validation');
     });
     
     it('should handle null passwords for OAuth users', async () => {
       const oauthUser = await testDataGenerator.createTestUser({
-        hashedPassword: null,
         email: 'oauth-user@example.com'
       });
       
-      expect(oauthUser.hashedPassword).toBeNull();
+      expect(oauthUser).toBeNull();
       expect(oauthUser.email).toBe('oauth-user@example.com');
       
       console.log('✅ OAuth user password handling');

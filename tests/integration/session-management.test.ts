@@ -20,39 +20,31 @@ const TEST_USERS = {
     id: 'test-admin-001',
     email: 'test-admin@session-test.com',
     name: 'Test Admin User',
-    role: 'ADMIN',
-  },
+    role: 'ADMIN'},
   USER: {
     id: 'test-user-001',
     email: 'test-user@session-test.com',
     name: 'Test Regular User',
-    role: 'CUSTOMER',
-  },
+    role: 'CUSTOMER'},
   SUSPICIOUS: {
     id: 'test-suspicious-001',
     email: 'suspicious@session-test.com',
     name: 'Suspicious User',
-    role: 'CUSTOMER',
-  },
-};
+    role: 'CUSTOMER'}};
 
 const TEST_SESSIONS = {
   VALID: {
     userAgent: 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36',
     ipAddress: '192.168.1.100',
-    location: 'New York, US',
-  },
+    location: 'New York, US'},
   SUSPICIOUS: {
     userAgent: 'Suspicious Bot/1.0',
     ipAddress: '10.0.0.1',
-    location: 'Unknown Location',
-  },
+    location: 'Unknown Location'},
   MOBILE: {
     userAgent: 'Mozilla/5.0 (iPhone; CPU iPhone OS 14_0 like Mac OS X)',
     ipAddress: '192.168.1.101',
-    location: 'New York, US',
-  },
-};
+    location: 'New York, US'}};
 
 describe('Session Management Integration Tests', () => {
   let prisma: PrismaClient;
@@ -65,10 +57,7 @@ describe('Session Management Integration Tests', () => {
     prisma = new PrismaClient({
       datasources: {
         db: {
-          url: TEST_CONFIG.DATABASE_URL,
-        },
-      },
-    });
+          url: TEST_CONFIG.DATABASE_URL}}});
 
     // Initialize session manager with test database
     sessionManager = new SessionManager(prisma);
@@ -85,10 +74,7 @@ describe('Session Management Integration Tests', () => {
           name: userData.name,
           role: userData.role as any,
           emailVerified: true,
-          isActive: true,
-          hashedPassword: '$2b$12$test.hash.for.testing.purposes.only',
-        },
-      });
+          isActive: true}});
       testUsers.push(user);
     }
   });
@@ -119,10 +105,7 @@ describe('Session Management Integration Tests', () => {
     await prisma.session.deleteMany({
       where: {
         userId: {
-          in: testUsers.map(u => u.id),
-        },
-      },
-    });
+          in: testUsers.map(u => u.id)}}});
     testSessions = [];
   });
 
@@ -135,8 +118,7 @@ describe('Session Management Integration Tests', () => {
         const session = await sessionManager.createSession(userId, {
           ipAddress: sessionData.ipAddress,
           userAgent: sessionData.userAgent,
-          maxAge: TEST_CONFIG.SESSION_DURATION,
-        });
+          maxAge: TEST_CONFIG.SESSION_DURATION});
 
         expect(session).toBeDefined();
         expect(session.userId).toBe(userId);
@@ -179,8 +161,7 @@ describe('Session Management Integration Tests', () => {
 
         const refreshResult = await sessionManager.refreshSession(session.id, {
           rotateToken: true,
-          extendExpiry: true,
-        });
+          extendExpiry: true});
 
         expect(refreshResult.success).toBe(true);
         expect(refreshResult.rotated).toBe(true);
@@ -196,8 +177,7 @@ describe('Session Management Integration Tests', () => {
         testSessions.push(session);
 
         const terminated = await sessionManager.terminateSession(session.id, {
-          reason: 'test_termination',
-        });
+          reason: 'test_termination'});
 
         expect(terminated).toBe(true);
 
@@ -217,8 +197,7 @@ describe('Session Management Integration Tests', () => {
 
         const terminatedCount = await sessionManager.terminateAllSessions(userId, {
           excludeCurrentSession: currentSession.id,
-          reason: 'test_bulk_termination',
-        });
+          reason: 'test_bulk_termination'});
 
         expect(terminatedCount).toBe(2);
 
@@ -235,8 +214,7 @@ describe('Session Management Integration Tests', () => {
         for (let i = 0; i < 5; i++) {
           const session = await sessionManager.createSession(userId, {
             ...TEST_SESSIONS.VALID,
-            ipAddress: `192.168.1.${100 + i}`,
-          });
+            ipAddress: `192.168.1.${100 + i}`});
           testSessions.push(session);
           
           // Small delay to ensure different timestamps
@@ -244,8 +222,7 @@ describe('Session Management Integration Tests', () => {
         }
 
         const cleanup = await sessionManager.enforceSessionLimits(userId, {
-          maxConcurrentSessions: maxSessions,
-        });
+          maxConcurrentSessions: maxSessions});
 
         expect(cleanup.displacedSessions).toBe(2); // 5 - 3 = 2 displaced
         expect(cleanup.totalCleaned).toBeGreaterThanOrEqual(2);
@@ -285,8 +262,7 @@ describe('Session Management Integration Tests', () => {
         testSessions.push(suspiciousSession);
 
         const sessions = await sessionManager.getUserSessions(userId, {
-          includeSecurity: true,
-        });
+          includeSecurity: true});
 
         const suspicious = sessions.find(s => s.id === suspiciousSession.id);
         expect(suspicious).toBeDefined();
@@ -340,8 +316,7 @@ describe('Session Management Integration Tests', () => {
         await new Promise(resolve => setTimeout(resolve, 1100));
 
         const sessions = await sessionManager.getUserSessions(userId, {
-          includeExpired: false,
-        });
+          includeExpired: false});
 
         expect(sessions).toHaveLength(0);
       });
@@ -356,9 +331,7 @@ describe('Session Management Integration Tests', () => {
             userId,
             expiresAt: new Date(Date.now() - 1000), // Expired 1 second ago
             createdAt: new Date(),
-            updatedAt: new Date(),
-          },
-        });
+            updatedAt: new Date()}});
         testSessions.push(expiredSession);
 
         const cleanupResult = await sessionManager.cleanupExpiredSessions();
@@ -376,8 +349,7 @@ describe('Session Management Integration Tests', () => {
         const promises = [
           sessionManager.refreshSession(session.id),
           sessionManager.refreshSession(session.id),
-          sessionManager.refreshSession(session.id),
-        ];
+          sessionManager.refreshSession(session.id)];
 
         const results = await Promise.allSettled(promises);
         
@@ -430,8 +402,7 @@ describe('Session Management Integration Tests', () => {
       const createPromises = Array.from({ length: sessionCount }, (_, i) => 
         sessionManager.createSession(userId, {
           ...TEST_SESSIONS.VALID,
-          ipAddress: `192.168.${Math.floor(i / 255)}.${i % 255}`,
-        })
+          ipAddress: `192.168.${Math.floor(i / 255)}.${i % 255}`})
       );
       
       const sessions = await Promise.all(createPromises);
@@ -456,8 +427,7 @@ describe('Session Management Integration Tests', () => {
       const sessions = await Promise.all([
         sessionManager.createSession(userId, TEST_SESSIONS.VALID),
         sessionManager.createSession(userId, TEST_SESSIONS.MOBILE),
-        sessionManager.createSession(userId, TEST_SESSIONS.SUSPICIOUS),
-      ]);
+        sessionManager.createSession(userId, TEST_SESSIONS.SUSPICIOUS)]);
       testSessions.push(...sessions);
 
       const startTime = Date.now();
@@ -483,13 +453,10 @@ expect.extend({
     if (pass) {
       return {
         message: () => `expected ${received} not to be after ${expected}`,
-        pass: true,
-      };
+        pass: true};
     } else {
       return {
         message: () => `expected ${received} to be after ${expected}`,
-        pass: false,
-      };
+        pass: false};
     }
-  },
-});
+  }});

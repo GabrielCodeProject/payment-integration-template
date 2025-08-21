@@ -36,7 +36,7 @@ export const userRoleSchema = z.enum(['CUSTOMER', 'ADMIN', 'SUPPORT'], {
 // =============================================================================
 
 /**
- * Base user schema - matches Prisma User model
+ * Base user schema - matches Prisma User model (BetterAuth only)
  */
 export const userSchema = z.object({
   id: cuidSchema,
@@ -47,7 +47,6 @@ export const userSchema = z.object({
   phone: phoneSchema,
   
   // Authentication & Security
-  hashedPassword: z.string().optional(),
   twoFactorEnabled: z.boolean().default(false),
   isActive: z.boolean().default(true),
   role: userRoleSchema.default('CUSTOMER'),
@@ -277,7 +276,6 @@ export const createSessionSchema = z.object({
  * Public user schema (excludes sensitive data)
  */
 export const publicUserSchema = userSchema.omit({
-  hashedPassword: true,
   stripeCustomerId: true,
 }).extend({
   hasStripeCustomer: z.boolean(),
@@ -286,9 +284,7 @@ export const publicUserSchema = userSchema.omit({
 /**
  * User profile schema (for authenticated users viewing their own profile)
  */
-export const userProfileSchema = userSchema.omit({
-  hashedPassword: true,
-});
+export const userProfileSchema = userSchema;
 
 /**
  * User list item schema (for admin lists)
@@ -372,9 +368,7 @@ export const profileImageUrlSchema = z.object({
 /**
  * Complete profile schema (for fetching user profile)
  */
-export const profileResponseSchema = userSchema.omit({
-  hashedPassword: true,
-}).extend({
+export const profileResponseSchema = userSchema.extend({
   hasStripeCustomer: z.boolean(),
 });
 

@@ -585,7 +585,6 @@ export class AuditHelpers {
   static maskSensitiveData(data: Record<string, unknown>): Record<string, unknown> {
     const sensitiveFields = [
       'password',
-      'hashedPassword',
       'token',
       'apiKey',
       'secret',

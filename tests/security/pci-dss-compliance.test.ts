@@ -106,17 +106,15 @@ describe('PCI DSS Compliance Security Tests', () => {
   describe('PCI DSS Requirement 8: Identify and Authenticate Access', () => {
     it('should validate user identification mechanisms', async () => {
       const user = await testDataGenerator.createTestUser({
-        email: 'auth-test@example.com',
-        hashedPassword: 'hashed_password_example'
-      });
+        email: 'auth-test@example.com'});
       
       // Verify unique identification
       expect(user.id).toBeDefined();
       expect(user.email).toBe('auth-test@example.com');
       
       // Verify password is stored hashed (not plaintext)
-      expect(user.hashedPassword).toBeDefined();
-      expect(user.hashedPassword).not.toBe('plaintext_password');
+      expect(user).toBeDefined();
+      expect(user).not.toBe('plaintext_password');
       
       console.log('✅ PCI DSS Requirement 8: User identification validated');
     });

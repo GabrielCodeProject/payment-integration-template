@@ -314,7 +314,7 @@ describe('End-to-End Security Flow Integration Tests', () => {
         tableName: 'users',
         recordId: 'e2e-user-3',
         action: 'UPDATE',
-        changedFields: ['hashedPassword', 'passwordResetToken'],
+        changedFields: [, 'passwordResetToken'],
         metadata: {
           operation: 'password_reset',
           e2e_test: true,

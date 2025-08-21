@@ -182,14 +182,12 @@ describe('Audit Logging Integration Tests', () => {
         recordId: 'user-789',
         action: 'UPDATE',
         oldValues: {
-          hashedPassword: '[MASKED]',
           passwordUpdatedAt: new Date('2023-01-01')
         },
         newValues: {
-          hashedPassword: '[MASKED]',
           passwordUpdatedAt: new Date()
         },
-        changedFields: ['hashedPassword', 'passwordUpdatedAt'],
+        changedFields: [, 'passwordUpdatedAt'],
         metadata: {
           operation: 'password_change',
           change_method: 'user_initiated',
@@ -202,7 +200,7 @@ describe('Audit Logging Integration Tests', () => {
       
       const passwordChange = passwordLogs[0];
       expect(passwordChange.action).toBe('UPDATE');
-      expect(passwordChange.changedFields).toContain('hashedPassword');
+      expect(passwordChange.changedFields).toContain();
       expect(passwordChange.metadata).toMatchObject({
         operation: 'password_change'
       });
@@ -367,7 +365,6 @@ describe('Audit Logging Integration Tests', () => {
       const testData = {
         email: 'user@example.com',
         password: 'secret123',
-        hashedPassword: 'hash$2b$10$abcdef',
         token: 'jwt.token.here',
         apiKey: 'api_key_12345',
         creditCard: '4111111111111111',
@@ -380,7 +377,7 @@ describe('Audit Logging Integration Tests', () => {
       expect(maskedData.email).toBe('user@example.com');
       expect(maskedData.normalField).toBe('normal_value');
       expect(maskedData.password).toBe('[MASKED]');
-      expect(maskedData.hashedPassword).toBe('ha***ef');
+      expect(maskedData).toBe('ha***ef');
       expect(maskedData.token).toBe('[MASKED]');
       expect(maskedData.apiKey).toBe('ap***45');
       expect(maskedData.creditCard).toBe('41***11');

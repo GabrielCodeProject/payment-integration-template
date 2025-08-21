@@ -61,7 +61,8 @@
       "mcp__playwright__browser_press_key",
       "Bash(npm test:*)",
       "Bash(npx jest:*)",
-      "Bash(TEST_DATABASE_URL=postgresql://postgres:postgres@localhost:5432/payment_template_test npx prisma migrate deploy)"
+      "Bash(TEST_DATABASE_URL=postgresql://postgres:postgres@localhost:5432/payment_template_test npx prisma migrate deploy)",
+      "WebSearch"
     ]
   },
   "enableAllProjectMcpServers": true,

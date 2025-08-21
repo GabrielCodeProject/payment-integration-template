@@ -133,9 +133,7 @@ describe('Authentication State Edge Cases', () => {
   describe('Concurrent Authentication Attempts', () => {
     it('should handle multiple login attempts for same user', async () => {
       const user = await testDataGenerator.createTestUser({
-        email: 'concurrent@example.com',
-        hashedPassword: '$2b$10$example.hash.for.testing'
-      });
+        email: 'concurrent@example.com'});
       
       let loginAttempts = 0;
       

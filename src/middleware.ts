@@ -9,11 +9,8 @@ import {
   createAuthRedirect,
   type EdgeAuthConfig,
 } from "@/lib/auth/edge-middleware";
-import { 
-  checkAuthRateLimit, 
-  checkPaymentRateLimit, 
-  createRateLimitResponse 
-} from "@/lib/rate-limiting";
+// Using edge-compatible rate limiting instead of Redis-based rate limiting
+// to avoid Node.js modules in edge runtime
 import {
   applyCSRFProtection,
   defaultCSRFConfig,
@@ -135,75 +132,51 @@ export async function middleware(request: NextRequest) {
   // RATE LIMITING
   // =============================================================================
 
-  // Rate limit authentication endpoints with enhanced Redis-based limiting
+  // Rate limit authentication endpoints with edge-compatible limiting
   if (pathname.startsWith("/api/auth/") || pathname.startsWith("/login") || pathname.startsWith("/register")) {
-    try {
-      const rateLimitResult = await checkAuthRateLimit(request);
+    const rateLimitResult = checkRateLimit(`auth:${clientIP}`, 10, 60000);
 
-      if (!rateLimitResult.allowed) {
-        logAuthEvent("blocked", {
-          pathname,
-          ip: clientIP,
-          reason: "Rate limit exceeded",
-        });
+    if (!rateLimitResult.allowed) {
+      logAuthEvent("blocked", {
+        pathname,
+        ip: clientIP,
+        reason: "Rate limit exceeded",
+      });
 
-        return createRateLimitResponse(rateLimitResult);
-      }
-    } catch (error) {
-      // Fallback to simple edge rate limiting if enhanced fails
-      const rateLimitResult = checkRateLimit(`auth:${clientIP}`, 10, 60000);
-
-      if (!rateLimitResult.allowed) {
-        logAuthEvent("blocked", {
-          pathname,
-          ip: clientIP,
-          reason: "Rate limit exceeded",
-        });
-
-        return new NextResponse("Too Many Requests", {
-          status: 429,
-          headers: {
-            "X-RateLimit-Limit": "10",
-            "X-RateLimit-Remaining": "0",
-            "X-RateLimit-Reset": new Date(
-              rateLimitResult.resetTime
-            ).toISOString(),
-            "Retry-After": Math.ceil(
-              (rateLimitResult.resetTime - Date.now()) / 1000
-            ).toString(),
-          },
-        });
-      }
+      return new NextResponse("Too Many Requests", {
+        status: 429,
+        headers: {
+          "X-RateLimit-Limit": "10",
+          "X-RateLimit-Remaining": "0",
+          "X-RateLimit-Reset": new Date(
+            rateLimitResult.resetTime
+          ).toISOString(),
+          "Retry-After": Math.ceil(
+            (rateLimitResult.resetTime - Date.now()) / 1000
+          ).toString(),
+        },
+      });
     }
   }
 
-  // Rate limit payment and webhook endpoints with enhanced limiting
+  // Rate limit payment and webhook endpoints with edge-compatible limiting
   if (
     pathname.startsWith("/api/payments") ||
     pathname.startsWith("/api/webhooks")
   ) {
-    try {
-      const rateLimitResult = await checkPaymentRateLimit(request);
+    const rateLimitResult = checkRateLimit(`payment:${clientIP}`, 30, 60000);
 
-      if (!rateLimitResult.allowed) {
-        return createRateLimitResponse(rateLimitResult);
-      }
-    } catch (error) {
-      // Fallback to simple edge rate limiting if enhanced fails
-      const rateLimitResult = checkRateLimit(`payment:${clientIP}`, 30, 60000);
-
-      if (!rateLimitResult.allowed) {
-        return new NextResponse("Payment rate limit exceeded", {
-          status: 429,
-          headers: {
-            "X-RateLimit-Limit": "30",
-            "X-RateLimit-Remaining": "0",
-            "X-RateLimit-Reset": new Date(
-              rateLimitResult.resetTime
-            ).toISOString(),
-          },
-        });
-      }
+    if (!rateLimitResult.allowed) {
+      return new NextResponse("Payment rate limit exceeded", {
+        status: 429,
+        headers: {
+          "X-RateLimit-Limit": "30",
+          "X-RateLimit-Remaining": "0",
+          "X-RateLimit-Reset": new Date(
+            rateLimitResult.resetTime
+          ).toISOString(),
+        },
+      });
     }
   }
 
