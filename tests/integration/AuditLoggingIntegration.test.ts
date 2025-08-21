@@ -10,11 +10,7 @@ import { PrismaClient } from '@prisma/client';
 import {
   AuditService,
   AuditHelpers,
-  auditService,
-  type AuditContext,
-  type AuditLogEntry,
-  type AuditQueryOptions,
-  type AuditTrailSummary
+  type AuditContext
 } from '@/lib/audit';
 import { db } from '@/lib/db';
 
@@ -755,7 +751,7 @@ describe('Audit Logging Integration Tests', () => {
         
         const status = await testAuditService.checkTriggerStatus();
         expect(status.some(s => s.triggerEnabled)).toBe(true);
-      } catch (error) {
+      } catch (_error) {
         // Triggers might not be supported in test environment
         console.warn('Trigger management not available in test environment');
       }
@@ -792,7 +788,7 @@ describe('Audit Logging Integration Tests', () => {
         
         expect(typeof cleanupResult).toBe('number');
         expect(cleanupResult).toBeGreaterThanOrEqual(0);
-      } catch (error) {
+      } catch (_error) {
         // Cleanup might not be supported in test environment
         console.warn('Audit cleanup not available in test environment');
       }

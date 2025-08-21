@@ -160,7 +160,7 @@ export async function PUT(
         };
 
         // Clean update data to match interface expectations
-        const cleanUpdateData: any = {};
+        const cleanUpdateData: Record<string, unknown> = {};
         if (updateData.name !== undefined) cleanUpdateData.name = updateData.name;
         if (updateData.email !== undefined) cleanUpdateData.email = updateData.email;
         if (updateData.role !== undefined) cleanUpdateData.role = updateData.role;

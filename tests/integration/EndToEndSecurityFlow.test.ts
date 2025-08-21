@@ -7,13 +7,12 @@
  */
 
 import { describe, it, expect, beforeAll, afterAll, beforeEach, afterEach, jest } from '@jest/globals';
-import { NextRequest, NextResponse } from 'next/server';
+import { NextRequest } from 'next/server';
 import { PrismaClient } from '@prisma/client';
 import { middleware } from '@/middleware';
 import { 
   validateCSRFProtection, 
-  generateServerCSRFToken,
-  type CSRFConfig 
+  generateServerCSRFToken
 } from '@/lib/csrf-protection';
 import { 
   checkAuthRateLimit, 
@@ -660,7 +659,7 @@ describe('End-to-End Security Flow Integration Tests', () => {
       );
 
       // All should pass security validation
-      responses.forEach((response, index) => {
+      responses.forEach((response, _index) => {
         expect(response.status).not.toBe(403);
         expect(response.headers.get('X-Request-Id')).toBeTruthy();
         expect(response.headers.get('X-Frame-Options')).toBe('DENY');

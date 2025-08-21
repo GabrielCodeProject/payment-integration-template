@@ -513,7 +513,7 @@ describe('Authentication State Edge Cases', () => {
       const maxSessions = 3;
       
       // Create maximum number of sessions
-      const existingSessions = await Promise.all(
+      const _existingSessions = await Promise.all(
         Array.from({ length: maxSessions }, (_, i) => 
           prisma.session.create({
             data: {
@@ -561,7 +561,7 @@ describe('Authentication State Edge Cases', () => {
       const user = await testDataGenerator.createTestUser();
       
       // Create session on mobile device
-      const mobileSession = await prisma.session.create({
+      const _mobileSession = await prisma.session.create({
         data: {
           sessionToken: 'mobile-session',
           userId: user.id,

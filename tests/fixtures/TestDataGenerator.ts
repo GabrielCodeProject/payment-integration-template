@@ -9,7 +9,7 @@ export class TestDataGenerator {
   }
   
   // User generation
-  generateUserData(overrides: Partial<any> = {}) {
+  generateUserData(overrides: Partial<Record<string, unknown>> = {}) {
     return {
       id: faker.string.uuid(),
       email: faker.internet.email(),
@@ -31,7 +31,7 @@ export class TestDataGenerator {
   }
   
   // Product generation
-  generateProductData(overrides: Partial<any> = {}) {
+  generateProductData(overrides: Partial<Record<string, unknown>> = {}) {
     const name = faker.commerce.productName();
     return {
       id: faker.string.uuid(),
@@ -69,7 +69,7 @@ export class TestDataGenerator {
   }
   
   // Order generation
-  generateOrderData(userId?: string, overrides: Partial<any> = {}) {
+  generateOrderData(userId?: string, overrides: Partial<Record<string, unknown>> = {}) {
     const orderNumber = `ORD-${Date.now()}-${faker.string.alphanumeric(6).toUpperCase()}`;
     const subtotal = parseFloat(faker.commerce.price({ min: 50, max: 500 }));
     const taxAmount = subtotal * 0.08; // 8% tax
@@ -118,7 +118,7 @@ export class TestDataGenerator {
   }
   
   // Subscription generation
-  generateSubscriptionData(userId: string, productId: string, overrides: Partial<any> = {}) {
+  generateSubscriptionData(userId: string, productId: string, overrides: Partial<Record<string, unknown>> = {}) {
     const currentPeriodStart = new Date();
     const currentPeriodEnd = new Date();
     currentPeriodEnd.setMonth(currentPeriodEnd.getMonth() + 1);
@@ -148,7 +148,7 @@ export class TestDataGenerator {
   }
   
   // Discount code generation
-  generateDiscountCodeData(overrides: Partial<any> = {}) {
+  generateDiscountCodeData(overrides: Partial<Record<string, unknown>> = {}) {
     const code = faker.string.alphanumeric(8).toUpperCase();
     const type = faker.helpers.arrayElement(Object.values(DiscountType));
     
@@ -185,7 +185,7 @@ export class TestDataGenerator {
   }
   
   // Payment method generation
-  generatePaymentMethodData(userId: string, overrides: Partial<any> = {}) {
+  generatePaymentMethodData(userId: string, overrides: Partial<Record<string, unknown>> = {}) {
     return {
       id: faker.string.uuid(),
       userId,
@@ -229,17 +229,17 @@ export class TestDataGenerator {
       subscriptions = 150
     } = counts;
     
-    console.log(`🔄 Generating bulk test data...`);
+    // Generating bulk test data...
     
     // Create users
     const userPromises = Array.from({ length: users }, () => this.createTestUser());
     const createdUsers = await Promise.all(userPromises);
-    console.log(`✅ Created ${users} test users`);
+    // Created test users
     
     // Create products
     const productPromises = Array.from({ length: products }, () => this.createTestProduct());
     const createdProducts = await Promise.all(productPromises);
-    console.log(`✅ Created ${products} test products`);
+    // Created test products
     
     // Create orders
     const orderPromises = Array.from({ length: orders }, () => {
@@ -247,7 +247,7 @@ export class TestDataGenerator {
       return this.createTestOrder(randomUser.id);
     });
     const createdOrders = await Promise.all(orderPromises);
-    console.log(`✅ Created ${orders} test orders`);
+    // Created test orders
     
     // Create subscriptions
     const subscriptionPromises = Array.from({ length: subscriptions }, () => {
@@ -256,9 +256,9 @@ export class TestDataGenerator {
       return this.createTestSubscription(randomUser.id, randomProduct.id);
     });
     const createdSubscriptions = await Promise.all(subscriptionPromises);
-    console.log(`✅ Created ${subscriptions} test subscriptions`);
+    // Created test subscriptions
     
-    console.log(`🎉 Bulk test data generation complete!`);
+    // Bulk test data generation complete!
     
     return {
       users: createdUsers,
