@@ -271,7 +271,7 @@ export async function seedUsers(prisma: PrismaClient, config: SeedConfig): Promi
         timezone: userData.timezone,
         preferredCurrency: userData.preferredCurrency,
         twoFactorEnabled: userData.twoFactorEnabled || false,
-        emailVerified: userData.emailVerified ? new Date() : null,
+        emailVerified: userData.emailVerified || false,
         isActive: userData.isActive !== false,
         lastLoginAt: userData.isActive ? daysAgo(Math.floor(Math.random() * 30)) : null
       }
@@ -321,7 +321,7 @@ export async function seedUsers(prisma: PrismaClient, config: SeedConfig): Promi
           timezone: userData.timezone,
           preferredCurrency: userData.preferredCurrency,
           twoFactorEnabled: userData.twoFactorEnabled || false,
-          emailVerified: userData.emailVerified ? new Date() : null,
+          emailVerified: userData.emailVerified || false,
           isActive: userData.isActive !== false,
           lastLoginAt: userData.isActive ? daysAgo(Math.floor(Math.random() * 30)) : null
         }

@@ -76,9 +76,9 @@ services:
       # Enable logical replication for potential future needs
       POSTGRES_REPLICA_USER: replica
       POSTGRES_REPLICA_PASSWORD: ${POSTGRES_REPLICA_PASSWORD:-secure_replica_password_2024}
-    # Remove direct port exposure - only accessible through PgBouncer
-    expose:
-      - "5432"
+    # Direct port exposure for development (bypassing PgBouncer for now)
+    ports:
+      - "5433:5432"
     volumes:
       # Persistent data storage
       - postgres_data:/var/lib/postgresql/data
