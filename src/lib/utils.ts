@@ -19,18 +19,20 @@ export function getCSRFToken(): string | null {
     }
 
     // Read the CSRF token cookie (name matches CSRF_TOKEN_NAME in csrf-protection.ts)
-    const cookieName = '__Secure-csrf-token';
+    // Use __Secure- prefix only in production for security, regular name in development for compatibility
+    const cookieName = process.env.NODE_ENV === 'production' ? '__Secure-csrf-token' : 'csrf-token';
     const cookies = document.cookie.split(';');
     
     for (const cookie of cookies) {
       const [name, value] = cookie.trim().split('=');
-      if (name === cookieName) {
+      if (name === cookieName && value) {
         return decodeURIComponent(value);
       }
     }
     
     return null;
   } catch (error) {
+    // eslint-disable-next-line no-console
     console.warn('Error reading CSRF token:', error);
     return null;
   }

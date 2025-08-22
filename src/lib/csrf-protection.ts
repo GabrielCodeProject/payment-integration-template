@@ -11,7 +11,8 @@ import { NextRequest, NextResponse } from "next/server";
 import { cookies } from "next/headers";
 
 // CSRF token configuration
-const CSRF_TOKEN_NAME = "__Secure-csrf-token";
+// Use __Secure- prefix only in production for security, regular name in development for compatibility
+const CSRF_TOKEN_NAME = process.env.NODE_ENV === "production" ? "__Secure-csrf-token" : "csrf-token";
 const CSRF_HEADER_NAME = "x-csrf-token";
 const CSRF_FORM_FIELD = "_csrf";
 const TOKEN_LENGTH = 32;
@@ -124,6 +125,7 @@ export function validateCSRFProtection(
   shouldSetToken?: boolean; 
 } {
   const pathname = request.nextUrl.pathname;
+  const isDevelopment = process.env.NODE_ENV === 'development';
   
   // Skip validation for excluded paths
   if (config.excludePaths?.some(path => pathname.startsWith(path))) {
@@ -156,22 +158,51 @@ export function validateCSRFProtection(
   const cookieToken = getCSRFTokenFromCookies(request);
   const headerToken = getCSRFTokenFromHeaders(request);
   
+  // Enhanced development logging for CSRF debugging
+  if (isDevelopment) {
+    // eslint-disable-next-line no-console
+    console.log('🔒 CSRF Validation Debug:', {
+      pathname,
+      method: request.method,
+      cookieToken: cookieToken ? `${cookieToken.substring(0, 8)}...` : 'missing',
+      headerToken: headerToken ? `${headerToken.substring(0, 8)}...` : 'missing',
+      cookieName: CSRF_TOKEN_NAME,
+      headerName: CSRF_HEADER_NAME,
+    });
+  }
+  
   // Check if we have a valid cookie token
   if (!cookieToken || !validateTimestampedToken(cookieToken)) {
+    const reason = !cookieToken 
+      ? `Missing CSRF cookie token (${CSRF_TOKEN_NAME})`
+      : "Invalid or expired CSRF cookie token";
+      
+    if (isDevelopment) {
+      // eslint-disable-next-line no-console
+      console.warn('❌ CSRF Validation Failed:', reason);
+    }
+    
     return { 
       isValid: false, 
-      reason: "Missing or invalid CSRF cookie token",
+      reason,
       shouldSetToken: true 
     };
   }
 
   // For state-changing requests, require header token (double-submit pattern)
   if (!headerToken) {
+    const reason = `Missing CSRF header token (${CSRF_HEADER_NAME})`;
+    
+    if (isDevelopment) {
+      // eslint-disable-next-line no-console
+      console.warn('❌ CSRF Validation Failed:', reason);
+    }
+    
     // Check if custom header requirement is enabled
     if (config.requireCustomHeader) {
       return { 
         isValid: false, 
-        reason: "Missing CSRF header token" 
+        reason 
       };
     }
     
@@ -179,17 +210,29 @@ export function validateCSRFProtection(
     if (pathname.startsWith('/api/')) {
       return { 
         isValid: false, 
-        reason: "Missing CSRF header token for API request" 
+        reason: `${reason} for API request` 
       };
     }
   }
 
   // Validate token match (double-submit pattern)
   if (headerToken && cookieToken !== headerToken) {
+    const reason = "CSRF token mismatch between cookie and header";
+    
+    if (isDevelopment) {
+      // eslint-disable-next-line no-console
+      console.warn('❌ CSRF Validation Failed:', reason);
+    }
+    
     return { 
       isValid: false, 
-      reason: "CSRF token mismatch" 
+      reason 
     };
+  }
+
+  if (isDevelopment) {
+    // eslint-disable-next-line no-console
+    console.log('✅ CSRF Validation Passed for', pathname);
   }
 
   return { isValid: true };
@@ -248,6 +291,7 @@ export async function getServerCSRFToken(): Promise<string | null> {
     
     return null;
   } catch (error) {
+    // eslint-disable-next-line no-console
     console.warn("Error getting server CSRF token:", error);
     return null;
   }
