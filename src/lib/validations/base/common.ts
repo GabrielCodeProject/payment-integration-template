@@ -37,8 +37,10 @@ export const urlSchema = z.string().url('Invalid URL format');
  */
 export const phoneSchema = z
   .string()
-  .regex(/^[+]?[1-9]\d{1,14}$/, 'Invalid phone number format')
-  .optional();
+  .optional()
+  .refine((val) => !val || val.trim() === '' || /^[+]?[1-9]\d{1,14}$/.test(val), {
+    message: 'Invalid phone number format'
+  });
 
 /**
  * Currency code validation (ISO 4217)

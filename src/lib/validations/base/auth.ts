@@ -1,19 +1,19 @@
-import { z } from 'zod';
+import { z } from "zod";
 import {
   cuidSchema,
-  emailSchema,
-  nameSchema,
-  phoneSchema,
-  ipAddressSchema,
-  userAgentSchema,
-  sessionIdSchema,
   dateSchema,
+  emailSchema,
+  ipAddressSchema,
+  nameSchema,
   optionalDateSchema,
-} from './common';
+  phoneSchema,
+  sessionIdSchema,
+  userAgentSchema,
+} from "./common";
 
 /**
  * Authentication Validation Schemas
- * 
+ *
  * Comprehensive validation schemas for authentication,
  * authorization, and session management with BetterAuth integration.
  */
@@ -27,7 +27,7 @@ import {
  */
 export const loginCredentialsSchema = z.object({
   email: emailSchema,
-  password: z.string().min(1, 'Password is required'),
+  password: z.string().min(1, "Password is required"),
   rememberMe: z.boolean().default(false),
   captchaToken: z.string().optional(), // For bot protection
   deviceFingerprint: z.string().max(255).optional(),
@@ -36,45 +36,44 @@ export const loginCredentialsSchema = z.object({
 /**
  * Registration schema
  */
-export const registrationSchema = z.object({
-  email: emailSchema,
-  name: nameSchema.optional(),
-  phone: phoneSchema,
-  password: z
-    .string()
-    .min(8, 'Password must be at least 8 characters')
-    .max(128, 'Password must not exceed 128 characters')
-    .regex(
-      /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]/,
-      'Password must contain at least one uppercase letter, one lowercase letter, one number, and one special character'
-    ),
-  confirmPassword: z.string(),
-  agreeToTerms: z.boolean().refine(val => val === true, {
-    message: 'You must agree to the terms and conditions',
-  }),
-  agreeToPrivacy: z.boolean().refine(val => val === true, {
-    message: 'You must agree to the privacy policy',
-  }),
-  marketingOptIn: z.boolean().default(false),
-  captchaToken: z.string().optional(),
-}).refine(
-  (data) => data.password === data.confirmPassword,
-  {
-    message: 'Passwords do not match',
-    path: ['confirmPassword'],
-  }
-);
+export const registrationSchema = z
+  .object({
+    email: emailSchema,
+    name: nameSchema.optional(),
+    phone: phoneSchema,
+    password: z
+      .string()
+      .min(8, "Password must be at least 8 characters")
+      .max(128, "Password must not exceed 128 characters")
+      .regex(
+        /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]/,
+        "Password must contain at least one uppercase letter, one lowercase letter, one number, and one special character"
+      ),
+    confirmPassword: z.string(),
+    agreeToTerms: z.boolean().refine((val) => val === true, {
+      message: "You must agree to the terms and conditions",
+    }),
+    agreeToPrivacy: z.boolean().refine((val) => val === true, {
+      message: "You must agree to the privacy policy",
+    }),
+    marketingOptIn: z.boolean().default(false),
+    captchaToken: z.string().optional(),
+  })
+  .refine((data) => data.password === data.confirmPassword, {
+    message: "Passwords do not match",
+    path: ["confirmPassword"],
+  });
 
 /**
  * Password validation schema (for password-only validation)
  */
 export const passwordSchema = z
   .string()
-  .min(8, 'Password must be at least 8 characters')
-  .max(128, 'Password must not exceed 128 characters')
+  .min(8, "Password must be at least 8 characters")
+  .max(128, "Password must not exceed 128 characters")
   .regex(
     /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]/,
-    'Password must contain at least one uppercase letter, one lowercase letter, one number, and one special character'
+    "Password must contain at least one uppercase letter, one lowercase letter, one number, and one special character"
   );
 
 /**
@@ -82,7 +81,7 @@ export const passwordSchema = z
  */
 export const passwordStrengthSchema = z.object({
   password: passwordSchema,
-  strength: z.enum(['weak', 'fair', 'good', 'strong']),
+  strength: z.enum(["weak", "fair", "good", "strong"]),
   score: z.number().min(0).max(100),
   feedback: z.array(z.string()).default([]),
   entropy: z.number().min(0),
@@ -105,30 +104,33 @@ export const emailVerificationRequestSchema = z.object({
  */
 export const emailVerificationSchema = z.object({
   email: emailSchema,
-  token: z.string().min(1, 'Verification token is required'),
-  code: z.string().length(6, 'Verification code must be 6 digits').regex(/^\d{6}$/, 'Verification code must be numeric').optional(),
+  token: z.string().min(1, "Verification token is required"),
+  code: z
+    .string()
+    .length(6, "Verification code must be 6 digits")
+    .regex(/^\d{6}$/, "Verification code must be numeric")
+    .optional(),
 });
 
 /**
  * Email change request schema
  */
-export const emailChangeRequestSchema = z.object({
-  currentEmail: emailSchema,
-  newEmail: emailSchema,
-  password: z.string().min(1, 'Password is required'),
-}).refine(
-  (data) => data.currentEmail !== data.newEmail,
-  {
-    message: 'New email must be different from current email',
-    path: ['newEmail'],
-  }
-);
+export const emailChangeRequestSchema = z
+  .object({
+    currentEmail: emailSchema,
+    newEmail: emailSchema,
+    password: z.string().min(1, "Password is required"),
+  })
+  .refine((data) => data.currentEmail !== data.newEmail, {
+    message: "New email must be different from current email",
+    path: ["newEmail"],
+  });
 
 /**
  * Email change confirmation schema
  */
 export const emailChangeConfirmationSchema = z.object({
-  token: z.string().min(1, 'Confirmation token is required'),
+  token: z.string().min(1, "Confirmation token is required"),
   newEmail: emailSchema,
 });
 
@@ -147,38 +149,34 @@ export const passwordResetRequestSchema = z.object({
 /**
  * Password reset validation schema
  */
-export const passwordResetSchema = z.object({
-  token: z.string().min(1, 'Reset token is required'),
-  newPassword: passwordSchema,
-  confirmPassword: z.string(),
-}).refine(
-  (data) => data.newPassword === data.confirmPassword,
-  {
-    message: 'Passwords do not match',
-    path: ['confirmPassword'],
-  }
-);
+export const passwordResetSchema = z
+  .object({
+    token: z.string().min(1, "Reset token is required"),
+    newPassword: passwordSchema,
+    confirmPassword: z.string(),
+  })
+  .refine((data) => data.newPassword === data.confirmPassword, {
+    message: "Passwords do not match",
+    path: ["confirmPassword"],
+  });
 
 /**
  * Password change schema (for authenticated users)
  */
-export const passwordChangeSchema = z.object({
-  currentPassword: z.string().min(1, 'Current password is required'),
-  newPassword: passwordSchema,
-  confirmPassword: z.string(),
-}).refine(
-  (data) => data.newPassword === data.confirmPassword,
-  {
-    message: 'Passwords do not match',
-    path: ['confirmPassword'],
-  }
-).refine(
-  (data) => data.currentPassword !== data.newPassword,
-  {
-    message: 'New password must be different from current password',
-    path: ['newPassword'],
-  }
-);
+export const passwordChangeSchema = z
+  .object({
+    currentPassword: z.string().min(1, "Current password is required"),
+    newPassword: passwordSchema,
+    confirmPassword: z.string(),
+  })
+  .refine((data) => data.newPassword === data.confirmPassword, {
+    message: "Passwords do not match",
+    path: ["confirmPassword"],
+  })
+  .refine((data) => data.currentPassword !== data.newPassword, {
+    message: "New password must be different from current password",
+    path: ["newPassword"],
+  });
 
 // =============================================================================
 // TWO-FACTOR AUTHENTICATION SCHEMAS
@@ -188,17 +186,25 @@ export const passwordChangeSchema = z.object({
  * Two-factor authentication setup schema
  */
 export const twoFactorSetupSchema = z.object({
-  secret: z.string().min(1, 'Secret is required'),
-  qrCode: z.string().url('Invalid QR code URL').optional(),
-  backupCodes: z.array(z.string().length(8)).length(10, 'Must have exactly 10 backup codes'),
-  token: z.string().length(6, 'Token must be 6 digits').regex(/^\d{6}$/, 'Token must contain only digits'),
+  secret: z.string().min(1, "Secret is required"),
+  qrCode: z.string().url("Invalid QR code URL").optional(),
+  backupCodes: z
+    .array(z.string().length(8))
+    .length(10, "Must have exactly 10 backup codes"),
+  token: z
+    .string()
+    .length(6, "Token must be 6 digits")
+    .regex(/^\d{6}$/, "Token must contain only digits"),
 });
 
 /**
  * Two-factor authentication verification schema
  */
 export const twoFactorVerificationSchema = z.object({
-  token: z.string().length(6, 'Token must be 6 digits').regex(/^\d{6}$/, 'Token must contain only digits'),
+  token: z
+    .string()
+    .length(6, "Token must be 6 digits")
+    .regex(/^\d{6}$/, "Token must contain only digits"),
   isBackupCode: z.boolean().default(false),
   rememberDevice: z.boolean().default(false),
 });
@@ -206,24 +212,33 @@ export const twoFactorVerificationSchema = z.object({
 /**
  * Two-factor authentication disable schema
  */
-export const twoFactorDisableSchema = z.object({
-  password: z.string().min(1, 'Password is required'),
-  token: z.string().length(6, 'Token must be 6 digits').regex(/^\d{6}$/, 'Token must contain only digits').optional(),
-  backupCode: z.string().length(8, 'Backup code must be 8 characters').optional(),
-}).refine(
-  (data) => data.token || data.backupCode,
-  {
-    message: 'Either token or backup code is required',
-    path: ['token'],
-  }
-);
+export const twoFactorDisableSchema = z
+  .object({
+    password: z.string().min(1, "Password is required"),
+    token: z
+      .string()
+      .length(6, "Token must be 6 digits")
+      .regex(/^\d{6}$/, "Token must contain only digits")
+      .optional(),
+    backupCode: z
+      .string()
+      .length(8, "Backup code must be 8 characters")
+      .optional(),
+  })
+  .refine((data) => data.token || data.backupCode, {
+    message: "Either token or backup code is required",
+    path: ["token"],
+  });
 
 /**
  * Backup codes regeneration schema
  */
 export const regenerateBackupCodesSchema = z.object({
-  password: z.string().min(1, 'Password is required'),
-  token: z.string().length(6, 'Token must be 6 digits').regex(/^\d{6}$/, 'Token must contain only digits'),
+  password: z.string().min(1, "Password is required"),
+  token: z
+    .string()
+    .length(6, "Token must be 6 digits")
+    .regex(/^\d{6}$/, "Token must contain only digits"),
 });
 
 // =============================================================================
@@ -258,7 +273,7 @@ export const updateSessionSchema = z.object({
  * Session validation schema
  */
 export const sessionValidationSchema = z.object({
-  sessionToken: z.string().min(1, 'Session token is required'),
+  sessionToken: z.string().min(1, "Session token is required"),
   ipAddress: ipAddressSchema.optional(),
   userAgent: userAgentSchema.optional(),
   strict: z.boolean().default(false), // Strict validation includes IP/UA checking
@@ -267,18 +282,19 @@ export const sessionValidationSchema = z.object({
 /**
  * Session termination schema
  */
-export const terminateSessionSchema = z.object({
-  sessionId: sessionIdSchema.optional(),
-  sessionToken: z.string().optional(),
-  terminateAll: z.boolean().default(false),
-  reason: z.enum(['logout', 'security', 'admin', 'expired']).default('logout'),
-}).refine(
-  (data) => data.sessionId || data.sessionToken || data.terminateAll,
-  {
-    message: 'Session ID, session token, or terminate all flag is required',
-    path: ['sessionId'],
-  }
-);
+export const terminateSessionSchema = z
+  .object({
+    sessionId: sessionIdSchema.optional(),
+    sessionToken: z.string().optional(),
+    terminateAll: z.boolean().default(false),
+    reason: z
+      .enum(["logout", "security", "admin", "expired"])
+      .default("logout"),
+  })
+  .refine((data) => data.sessionId || data.sessionToken || data.terminateAll, {
+    message: "Session ID, session token, or terminate all flag is required",
+    path: ["sessionId"],
+  });
 
 // =============================================================================
 // OAUTH/SOCIAL LOGIN SCHEMAS
@@ -287,25 +303,20 @@ export const terminateSessionSchema = z.object({
 /**
  * OAuth provider validation
  */
-export const oauthProviderSchema = z.enum([
-  'google',
-  'github',
-  'discord',
-  'twitter',
-  'facebook',
-  'apple',
-  'microsoft',
-], {
-  errorMap: () => ({ message: 'Invalid OAuth provider' }),
-});
+export const oauthProviderSchema = z.enum(
+  ["google", "github", "discord", "twitter", "facebook", "apple", "microsoft"],
+  {
+    errorMap: () => ({ message: "Invalid OAuth provider" }),
+  }
+);
 
 /**
  * OAuth callback schema
  */
 export const oauthCallbackSchema = z.object({
   provider: oauthProviderSchema,
-  code: z.string().min(1, 'Authorization code is required'),
-  state: z.string().min(1, 'State parameter is required'),
+  code: z.string().min(1, "Authorization code is required"),
+  state: z.string().min(1, "State parameter is required"),
   error: z.string().optional(),
   errorDescription: z.string().optional(),
 });
@@ -315,10 +326,10 @@ export const oauthCallbackSchema = z.object({
  */
 export const oauthLinkingSchema = z.object({
   provider: oauthProviderSchema,
-  providerAccountId: z.string().min(1, 'Provider account ID is required'),
+  providerAccountId: z.string().min(1, "Provider account ID is required"),
   email: emailSchema,
   name: nameSchema.optional(),
-  avatar: z.string().url('Invalid avatar URL').optional(),
+  avatar: z.string().url("Invalid avatar URL").optional(),
   linkToExisting: z.boolean().default(false),
 });
 
@@ -327,9 +338,9 @@ export const oauthLinkingSchema = z.object({
  */
 export const oauthUnlinkingSchema = z.object({
   provider: oauthProviderSchema,
-  password: z.string().min(1, 'Password is required'),
-  confirmUnlink: z.boolean().refine(val => val === true, {
-    message: 'You must confirm unlinking this account',
+  password: z.string().min(1, "Password is required"),
+  confirmUnlink: z.boolean().refine((val) => val === true, {
+    message: "You must confirm unlinking this account",
   }),
 });
 
@@ -341,9 +352,15 @@ export const oauthUnlinkingSchema = z.object({
  * Device registration schema
  */
 export const deviceRegistrationSchema = z.object({
-  deviceName: z.string().min(1, 'Device name is required').max(100, 'Device name must not exceed 100 characters'),
-  deviceType: z.enum(['desktop', 'mobile', 'tablet', 'other']),
-  deviceFingerprint: z.string().min(1, 'Device fingerprint is required').max(255),
+  deviceName: z
+    .string()
+    .min(1, "Device name is required")
+    .max(100, "Device name must not exceed 100 characters"),
+  deviceType: z.enum(["desktop", "mobile", "tablet", "other"]),
+  deviceFingerprint: z
+    .string()
+    .min(1, "Device fingerprint is required")
+    .max(255),
   userAgent: userAgentSchema,
   ipAddress: ipAddressSchema,
   isTrusted: z.boolean().default(false),
@@ -354,25 +371,26 @@ export const deviceRegistrationSchema = z.object({
  */
 export const deviceTrustSchema = z.object({
   deviceId: cuidSchema,
-  trustLevel: z.enum(['untrusted', 'partial', 'trusted']),
+  trustLevel: z.enum(["untrusted", "partial", "trusted"]),
   expiresAt: optionalDateSchema,
-  password: z.string().min(1, 'Password is required'),
+  password: z.string().min(1, "Password is required"),
 });
 
 /**
  * Device revocation schema
  */
-export const deviceRevocationSchema = z.object({
-  deviceId: cuidSchema.optional(),
-  revokeAll: z.boolean().default(false),
-  reason: z.enum(['user_request', 'security', 'lost', 'stolen', 'compromised']).default('user_request'),
-}).refine(
-  (data) => data.deviceId || data.revokeAll,
-  {
-    message: 'Device ID or revoke all flag is required',
-    path: ['deviceId'],
-  }
-);
+export const deviceRevocationSchema = z
+  .object({
+    deviceId: cuidSchema.optional(),
+    revokeAll: z.boolean().default(false),
+    reason: z
+      .enum(["user_request", "security", "lost", "stolen", "compromised"])
+      .default("user_request"),
+  })
+  .refine((data) => data.deviceId || data.revokeAll, {
+    message: "Device ID or revoke all flag is required",
+    path: ["deviceId"],
+  });
 
 // =============================================================================
 // SECURITY SCHEMAS
@@ -387,15 +405,17 @@ export const loginAttemptSchema = z.object({
   ipAddress: ipAddressSchema,
   userAgent: userAgentSchema,
   timestamp: dateSchema,
-  failureReason: z.enum([
-    'invalid_credentials',
-    'account_locked',
-    'account_disabled',
-    'email_not_verified',
-    'two_factor_required',
-    'rate_limited',
-    'captcha_failed',
-  ]).optional(),
+  failureReason: z
+    .enum([
+      "invalid_credentials",
+      "account_locked",
+      "account_disabled",
+      "email_not_verified",
+      "two_factor_required",
+      "rate_limited",
+      "captcha_failed",
+    ])
+    .optional(),
   metadata: z.record(z.unknown()).optional(),
 });
 
@@ -404,7 +424,12 @@ export const loginAttemptSchema = z.object({
  */
 export const accountLockoutSchema = z.object({
   userId: cuidSchema,
-  reason: z.enum(['failed_attempts', 'security_violation', 'admin_action', 'suspicious_activity']),
+  reason: z.enum([
+    "failed_attempts",
+    "security_violation",
+    "admin_action",
+    "suspicious_activity",
+  ]),
   lockoutDuration: z.number().int().min(60).max(86400), // 1 minute to 24 hours
   unlockAt: dateSchema.optional(),
   metadata: z.record(z.unknown()).optional(),
@@ -416,14 +441,14 @@ export const accountLockoutSchema = z.object({
 export const securityAlertSchema = z.object({
   userId: cuidSchema,
   alertType: z.enum([
-    'new_device_login',
-    'suspicious_login',
-    'password_changed',
-    'email_changed',
-    'two_factor_disabled',
-    'account_compromised',
+    "new_device_login",
+    "suspicious_login",
+    "password_changed",
+    "email_changed",
+    "two_factor_disabled",
+    "account_compromised",
   ]),
-  severity: z.enum(['low', 'medium', 'high', 'critical']),
+  severity: z.enum(["low", "medium", "high", "critical"]),
   ipAddress: ipAddressSchema.optional(),
   userAgent: userAgentSchema.optional(),
   metadata: z.record(z.unknown()).optional(),
@@ -438,8 +463,14 @@ export const securityAlertSchema = z.object({
  * Rate limit configuration schema
  */
 export const rateLimitConfigSchema = z.object({
-  identifier: z.string().min(1, 'Identifier is required'), // IP, user ID, email, etc.
-  action: z.enum(['login', 'register', 'password_reset', 'email_verification', 'api_call']),
+  identifier: z.string().min(1, "Identifier is required"), // IP, user ID, email, etc.
+  action: z.enum([
+    "login",
+    "register",
+    "password_reset",
+    "email_verification",
+    "api_call",
+  ]),
   windowMs: z.number().int().min(1000).max(86400000), // 1 second to 24 hours
   maxAttempts: z.number().int().min(1).max(1000),
   skipSuccessfulRequests: z.boolean().default(false),
@@ -471,23 +502,23 @@ export const authAuditSchema = z.object({
   userId: cuidSchema.optional(),
   email: emailSchema.optional(),
   action: z.enum([
-    'login_success',
-    'login_failure',
-    'logout',
-    'register',
-    'password_change',
-    'password_reset',
-    'email_verify',
-    'two_factor_enable',
-    'two_factor_disable',
-    'oauth_link',
-    'oauth_unlink',
-    'session_create',
-    'session_terminate',
-    'device_trust',
-    'device_revoke',
-    'account_lock',
-    'account_unlock',
+    "login_success",
+    "login_failure",
+    "logout",
+    "register",
+    "password_change",
+    "password_reset",
+    "email_verify",
+    "two_factor_enable",
+    "two_factor_disable",
+    "oauth_link",
+    "oauth_unlink",
+    "session_create",
+    "session_terminate",
+    "device_trust",
+    "device_revoke",
+    "account_lock",
+    "account_unlock",
   ]),
   ipAddress: ipAddressSchema,
   userAgent: userAgentSchema,
@@ -507,10 +538,14 @@ export type LoginCredentials = z.infer<typeof loginCredentialsSchema>;
 export type Registration = z.infer<typeof registrationSchema>;
 export type Password = z.infer<typeof passwordSchema>;
 export type PasswordStrength = z.infer<typeof passwordStrengthSchema>;
-export type EmailVerificationRequest = z.infer<typeof emailVerificationRequestSchema>;
+export type EmailVerificationRequest = z.infer<
+  typeof emailVerificationRequestSchema
+>;
 export type EmailVerification = z.infer<typeof emailVerificationSchema>;
 export type EmailChangeRequest = z.infer<typeof emailChangeRequestSchema>;
-export type EmailChangeConfirmation = z.infer<typeof emailChangeConfirmationSchema>;
+export type EmailChangeConfirmation = z.infer<
+  typeof emailChangeConfirmationSchema
+>;
 export type PasswordResetRequest = z.infer<typeof passwordResetRequestSchema>;
 export type PasswordReset = z.infer<typeof passwordResetSchema>;
 export type PasswordChange = z.infer<typeof passwordChangeSchema>;
