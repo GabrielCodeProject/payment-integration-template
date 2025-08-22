@@ -1,6 +1,6 @@
 'use client';
 
-import { TrendingUp, Package, ShoppingCart, AlertTriangle, Eye, EyeOff } from 'lucide-react';
+import { Package, AlertTriangle, Eye, EyeOff } from 'lucide-react';
 
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';

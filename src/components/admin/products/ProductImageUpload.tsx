@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useRef, useCallback } from 'react';
-import { Upload, X, Image as ImageIcon, Move, Star } from 'lucide-react';
+import { Upload, X, Image as ImageIcon, Star } from 'lucide-react';
 import { toast } from 'sonner';
 
 import { Button } from '@/components/ui/button';
