@@ -17,6 +17,9 @@ import {
   Activity,
   FileText,
   ChevronRight,
+  Package,
+  ShoppingCart,
+  CreditCard,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -60,6 +63,32 @@ export function AdminNavigation() {
           icon: BarChart3,
           permission: PERMISSIONS.SYSTEM_MONITOR,
           description: "System analytics and metrics",
+        },
+      ],
+    },
+    {
+      name: "Commerce",
+      items: [
+        {
+          name: "Products",
+          href: "/admin/products",
+          icon: Package,
+          permission: PERMISSIONS.USER_READ, // Update with proper product permission when created
+          description: "Manage product catalog",
+        },
+        {
+          name: "Orders",
+          href: "/admin/orders",
+          icon: ShoppingCart,
+          permission: PERMISSIONS.USER_READ, // Update with proper order permission when created
+          description: "View and manage orders",
+        },
+        {
+          name: "Payments",
+          href: "/admin/payments",
+          icon: CreditCard,
+          permission: PERMISSIONS.USER_READ, // Update with proper payment permission when created
+          description: "Payment processing and history",
         },
       ],
     },
