@@ -8,7 +8,8 @@ export default async function globalSetup() {
   console.log('🔧 Setting up global test environment...');
   
   // Set test environment
-  process.env.NODE_ENV = 'test';
+  // NODE_ENV is read-only in TypeScript, but we can override it
+  (process.env as any).NODE_ENV = 'test';
   
   // Create test database if it doesn't exist
   await createTestDatabase();
@@ -68,7 +69,7 @@ async function runTestMigrations() {
     
     // Use Prisma CLI to run migrations
     await execAsync('npx prisma migrate deploy', {
-      env: { ...process.env, DATABASE_URL: process.env.TEST_DATABASE_URL }
+      env: { ...process.env, DATABASE_URL: process.env.TEST_DATABASE_URL || '' }
     });
     
     console.log('✅ Test database migrations completed');

@@ -136,7 +136,7 @@ jest.mock('sonner', () => ({
 }));
 
 // Mock environment variables
-process.env.NODE_ENV = 'test';
+(process.env as any).NODE_ENV = 'test';
 process.env.NEXT_PUBLIC_APP_URL = 'http://localhost:3000';
 
 // Global test utilities

@@ -129,14 +129,14 @@ async function createPaymentMethodsForUser(
   for (let i = 0; i < methodCount; i++) {
     const card = userCards[i];
     const isDefault = i === 0; // First card is default
-    const methodIndex = (userIndex * 10) + i + 1;
+    // Remove unused variable
     
     const paymentMethodData: PaymentMethodSeedData = {
       userId,
       stripePaymentMethodId: generateStripeId('pm', `${userId.split('-').pop()}_${i + 1}`),
-      type: card.type,
-      brand: card.brand,
-      last4: card.last4,
+      type: card!.type,
+      brand: card!.brand,
+      last4: card!.last4,
       expiryMonth: randomBetween(1, 12),
       expiryYear: randomBetween(2025, 2030),
       isDefault,
@@ -149,11 +149,11 @@ async function createPaymentMethodsForUser(
         userId: paymentMethodData.userId,
         stripePaymentMethodId: paymentMethodData.stripePaymentMethodId,
         type: paymentMethodData.type,
-        brand: paymentMethodData.brand,
-        last4: paymentMethodData.last4,
+        brand: paymentMethodData.brand || null,
+        last4: paymentMethodData.last4 || null,
         expiryMonth: paymentMethodData.expiryMonth,
         expiryYear: paymentMethodData.expiryYear,
-        fingerprint: `${card.fingerprint}_${userId}`,
+        fingerprint: `${card!.fingerprint}_${userId}`,
         isDefault: paymentMethodData.isDefault,
         nickname: paymentMethodData.nickname,
         billingAddress: paymentMethodData.billingAddress,
@@ -213,7 +213,7 @@ export async function seedPaymentMethods(prisma: PrismaClient, config: SeedConfi
     
     const paymentMethodIds = await createPaymentMethodsForUser(
       prisma,
-      customer.id,
+      customer!.id,
       i,
       config
     );
@@ -257,7 +257,7 @@ export async function seedTestPaymentMethods(prisma: PrismaClient, config: SeedC
       fingerprint: 'visa_expired_test',
       isDefault: false,
       nickname: 'Expired Test Card',
-      billingAddress: BILLING_ADDRESSES[0],
+      billingAddress: BILLING_ADDRESSES[0] || null,
       isActive: false // Inactive due to expiration
     }
   });

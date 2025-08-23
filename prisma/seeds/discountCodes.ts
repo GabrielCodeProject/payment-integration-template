@@ -264,11 +264,11 @@ export async function seedDiscountCodes(prisma: PrismaClient, config: SeedConfig
   for (const discountData of DISCOUNT_CODE_TEMPLATES) {
     const startsAt = discountData.startsAtDaysAgo !== undefined 
       ? (discountData.startsAtDaysAgo >= 0 ? daysAgo(discountData.startsAtDaysAgo) : daysFromNow(-discountData.startsAtDaysAgo))
-      : undefined;
+      : null;
     
     const expiresAt = discountData.expiresInDays !== undefined
       ? (discountData.expiresInDays >= 0 ? daysFromNow(discountData.expiresInDays) : daysAgo(-discountData.expiresInDays))
-      : undefined;
+      : null;
     
     const discountCode = await prisma.discountCode.create({
       data: {

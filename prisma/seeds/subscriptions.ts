@@ -127,7 +127,10 @@ function generateSubscriptionFromScenario(
     quantity: randomBetween(1, 3), // Some subscriptions have multiple quantities
     currency: 'usd',
     cancelAtPeriodEnd: scenario.cancelAtPeriodEnd,
-    metadata: randomChoice(SUBSCRIPTION_METADATA_TEMPLATES)
+    metadata: randomChoice(SUBSCRIPTION_METADATA_TEMPLATES),
+    currentPeriodStartDaysAgo: 0, // Will be set in switch
+    currentPeriodEndDaysInFuture: 0, // Will be set in switch
+    startedDaysAgo: 0 // Will be set in switch
   };
 
   // Set up timing based on scenario
@@ -315,12 +318,12 @@ export async function seedSubscriptions(prisma: PrismaClient, config: SeedConfig
             ? daysFromNow(subscriptionData.currentPeriodEndDaysInFuture)
             : daysAgo(-subscriptionData.currentPeriodEndDaysInFuture),
           cancelAtPeriodEnd: subscriptionData.cancelAtPeriodEnd,
-          trialStart: subscriptionData.trialStartDaysAgo ? daysAgo(subscriptionData.trialStartDaysAgo) : undefined,
-          trialEnd: subscriptionData.trialEndDaysInFuture ? daysFromNow(subscriptionData.trialEndDaysInFuture) : undefined,
+          trialStart: subscriptionData.trialStartDaysAgo ? daysAgo(subscriptionData.trialStartDaysAgo) : null,
+          trialEnd: subscriptionData.trialEndDaysInFuture ? daysFromNow(subscriptionData.trialEndDaysInFuture) : null,
           startedAt: daysAgo(subscriptionData.startedDaysAgo),
-          endedAt: subscriptionData.endedDaysAgo ? daysAgo(subscriptionData.endedDaysAgo) : undefined,
-          cancelledAt: subscriptionData.cancelledDaysAgo ? daysAgo(subscriptionData.cancelledDaysAgo) : undefined,
-          metadata: subscriptionData.metadata
+          endedAt: subscriptionData.endedDaysAgo ? daysAgo(subscriptionData.endedDaysAgo) : null,
+          cancelledAt: subscriptionData.cancelledDaysAgo ? daysAgo(subscriptionData.cancelledDaysAgo) : null,
+          metadata: subscriptionData.metadata || null
         }
       });
 

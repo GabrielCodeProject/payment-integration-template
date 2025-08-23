@@ -163,15 +163,20 @@ function generateOrderFromScenario(
     const unitPrice = randomBetween(999, 9999) / 100; // $9.99 to $99.99
     const totalPrice = quantity * unitPrice;
     
-    baseOrderData.items.push({
+    const item: any = {
       productId,
       quantity,
-      unitPrice,
-      metadata: randomBoolean(0.3) ? {
+      unitPrice
+    };
+    
+    if (randomBoolean(0.3)) {
+      item.metadata = {
         size: randomChoice(['S', 'M', 'L', 'XL']),
         color: randomChoice(['Black', 'White', 'Navy', 'Gray'])
-      } : undefined
-    });
+      };
+    }
+    
+    baseOrderData.items.push(item);
     
     subtotal += totalPrice;
   }
@@ -345,25 +350,25 @@ export async function seedOrders(prisma: PrismaClient, config: SeedConfig): Prom
           shippingAddress: orderData.shippingAddress,
           billingAddress: orderData.billingAddress,
           shippingMethod: orderData.shippingAmount > 0 ? 'Standard Shipping' : 'Free Shipping',
-          trackingNumber: orderData.shippedDaysAgo ? `TRACK${orderIndex.toString().padStart(9, '0')}` : undefined,
+          trackingNumber: orderData.shippedDaysAgo ? `TRACK${orderIndex.toString().padStart(9, '0')}` : null,
           stripePaymentIntentId: orderData.stripePaymentIntentId,
-          stripeChargeId: orderData.stripePaymentIntentId ? orderData.stripePaymentIntentId.replace('pi_', 'ch_') : undefined,
+          stripeChargeId: orderData.stripePaymentIntentId ? orderData.stripePaymentIntentId.replace('pi_', 'ch_') : null,
           paymentMethodId: orderData.paymentMethodId,
           discountCodeId: orderData.discountCodeId,
           metadata: orderData.metadata,
           createdAt: daysAgo(orderData.createdDaysAgo),
-          paidAt: orderData.paidDaysAgo ? daysAgo(orderData.paidDaysAgo) : undefined,
-          shippedAt: orderData.shippedDaysAgo ? daysAgo(orderData.shippedDaysAgo) : undefined,
-          deliveredAt: orderData.deliveredDaysAgo ? daysAgo(orderData.deliveredDaysAgo) : undefined,
+          paidAt: orderData.paidDaysAgo ? daysAgo(orderData.paidDaysAgo) : null,
+          shippedAt: orderData.shippedDaysAgo ? daysAgo(orderData.shippedDaysAgo) : null,
+          deliveredAt: orderData.deliveredDaysAgo ? daysAgo(orderData.deliveredDaysAgo) : null,
           cancelledAt: (orderData.status === 'CANCELLED' || orderData.status === 'REFUNDED') 
             ? daysAgo(Math.max(1, orderData.createdDaysAgo - randomBetween(0, 2)))
-            : undefined
+            : null
         }
       });
 
       // Create order items
       for (let itemIndex = 0; itemIndex < orderData.items.length; itemIndex++) {
-        const itemData = orderData.items[itemIndex];
+        const itemData = orderData.items[itemIndex]!;
         const product = products.find(p => p.id === itemData.productId);
         if (product) {
           await prisma.orderItem.create({
@@ -376,7 +381,7 @@ export async function seedOrders(prisma: PrismaClient, config: SeedConfig): Prom
               unitPrice: itemData.unitPrice,
               quantity: itemData.quantity,
               totalPrice: itemData.unitPrice * itemData.quantity,
-              metadata: itemData.metadata
+              metadata: itemData.metadata || null
             }
           });
         }
