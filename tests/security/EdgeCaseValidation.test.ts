@@ -34,7 +34,7 @@ describe('Edge Case Test Utilities Validation', () => {
       const connectionPromise = NetworkSimulator.simulateNetworkFailure('connection');
       await expect(connectionPromise).rejects.toThrow('Network request failed');
       
-      console.log('✅ Network failure simulation working');
+      // console.log('✅ Network failure simulation working');
     });
     
     it('should simulate slow network conditions', async () => {
@@ -45,7 +45,7 @@ describe('Edge Case Test Utilities Validation', () => {
       expect(endTime - startTime).toBeGreaterThanOrEqual(90); // Allow for timing variations
       expect(response).toBeInstanceOf(Response);
       
-      console.log('✅ Slow network simulation working');
+      // console.log('✅ Slow network simulation working');
     });
     
     it('should simulate intermittent connectivity', async () => {
@@ -58,7 +58,7 @@ describe('Edge Case Test Utilities Validation', () => {
       const response = await neverFailPromise;
       expect(response).toBeInstanceOf(Response);
       
-      console.log('✅ Intermittent connectivity simulation working');
+      // console.log('✅ Intermittent connectivity simulation working');
     });
   });
   
@@ -71,7 +71,7 @@ describe('Edge Case Test Utilities Validation', () => {
       expect(data.error).toBe('Internal Server Error');
       expect(data.code).toBe('HTTP_500');
       
-      console.log('✅ 5xx error simulation working');
+      // console.log('✅ 5xx error simulation working');
     });
     
     it('should create rate limit responses with proper headers', async () => {
@@ -83,7 +83,7 @@ describe('Edge Case Test Utilities Validation', () => {
       expect(data.code).toBe('RATE_LIMIT_EXCEEDED');
       expect(data.retryAfter).toBe(60);
       
-      console.log('✅ Rate limit simulation working');
+      // console.log('✅ Rate limit simulation working');
     });
     
     it('should create malformed responses', async () => {
@@ -95,7 +95,7 @@ describe('Edge Case Test Utilities Validation', () => {
       const emptyText = await emptyResponse.text();
       expect(emptyText).toBe('');
       
-      console.log('✅ Malformed response simulation working');
+      // console.log('✅ Malformed response simulation working');
     });
   });
   
@@ -105,7 +105,7 @@ describe('Edge Case Test Utilities Validation', () => {
       expect(expiredSession.userId).toBe('user123');
       expect(expiredSession.expires.getTime()).toBeLessThan(Date.now());
       
-      console.log('✅ Expired session simulation working');
+      // console.log('✅ Expired session simulation working');
     });
     
     it('should create near-expiry sessions', () => {
@@ -114,7 +114,7 @@ describe('Edge Case Test Utilities Validation', () => {
       expect(nearExpirySession.expires.getTime()).toBeGreaterThan(Date.now());
       expect(nearExpirySession.expires.getTime()).toBeLessThan(Date.now() + 60000);
       
-      console.log('✅ Near-expiry session simulation working');
+      // console.log('✅ Near-expiry session simulation working');
     });
     
     it('should simulate partial auth states', () => {
@@ -125,7 +125,7 @@ describe('Edge Case Test Utilities Validation', () => {
       const passwordReset = AuthStateSimulator.simulatePartialAuthState('password_reset_required');
       expect(passwordReset.code).toBe('PASSWORD_RESET_REQUIRED');
       
-      console.log('✅ Partial auth state simulation working');
+      // console.log('✅ Partial auth state simulation working');
     });
   });
   
@@ -136,7 +136,7 @@ describe('Edge Case Test Utilities Validation', () => {
       expect(malformedTokens[0]).toBe('invalid.jwt.token');
       expect(malformedTokens[2]).toBe('not-a-token-at-all');
       
-      console.log('✅ Malformed JWT generation working');
+      // console.log('✅ Malformed JWT generation working');
     });
     
     it('should simulate token expiry scenarios', () => {
@@ -147,7 +147,7 @@ describe('Edge Case Test Utilities Validation', () => {
       const expiredRefresh = TokenSimulator.simulateTokenExpiry('refresh');
       expect(expiredRefresh.code).toBe('REFRESH_TOKEN_EXPIRED');
       
-      console.log('✅ Token expiry simulation working');
+      // console.log('✅ Token expiry simulation working');
     });
     
     it('should simulate security violations', () => {
@@ -159,7 +159,7 @@ describe('Edge Case Test Utilities Validation', () => {
       expect(corrupted.code).toBe('TOKEN_CORRUPTED');
       expect(corrupted.action).toBe('reauthentication_required');
       
-      console.log('✅ Token security violation simulation working');
+      // console.log('✅ Token security violation simulation working');
     });
   });
   
@@ -170,7 +170,7 @@ describe('Edge Case Test Utilities Validation', () => {
       expect(xssPayloads).toContain('<script>alert("xss")</script>');
       expect(xssPayloads).toContain('javascript:alert("xss")');
       
-      console.log('✅ XSS payload generation working');
+      // console.log('✅ XSS payload generation working');
     });
     
     it('should generate SQL injection payloads', () => {
@@ -179,7 +179,7 @@ describe('Edge Case Test Utilities Validation', () => {
       expect(sqlPayloads).toContain("'; DROP TABLE users; --");
       expect(sqlPayloads).toContain("' OR '1'='1' --");
       
-      console.log('✅ SQL injection payload generation working');
+      // console.log('✅ SQL injection payload generation working');
     });
     
     it('should simulate brute force attacks', () => {
@@ -199,7 +199,7 @@ describe('Edge Case Test Utilities Validation', () => {
       expect(attempt3.code).toBe('ACCOUNT_LOCKED');
       expect(attempt3.lockoutDuration).toBe(900);
       
-      console.log('✅ Brute force attack simulation working');
+      // console.log('✅ Brute force attack simulation working');
     });
   });
   
@@ -209,7 +209,7 @@ describe('Edge Case Test Utilities Validation', () => {
       expect(jsDisabled.code).toBe('JAVASCRIPT_DISABLED');
       expect(jsDisabled.fallbackUrl).toBe('/login-basic');
       
-      console.log('✅ JavaScript disabled simulation working');
+      // console.log('✅ JavaScript disabled simulation working');
     });
     
     it('should simulate cookies disabled', () => {
@@ -217,7 +217,7 @@ describe('Edge Case Test Utilities Validation', () => {
       expect(cookiesDisabled.code).toBe('COOKIES_DISABLED');
       expect(cookiesDisabled.alternatives).toContain('localStorage_fallback');
       
-      console.log('✅ Cookies disabled simulation working');
+      // console.log('✅ Cookies disabled simulation working');
     });
     
     it('should simulate localStorage unavailable', () => {
@@ -229,7 +229,7 @@ describe('Edge Case Test Utilities Validation', () => {
       // Test cleanup
       localStorageTest.cleanup();
       
-      console.log('✅ localStorage unavailable simulation working');
+      // console.log('✅ localStorage unavailable simulation working');
     });
     
     it('should simulate legacy browsers', () => {
@@ -238,7 +238,7 @@ describe('Edge Case Test Utilities Validation', () => {
       expect(ie11.browser).toBe('ie11');
       expect(ie11.unsupportedFeatures).toContain('fetch_api');
       
-      console.log('✅ Legacy browser simulation working');
+      // console.log('✅ Legacy browser simulation working');
     });
   });
   
@@ -247,21 +247,21 @@ describe('Edge Case Test Utilities Validation', () => {
       const networkErrorMock = ErrorMockFactory.createNetworkErrorMock('timeout');
       expect(jest.isMockFunction(networkErrorMock)).toBe(true);
       
-      console.log('✅ Network error mock creation working');
+      // console.log('✅ Network error mock creation working');
     });
     
     it('should create server error mocks', () => {
       const serverErrorMock = ErrorMockFactory.createServerErrorMock(500);
       expect(jest.isMockFunction(serverErrorMock)).toBe(true);
       
-      console.log('✅ Server error mock creation working');
+      // console.log('✅ Server error mock creation working');
     });
     
     it('should create progressive delay mocks', () => {
       const progressiveDelayMock = ErrorMockFactory.createProgressiveDelayMock([0, 100, 200]);
       expect(jest.isMockFunction(progressiveDelayMock)).toBe(true);
       
-      console.log('✅ Progressive delay mock creation working');
+      // console.log('✅ Progressive delay mock creation working');
     });
   });
   
@@ -272,7 +272,7 @@ describe('Edge Case Test Utilities Validation', () => {
       expect(longInputs.extremelyLongPassword.length).toBeGreaterThan(10000);
       expect(longInputs.extremelyLongName.length).toBeGreaterThan(5000);
       
-      console.log('✅ Long input generation working');
+      // console.log('✅ Long input generation working');
     });
     
     it('should generate unicode inputs', () => {
@@ -281,7 +281,7 @@ describe('Edge Case Test Utilities Validation', () => {
       expect(unicodeInputs[0]).toContain('\u0000'); // Null byte
       expect(unicodeInputs[4]).toContain('\u0001'); // Control character
       
-      console.log('✅ Unicode input generation working');
+      // console.log('✅ Unicode input generation working');
     });
     
     it('should generate malicious inputs', () => {
@@ -290,7 +290,7 @@ describe('Edge Case Test Utilities Validation', () => {
       expect(maliciousInputs.sqlInjection.length).toBeGreaterThan(5);
       expect(maliciousInputs.pathTraversal).toContain('../../../etc/passwd');
       
-      console.log('✅ Malicious input generation working');
+      // console.log('✅ Malicious input generation working');
     });
     
     it('should generate concurrency test data', () => {
@@ -299,7 +299,7 @@ describe('Edge Case Test Utilities Validation', () => {
       expect(concurrentData[0].email).toContain('concurrent-user-0');
       expect(concurrentData[2].email).toContain('concurrent-user-2');
       
-      console.log('✅ Concurrency test data generation working');
+      // console.log('✅ Concurrency test data generation working');
     });
   });
   
@@ -313,7 +313,7 @@ describe('Edge Case Test Utilities Validation', () => {
       const data = await EdgeCaseAssertions.assertErrorResponse(mockResponse, 'TEST_ERROR_CODE', 400);
       expect(data.code).toBe('TEST_ERROR_CODE');
       
-      console.log('✅ Error response assertions working');
+      // console.log('✅ Error response assertions working');
     });
     
     it('should validate security violations', async () => {
@@ -325,7 +325,7 @@ describe('Edge Case Test Utilities Validation', () => {
       const data = await EdgeCaseAssertions.assertSecurityViolation(mockResponse);
       expect(data.securityViolation).toBe(true);
       
-      console.log('✅ Security violation assertions working');
+      // console.log('✅ Security violation assertions working');
     });
     
     it('should validate rate limit responses', async () => {
@@ -339,7 +339,7 @@ describe('Edge Case Test Utilities Validation', () => {
       const data = await EdgeCaseAssertions.assertRateLimitResponse(mockResponse);
       expect(data.retryAfter).toBe(60);
       
-      console.log('✅ Rate limit response assertions working');
+      // console.log('✅ Rate limit response assertions working');
     });
     
     it('should validate response times', () => {
@@ -350,7 +350,7 @@ describe('Edge Case Test Utilities Validation', () => {
       expect(elapsed).toBe(150);
       expect(elapsed).toBeGreaterThanOrEqual(100);
       
-      console.log('✅ Response time assertions working');
+      // console.log('✅ Response time assertions working');
     });
   });
   
@@ -372,7 +372,7 @@ describe('Edge Case Test Utilities Validation', () => {
       expect(time2).toBeGreaterThan(time1);
       expect(mockFetch).toHaveBeenCalledTimes(2);
       
-      console.log('✅ Complete error scenario simulation working');
+      // console.log('✅ Complete error scenario simulation working');
     });
     
     it('should demonstrate security threat detection flow', () => {
@@ -393,7 +393,7 @@ describe('Edge Case Test Utilities Validation', () => {
       expect(detectionResult.blocked).toBe(true);
       expect(detectionResult.sanitized).not.toContain('<script>');
       
-      console.log('✅ Security threat detection flow working');
+      // console.log('✅ Security threat detection flow working');
     });
     
     it('should demonstrate browser compatibility handling', () => {
@@ -414,7 +414,7 @@ describe('Edge Case Test Utilities Validation', () => {
       expect(fallbackStrategy.usePolyfills).toBe(true);
       expect(fallbackStrategy.degradedExperience).toBe(true);
       
-      console.log('✅ Browser compatibility handling working');
+      // console.log('✅ Browser compatibility handling working');
     });
   });
 });

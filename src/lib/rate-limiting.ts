@@ -48,9 +48,9 @@ async function getRedisClient() {
     await client.connect();
     redisClient = client;
     return client;
-  } catch (error) {
+  } catch (_error) {
     if (process.env.NODE_ENV === "development") {
-      console.warn("Redis not available, using in-memory rate limiting:", error);
+      // console.warn("Redis not available, using in-memory rate limiting:", error);
     }
     return null;
   }
@@ -124,9 +124,9 @@ async function redisRateLimit(
           totalHits: newCount,
         };
       }
-    } catch (error) {
+    } catch (_error) {
       if (process.env.NODE_ENV === "development") {
-        console.warn("Redis rate limiting failed, falling back to memory:", error);
+        // console.warn("Redis rate limiting failed, falling back to memory:", error);
       }
       // Fall through to memory-based rate limiting
     }
@@ -317,8 +317,8 @@ export async function cleanupRateLimit(): Promise<void> {
     try {
       await redisClient.quit();
       redisClient = null;
-    } catch (error) {
-      console.warn("Error closing Redis connection:", error);
+    } catch (_error) {
+      // console.warn("Error closing Redis connection:", error);
     }
   }
   memoryStore.clear();

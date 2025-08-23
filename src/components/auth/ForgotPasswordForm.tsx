@@ -49,7 +49,7 @@ export function ForgotPasswordForm({ onSuccess }: ForgotPasswordFormProps) {
 
       if (response.error) {
         // Handle specific errors
-        switch (response.error.message) {
+        switch (response._error.message) {
           case "User not found":
           case "Email not found":
             // For security, we don't reveal if the email exists or not
@@ -68,7 +68,7 @@ export function ForgotPasswordForm({ onSuccess }: ForgotPasswordFormProps) {
             });
             return;
           default:
-            toast.error(response.error.message || "Failed to send password reset email. Please try again.");
+            toast.error(response._error.message || "Failed to send password reset email. Please try again.");
             return;
         }
       }
@@ -80,14 +80,14 @@ export function ForgotPasswordForm({ onSuccess }: ForgotPasswordFormProps) {
       if (onSuccess) {
         onSuccess(data.email);
       }
-    } catch (error) {
+    } catch (_error) {
       // eslint-disable-next-line no-console
-      console.error("Forgot password error:", error);
+      // console.error("Forgot password error:", error);
       // Handle network errors specifically
-      if (error instanceof Error) {
-        if (error.message.includes("fetch") || error.message.includes("network")) {
+      if (_error instanceof Error) {
+        if (_error.message.includes("fetch") || _error.message.includes("network")) {
           toast.error("Network error. Please check your connection and try again.");
-        } else if (error.message.includes("timeout")) {
+        } else if (_error.message.includes("timeout")) {
           toast.error("Request timed out. Please try again.");
         } else {
           toast.error("An unexpected error occurred. Please try again.");

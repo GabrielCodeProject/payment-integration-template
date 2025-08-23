@@ -50,7 +50,7 @@ describe('Browser Compatibility Edge Cases', () => {
       expect(errorData.code).toBe('JAVASCRIPT_DISABLED');
       expect(errorData.fallbackUrl).toBe('/login-basic');
       
-      console.log('✅ JavaScript disabled handling');
+      // console.log('✅ JavaScript disabled handling');
     });
     
     it('should provide graceful degradation for auth forms', async () => {
@@ -74,7 +74,7 @@ describe('Browser Compatibility Edge Cases', () => {
       expect(responseData.basicMode).toBe(true);
       expect(responseData.limitations).toContain('no_realtime_validation');
       
-      console.log('✅ Graceful degradation for auth forms');
+      // console.log('✅ Graceful degradation for auth forms');
     });
   });
   
@@ -115,7 +115,7 @@ describe('Browser Compatibility Edge Cases', () => {
       expect(errorData.code).toBe('COOKIES_DISABLED');
       expect(errorData.alternatives).toContain('localStorage_fallback');
       
-      console.log('✅ Disabled cookies handling');
+      // console.log('✅ Disabled cookies handling');
     });
     
     it('should handle third-party cookie restrictions', async () => {
@@ -144,7 +144,7 @@ describe('Browser Compatibility Edge Cases', () => {
       expect(responseData.code).toBe('THIRD_PARTY_COOKIES_BLOCKED');
       expect(responseData.alternatives).toContain('session_storage');
       
-      console.log('✅ Third-party cookie restrictions handling');
+      // console.log('✅ Third-party cookie restrictions handling');
     });
   });
   
@@ -191,7 +191,7 @@ describe('Browser Compatibility Edge Cases', () => {
         writable: true
       });
       
-      console.log('✅ localStorage unavailability handling');
+      // console.log('✅ localStorage unavailability handling');
     });
     
     it('should handle localStorage quota exceeded', async () => {
@@ -238,7 +238,7 @@ describe('Browser Compatibility Edge Cases', () => {
       const errorData = await response.json();
       expect(errorData.code).toBe('STORAGE_QUOTA_EXCEEDED');
       
-      console.log('✅ localStorage quota exceeded handling');
+      // console.log('✅ localStorage quota exceeded handling');
     });
   });
   
@@ -274,7 +274,7 @@ describe('Browser Compatibility Edge Cases', () => {
       expect(responseData.code).toBe('LEGACY_BROWSER');
       expect(responseData.unsupportedFeatures).toContain('fetch_api');
       
-      console.log('✅ Internet Explorer compatibility handling');
+      // console.log('✅ Internet Explorer compatibility handling');
     });
     
     it('should handle Safari private browsing limitations', async () => {
@@ -328,7 +328,7 @@ describe('Browser Compatibility Edge Cases', () => {
       expect(responseData.code).toBe('PRIVATE_BROWSING');
       expect(responseData.limitations).toContain('localStorage');
       
-      console.log('✅ Safari private browsing limitations handling');
+      // console.log('✅ Safari private browsing limitations handling');
     });
   });
   
@@ -360,7 +360,7 @@ describe('Browser Compatibility Edge Cases', () => {
       expect(responseData.code).toBe('MOBILE_MEMORY_LIMITED');
       expect(responseData.optimizations).toContain('reduced_cache');
       
-      console.log('✅ Mobile browser memory constraints handling');
+      // console.log('✅ Mobile browser memory constraints handling');
     });
     
     it('should handle iOS PWA authentication issues', async () => {
@@ -401,7 +401,7 @@ describe('Browser Compatibility Edge Cases', () => {
       expect(responseData.code).toBe('PWA_AUTH_MODE');
       expect(responseData.features).toContain('biometric_auth');
       
-      console.log('✅ iOS PWA authentication issues handling');
+      // console.log('✅ iOS PWA authentication issues handling');
     });
   });
   
@@ -442,7 +442,7 @@ describe('Browser Compatibility Edge Cases', () => {
       expect(responseData.code).toBe('AD_BLOCKER_DETECTED');
       expect(responseData.affectedFeatures).toContain('social_login');
       
-      console.log('✅ Ad blocker interference detection');
+      // console.log('✅ Ad blocker interference detection');
     });
     
     it('should handle password manager conflicts', async () => {
@@ -482,7 +482,7 @@ describe('Browser Compatibility Edge Cases', () => {
       expect(responseData.code).toBe('PASSWORD_MANAGER_CONFLICT');
       expect(responseData.commonIssues).toContain('duplicate_submissions');
       
-      console.log('✅ Password manager conflicts handling');
+      // console.log('✅ Password manager conflicts handling');
     });
   });
   
@@ -525,7 +525,7 @@ describe('Browser Compatibility Edge Cases', () => {
       const responseData = await response.json();
       expect(responseData.performance.connectionType).toBe('slow-2g');
       
-      console.log('✅ Slow network connection handling');
+      // console.log('✅ Slow network connection handling');
     });
     
     it('should handle intermittent connectivity', async () => {
@@ -579,7 +579,7 @@ describe('Browser Compatibility Edge Cases', () => {
       expect(success).toBe(true);
       expect(retries).toBeGreaterThan(0);
       
-      console.log('✅ Intermittent connectivity handling');
+      // console.log('✅ Intermittent connectivity handling');
     });
   });
   

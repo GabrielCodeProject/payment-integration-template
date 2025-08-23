@@ -201,11 +201,11 @@ export async function POST(request: NextRequest) {
             error: 'Termination failed',
           });
         }
-      } catch (error) {
+      } catch (_error) {
         terminationResults.push({
           sessionId: sessionToTerminate.id,
           terminated: false,
-          error: error instanceof Error ? error.message : 'Unknown error',
+          error: error instanceof Error ? _error.message : 'Unknown error',
         });
       }
     }
@@ -252,8 +252,8 @@ export async function POST(request: NextRequest) {
       },
     });
 
-  } catch (error) {
-    console.error('Bulk session termination error:', error);
+  } catch (_error) {
+    // console.error('Bulk session termination error:', error);
     
     // Log the error for monitoring
     try {
@@ -263,7 +263,7 @@ export async function POST(request: NextRequest) {
         action: 'DELETE',
         metadata: {
           operation: 'bulkTermination',
-          error: error instanceof Error ? error.message : 'Unknown error',
+          error: error instanceof Error ? _error.message : 'Unknown error',
           errorType: 'bulk_termination_error',
         },
       });
@@ -406,8 +406,8 @@ export async function GET(request: NextRequest) {
       },
     });
 
-  } catch (error) {
-    console.error('Bulk termination analysis error:', error);
+  } catch (_error) {
+    // console.error('Bulk termination analysis error:', error);
     
     return NextResponse.json(
       { 

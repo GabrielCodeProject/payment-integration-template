@@ -163,7 +163,7 @@ export async function createAuditLog(
   tableName: string,
   recordId: string,
   userId?: string,
-  metadata?: Record<string, any>
+  metadata?: Record<string, string | number | boolean>
 ): Promise<void> {
   try {
     await prisma.auditLog.create({

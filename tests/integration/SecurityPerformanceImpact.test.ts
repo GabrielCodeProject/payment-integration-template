@@ -51,12 +51,12 @@ describe('Security Performance Impact Integration Tests', () => {
     }
 
     // Log performance summary
-    console.log('\n=== Security Performance Test Summary ===');
+    // console.log('\n=== Security Performance Test Summary ===');
     for (const [testName, measurements] of performanceMetrics.entries()) {
       const avg = measurements.reduce((a, b) => a + b, 0) / measurements.length;
       const min = Math.min(...measurements);
       const max = Math.max(...measurements);
-      console.log(`${testName}: avg=${avg.toFixed(2)}ms, min=${min.toFixed(2)}ms, max=${max.toFixed(2)}ms`);
+      // console.log(`${testName}: avg=${avg.toFixed(2)}ms, min=${min.toFixed(2)}ms, max=${max.toFixed(2)}ms`);
     }
   });
 

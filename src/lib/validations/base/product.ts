@@ -8,7 +8,6 @@ import {
   currencySchema,
   skuSchema,
   slugSchema,
-  tagsSchema,
   imagesSchema,
   urlSchema,
   stripeProductIdSchema,
@@ -33,16 +32,12 @@ import {
 /**
  * Product type validation
  */
-export const productTypeSchema = z.enum(['ONE_TIME', 'SUBSCRIPTION', 'USAGE_BASED'], {
-  errorMap: () => ({ message: 'Invalid product type' }),
-});
+export const productTypeSchema = z.enum(['ONE_TIME', 'SUBSCRIPTION', 'USAGE_BASED']);
 
 /**
  * Billing interval validation
  */
-export const billingIntervalSchema = z.enum(['DAY', 'WEEK', 'MONTH', 'YEAR'], {
-  errorMap: () => ({ message: 'Invalid billing interval' }),
-});
+export const billingIntervalSchema = z.enum(['DAY', 'WEEK', 'MONTH', 'YEAR']);
 
 // =============================================================================
 // CORE PRODUCT SCHEMAS
@@ -76,7 +71,8 @@ export const productSchema = z.object({
   slug: slugSchema,
   metaTitle: z.string().max(70, 'Meta title must not exceed 70 characters').optional(),
   metaDescription: z.string().max(160, 'Meta description must not exceed 160 characters').optional(),
-  tags: tagsSchema,
+  categoryIds: z.array(cuidSchema).optional(),
+  tagIds: z.array(cuidSchema).optional(),
   
   // Media
   images: imagesSchema,
@@ -113,7 +109,8 @@ export const createProductSchema = z.object({
   slug: slugSchema,
   metaTitle: z.string().max(70, 'Meta title must not exceed 70 characters').optional(),
   metaDescription: z.string().max(160, 'Meta description must not exceed 160 characters').optional(),
-  tags: tagsSchema.optional(),
+  categoryIds: z.array(cuidSchema).optional(),
+  tagIds: z.array(cuidSchema).optional(),
   images: imagesSchema.optional(),
   thumbnail: urlSchema.optional(),
   type: productTypeSchema.default('ONE_TIME'),
@@ -176,7 +173,8 @@ export const updateProductSchema = z.object({
   slug: slugSchema.optional(),
   metaTitle: z.string().max(70, 'Meta title must not exceed 70 characters').optional(),
   metaDescription: z.string().max(160, 'Meta description must not exceed 160 characters').optional(),
-  tags: tagsSchema.optional(),
+  categoryIds: z.array(cuidSchema).optional(),
+  tagIds: z.array(cuidSchema).optional(),
   images: imagesSchema.optional(),
   thumbnail: urlSchema.optional(),
   type: productTypeSchema.optional(),
@@ -212,7 +210,8 @@ export const productFilterSchema = z.object({
   inStock: z.boolean().optional(),
   priceMin: z.number().min(0).optional(),
   priceMax: z.number().min(0).optional(),
-  tags: z.array(z.string()).optional(),
+  categoryIds: z.array(cuidSchema).optional(),
+  tagIds: z.array(cuidSchema).optional(),
   createdAfter: optionalDateSchema,
   createdBefore: optionalDateSchema,
 });
@@ -335,7 +334,8 @@ export const updateSeoSchema = z.object({
   slug: slugSchema.optional(),
   metaTitle: z.string().max(70, 'Meta title must not exceed 70 characters').optional(),
   metaDescription: z.string().max(160, 'Meta description must not exceed 160 characters').optional(),
-  tags: tagsSchema.optional(),
+  categoryIds: z.array(cuidSchema).optional(),
+  tagIds: z.array(cuidSchema).optional(),
 });
 
 // =============================================================================
@@ -349,7 +349,8 @@ export const bulkProductUpdateSchema = z.object({
   productIds: z.array(cuidSchema).min(1, 'At least one product is required'),
   updates: z.object({
     isActive: z.boolean().optional(),
-    tags: z.array(z.string()).optional(),
+    categoryIds: z.array(cuidSchema).optional(),
+    tagIds: z.array(cuidSchema).optional(),
     type: productTypeSchema.optional(),
   }).partial(),
 });

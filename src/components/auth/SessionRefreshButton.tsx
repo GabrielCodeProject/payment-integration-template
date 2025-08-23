@@ -53,8 +53,8 @@ export function SessionRefreshButton({
       }
       
       onSuccess?.();
-    } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : 'Failed to refresh session';
+    } catch (_error) {
+      const errorMessage = error instanceof Error ? _error.message : 'Failed to refresh session';
       toast.error(errorMessage);
       onError?.(errorMessage);
     } finally {
@@ -143,8 +143,8 @@ export function BulkSessionRefreshButton({
       const result = await response.json();
       toast.success(`Refreshed ${result.data?.refreshedCount || 0} sessions`);
       onSuccess?.();
-    } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : 'Failed to refresh sessions';
+    } catch (_error) {
+      const errorMessage = error instanceof Error ? _error.message : 'Failed to refresh sessions';
       toast.error(errorMessage);
       onError?.(errorMessage);
     } finally {

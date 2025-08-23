@@ -8,7 +8,7 @@ import { promises as fs } from 'fs';
 import { glob } from 'glob';
 
 async function updateTestFiles() {
-  console.log('🔧 Updating test files to remove hashedPassword references...\n');
+  // console.log('🔧 Updating test files to remove hashedPassword references...\n');
   
   try {
     // Find all test files
@@ -16,7 +16,7 @@ async function updateTestFiles() {
       ignore: ['node_modules/**', 'dist/**']
     });
 
-    console.log(`Found ${testFiles.length} test files to check:`);
+    // console.log(`Found ${testFiles.length} test files to check:`);
     
     let updatedCount = 0;
     
@@ -26,7 +26,7 @@ async function updateTestFiles() {
         
         // Check if file contains hashedPassword references
         if (content.includes('hashedPassword')) {
-          console.log(`  - Updating: ${filePath}`);
+          // console.log(`  - Updating: ${filePath}`);
           
           let updatedContent = content;
           
@@ -73,17 +73,17 @@ async function updateTestFiles() {
           await fs.writeFile(filePath, updatedContent, 'utf-8');
           updatedCount++;
         } else {
-          console.log(`  - Skipping: ${filePath} (no hashedPassword references)`);
+          // console.log(`  - Skipping: ${filePath} (no hashedPassword references)`);
         }
       } catch (error) {
-        console.error(`  - Error updating ${filePath}:`, error);
+        // console.error(`  - Error updating ${filePath}:`, error);
       }
     }
     
-    console.log(`\n✅ Updated ${updatedCount} test files successfully!`);
+    // console.log(`\n✅ Updated ${updatedCount} test files successfully!`);
     
   } catch (error) {
-    console.error('❌ Error updating test files:', error);
+    // console.error('❌ Error updating test files:', error);
   }
 }
 

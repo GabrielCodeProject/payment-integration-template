@@ -42,7 +42,7 @@ export class DatabaseOptimizer {
   }
   
   async analyzeIndexPerformance(): Promise<IndexAnalysis[]> {
-    console.log('🔍 Analyzing index performance...');
+    // console.log('🔍 Analyzing index performance...');
     
     const indexStats = await this.prisma.$queryRaw`
       SELECT 
@@ -115,12 +115,12 @@ export class DatabaseOptimizer {
       return analysis;
     });
     
-    console.log(`✅ Analyzed ${analyses.length} indexes`);
+    // console.log(`✅ Analyzed ${analyses.length} indexes`);
     return analyses;
   }
   
   async analyzeSlowQueries(): Promise<QueryAnalysis[]> {
-    console.log('🐌 Analyzing slow queries...');
+    // console.log('🐌 Analyzing slow queries...');
     
     // Check if pg_stat_statements extension is available
     const hasStatStatements = await this.prisma.$queryRaw`
@@ -128,7 +128,7 @@ export class DatabaseOptimizer {
     ` as any[];
     
     if (hasStatStatements.length === 0) {
-      console.log('⚠️  pg_stat_statements extension not available, using basic analysis');
+      // console.log('⚠️  pg_stat_statements extension not available, using basic analysis');
       return [];
     }
     
@@ -197,7 +197,7 @@ export class DatabaseOptimizer {
       return analysis;
     });
     
-    console.log(`✅ Analyzed ${analyses.length} slow queries`);
+    // console.log(`✅ Analyzed ${analyses.length} slow queries`);
     return analyses;
   }
   
@@ -208,7 +208,7 @@ export class DatabaseOptimizer {
     lastAnalyzed: Date | null;
     needsUpdate: boolean;
   }[]> {
-    console.log('📊 Analyzing table statistics...');
+    // console.log('📊 Analyzing table statistics...');
     
     const tableStats = await this.prisma.$queryRaw`
       SELECT 
@@ -249,12 +249,12 @@ export class DatabaseOptimizer {
       });
     }
     
-    console.log(`✅ Analyzed ${analyses.length} table statistics`);
+    // console.log(`✅ Analyzed ${analyses.length} table statistics`);
     return analyses;
   }
   
   async generateOptimizationRecommendations(): Promise<OptimizationRecommendation[]> {
-    console.log('💡 Generating optimization recommendations...');
+    // console.log('💡 Generating optimization recommendations...');
     
     const recommendations: OptimizationRecommendation[] = [];
     
@@ -307,7 +307,7 @@ export class DatabaseOptimizer {
     const priorityOrder = { 'HIGH': 3, 'MEDIUM': 2, 'LOW': 1 };
     recommendations.sort((a, b) => priorityOrder[b.priority] - priorityOrder[a.priority]);
     
-    console.log(`✅ Generated ${recommendations.length} optimization recommendations`);
+    // console.log(`✅ Generated ${recommendations.length} optimization recommendations`);
     return recommendations;
   }
   
@@ -374,7 +374,7 @@ export class DatabaseOptimizer {
     queryAnalyses: QueryAnalysis[];
     recommendations: OptimizationRecommendation[];
   }> {
-    console.log('📝 Generating comprehensive performance report...');
+    // console.log('📝 Generating comprehensive performance report...');
     
     const indexAnalyses = await this.analyzeIndexPerformance();
     const queryAnalyses = await this.analyzeSlowQueries();
@@ -403,35 +403,35 @@ export class DatabaseOptimizer {
       recommendations
     };
     
-    console.log('✅ Performance report generated');
+    // console.log('✅ Performance report generated');
     return report;
   }
   
   async optimizeTableStatistics(): Promise<void> {
-    console.log('🔧 Optimizing table statistics...');
+    // console.log('🔧 Optimizing table statistics...');
     
     const tableStats = await this.analyzeTableStatistics();
     
     for (const stat of tableStats) {
       if (stat.needsUpdate) {
-        console.log(`Updating statistics for table: ${stat.tableName}`);
+        // console.log(`Updating statistics for table: ${stat.tableName}`);
         await this.prisma.$executeRaw`ANALYZE ${stat.tableName}`;
       }
     }
     
-    console.log('✅ Table statistics optimization complete');
+    // console.log('✅ Table statistics optimization complete');
   }
   
   async vacuumTables(): Promise<void> {
-    console.log('🧹 Running vacuum on tables...');
+    // console.log('🧹 Running vacuum on tables...');
     
     const tables = ['users', 'products', 'orders', 'subscriptions', 'payment_methods', 'audit_logs'];
     
     for (const table of tables) {
-      console.log(`Vacuuming table: ${table}`);
+      // console.log(`Vacuuming table: ${table}`);
       await this.prisma.$executeRaw`VACUUM ANALYZE ${table}`;
     }
     
-    console.log('✅ Vacuum operations complete');
+    // console.log('✅ Vacuum operations complete');
   }
 }

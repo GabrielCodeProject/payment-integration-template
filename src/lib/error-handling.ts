@@ -112,10 +112,10 @@ export function parseError(
   };
 
   // Network/Fetch errors
-  if (error instanceof TypeError && error.message.includes("fetch")) {
+  if (_error instanceof TypeError && _error.message.includes("fetch")) {
     if (
-      error.message.includes("NetworkError") ||
-      error.message.includes("ERR_NETWORK")
+      _error.message.includes("NetworkError") ||
+      _error.message.includes("ERR_NETWORK")
     ) {
       return {
         ...baseError,
@@ -146,7 +146,7 @@ export function parseError(
   }
 
   // Response-based errors (from fetch response)
-  if (error instanceof Error) {
+  if (_error instanceof Error) {
     try {
       // Try to parse as API error response
       const parsedError = parseApiResponse(error);
@@ -159,8 +159,8 @@ export function parseError(
 
     // Timeout errors
     if (
-      error.message.includes("timeout") ||
-      error.message.includes("aborted")
+      _error.message.includes("timeout") ||
+      _error.message.includes("aborted")
     ) {
       return {
         ...baseError,
@@ -177,8 +177,8 @@ export function parseError(
 
     // CSRF errors
     if (
-      error.message.includes("CSRF") ||
-      error.message.includes("security validation")
+      _error.message.includes("CSRF") ||
+      _error.message.includes("security validation")
     ) {
       return {
         ...baseError,
@@ -194,8 +194,8 @@ export function parseError(
 
     // Authentication errors
     if (
-      error.message.includes("authentication") ||
-      error.message.includes("unauthorized")
+      _error.message.includes("authentication") ||
+      _error.message.includes("unauthorized")
     ) {
       return {
         ...baseError,
@@ -211,8 +211,8 @@ export function parseError(
 
     // Permission errors
     if (
-      error.message.includes("permission") ||
-      error.message.includes("forbidden")
+      _error.message.includes("permission") ||
+      _error.message.includes("forbidden")
     ) {
       return {
         ...baseError,
@@ -228,8 +228,8 @@ export function parseError(
 
     // Rate limiting
     if (
-      error.message.includes("rate limit") ||
-      error.message.includes("too many")
+      _error.message.includes("rate limit") ||
+      _error.message.includes("too many")
     ) {
       return {
         ...baseError,
@@ -247,15 +247,15 @@ export function parseError(
 
     // Validation errors
     if (
-      error.message.includes("validation") ||
-      error.message.includes("invalid")
+      _error.message.includes("validation") ||
+      _error.message.includes("invalid")
     ) {
       return {
         ...baseError,
         type: ErrorType.VALIDATION_ERROR,
         severity: ErrorSeverity.LOW,
         message: "Validation failed",
-        userMessage: error.message || "Please check your input and try again.",
+        userMessage: _error.message || "Please check your input and try again.",
         isRetryable: false,
         originalError: error,
         statusCode: 400,
@@ -264,8 +264,8 @@ export function parseError(
 
     // Not found errors
     if (
-      error.message.includes("not found") ||
-      error.message.includes("does not exist")
+      _error.message.includes("not found") ||
+      _error.message.includes("does not exist")
     ) {
       return {
         ...baseError,
@@ -282,8 +282,8 @@ export function parseError(
 
     // Database/Server errors
     if (
-      error.message.includes("database") ||
-      error.message.includes("connection")
+      _error.message.includes("database") ||
+      _error.message.includes("connection")
     ) {
       return {
         ...baseError,
@@ -306,7 +306,7 @@ export function parseError(
     ...baseError,
     type: ErrorType.UNKNOWN_ERROR,
     severity: ErrorSeverity.MEDIUM,
-    message: error instanceof Error ? error.message : "Unknown error occurred",
+    message: error instanceof Error ? _error.message : "Unknown error occurred",
     userMessage: "An unexpected error occurred. Please try again.",
     isRetryable: true,
     retryDelay: 1000,
@@ -503,14 +503,14 @@ export async function enhancedFetch(
     }
 
     return response;
-  } catch (error) {
+  } catch (_error) {
     clearTimeout(timeoutId);
 
-    if (error instanceof Error && error.name === "AbortError") {
+    if (_error instanceof Error && error.name === "AbortError") {
       throw parseError(new Error("Request timed out"));
     }
 
-    throw error;
+    throw _error;
   }
 }
 
@@ -527,7 +527,7 @@ export async function retryOperation<T>(
   for (let attempt = 0; attempt <= finalConfig.maxRetries; attempt++) {
     try {
       return await operation();
-    } catch (error) {
+    } catch (_error) {
       const enhancedError =
         error instanceof Error && "type" in error
           ? (error as EnhancedError)
@@ -588,27 +588,27 @@ export function logError(
     // eslint-disable-next-line no-console
     console.group(`🚨 ${error.type.toUpperCase()} [${error.severity}]`);
     // eslint-disable-next-line no-console
-    console.error("Message:", error.message);
+    // console.error("Message:", _error.message);
     // eslint-disable-next-line no-console
-    console.error("User Message:", error.userMessage);
+    // console.error("User Message:", error.userMessage);
     // eslint-disable-next-line no-console
-    console.error("Retryable:", error.isRetryable);
+    // console.error("Retryable:", error.isRetryable);
     // eslint-disable-next-line no-console
-    if (error.statusCode) console.error("Status:", error.statusCode);
+    if (error.statusCode) // console.error("Status:", error.statusCode);
     // eslint-disable-next-line no-console
-    if (error.context) console.error("Context:", error.context);
+    if (error.context) // console.error("Context:", error.context);
     // eslint-disable-next-line no-console
-    if (context) console.error("Additional Context:", context);
+    if (context) // console.error("Additional Context:", context);
     // eslint-disable-next-line no-console
     if (error.originalError)
-      console.error("Original Error:", error.originalError);
+      // console.error("Original Error:", error.originalError);
     // eslint-disable-next-line no-console
     console.groupEnd();
   } else {
     // In production, log minimal error information
     // eslint-disable-next-line no-console
-    console.error(`Error [${error.type}]:`, {
-      message: error.message,
+    // console.error(`Error [${error.type}]:`, {
+      message: _error.message,
       severity: error.severity,
       statusCode: error.statusCode,
       timestamp: error.timestamp,

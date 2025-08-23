@@ -57,11 +57,11 @@ export const authActionClient = actionClient.use(async ({ next, ctx }) => {
         session: session,
       }
     });
-  } catch (error) {
+  } catch (_error) {
     // Log error details for debugging (only in development)
     if (process.env.NODE_ENV === "development") {
-      console.error("Authentication error:", {
-        message: error instanceof Error ? error.message : 'Unknown error',
+      // console.error("Authentication error:", {
+        message: error instanceof Error ? _error.message : 'Unknown error',
         headers: Array.from(headersList.keys()),
       });
     }

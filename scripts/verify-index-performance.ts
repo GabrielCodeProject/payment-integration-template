@@ -93,11 +93,11 @@ function addResult(
     logMessage += ` (${performance.queryTime}ms ≤ ${performance.threshold}ms)`;
   }
 
-  console.log(logMessage);
+  // console.log(logMessage);
 
   if (error) {
     const errorMessage = error instanceof Error ? error.message : String(error);
-    console.log(`   Error details: ${errorMessage}`);
+    // console.log(`   Error details: ${errorMessage}`);
   }
 }
 
@@ -128,7 +128,7 @@ async function getTableIndexes(): Promise<IndexInfo[]> {
     `;
     return indexes;
   } catch (error) {
-    console.error("Error fetching indexes:", error);
+    // console.error("Error fetching indexes:", error);
     return [];
   }
 }
@@ -140,13 +140,13 @@ async function analyzeQueryPlan(query: string): Promise<unknown> {
     );
     return plan;
   } catch (error) {
-    console.error(`Error analyzing query plan for: ${query}`, error);
+    // console.error(`Error analyzing query plan for: ${query}`, error);
     return null;
   }
 }
 
 async function testPrimaryKeyIndexes() {
-  console.log("\n🔑 Testing Primary Key Indexes...");
+  // console.log("\n🔑 Testing Primary Key Indexes...");
 
   const tables = [
     { name: "users", pkColumn: "id" },
@@ -202,7 +202,7 @@ async function testPrimaryKeyIndexes() {
 }
 
 async function testForeignKeyIndexes() {
-  console.log("\n🔗 Testing Foreign Key Indexes...");
+  // console.log("\n🔗 Testing Foreign Key Indexes...");
 
   const foreignKeys = [
     { table: "orders", column: "userId", references: "users(id)" },
@@ -271,7 +271,7 @@ async function testForeignKeyIndexes() {
 }
 
 async function testUniqueConstraintIndexes() {
-  console.log("\n🔒 Testing Unique Constraint Indexes...");
+  // console.log("\n🔒 Testing Unique Constraint Indexes...");
 
   const uniqueConstraints = [
     { table: "users", column: "email" },
@@ -329,7 +329,7 @@ async function testUniqueConstraintIndexes() {
 }
 
 async function testSingleColumnIndexes() {
-  console.log("\n📊 Testing Single Column Indexes...");
+  // console.log("\n📊 Testing Single Column Indexes...");
 
   const expectedIndexes = [
     { table: "users", column: "role" },
@@ -392,7 +392,7 @@ async function testSingleColumnIndexes() {
 }
 
 async function testCompositeIndexes() {
-  console.log("\n🔀 Testing Composite Indexes...");
+  // console.log("\n🔀 Testing Composite Indexes...");
 
   // Check for potential composite indexes that would benefit performance
   const potentialCompositeIndexes = [
@@ -462,7 +462,7 @@ async function testCompositeIndexes() {
 }
 
 async function testPerformanceBenchmarks() {
-  console.log("\n⚡ Testing Performance Benchmarks...");
+  // console.log("\n⚡ Testing Performance Benchmarks...");
 
   // Create test data for performance testing
   try {
@@ -639,7 +639,7 @@ async function testPerformanceBenchmarks() {
 }
 
 async function testQueryPlanAnalysis() {
-  console.log("\n🔍 Testing Query Plan Analysis...");
+  // console.log("\n🔍 Testing Query Plan Analysis...");
 
   try {
     // We'll test a few key queries to ensure they use indexes
@@ -715,7 +715,7 @@ async function testQueryPlanAnalysis() {
 }
 
 async function detectMissingIndexes() {
-  console.log("\n🔍 Detecting Missing Indexes...");
+  // console.log("\n🔍 Detecting Missing Indexes...");
 
   const recommendations = [
     {
@@ -790,13 +790,13 @@ async function detectMissingIndexes() {
 }
 
 async function generateIndexReport() {
-  console.log("\n📋 Generating Index Report...");
+  // console.log("\n📋 Generating Index Report...");
 
   try {
     const indexes = await getTableIndexes();
 
-    console.log("\n📊 CURRENT INDEX SUMMARY:");
-    console.log("=".repeat(80));
+    // console.log("\n📊 CURRENT INDEX SUMMARY:");
+    // console.log("=".repeat(80));
 
     const indexesByTable = indexes.reduce(
       (acc, idx) => {
@@ -810,14 +810,14 @@ async function generateIndexReport() {
     );
 
     Object.entries(indexesByTable).forEach(([table, tableIndexes]) => {
-      console.log(`\n📁 Table: ${table}`);
+      // console.log(`\n📁 Table: ${table}`);
       tableIndexes.forEach((idx) => {
         const indexType = idx.indexdef.includes("UNIQUE")
           ? "UNIQUE"
           : idx.indexdef.includes("PRIMARY")
             ? "PRIMARY"
             : "INDEX";
-        console.log(`   ${indexType}: ${idx.indexname}`);
+        // console.log(`   ${indexType}: ${idx.indexname}`);
       });
     });
 
@@ -840,9 +840,9 @@ async function generateIndexReport() {
 }
 
 async function printSummary() {
-  console.log("\n" + "=".repeat(80));
-  console.log("🏁 DATABASE INDEX PERFORMANCE VERIFICATION SUMMARY");
-  console.log("=".repeat(80));
+  // console.log("\n" + "=".repeat(80));
+  // console.log("🏁 DATABASE INDEX PERFORMANCE VERIFICATION SUMMARY");
+  // console.log("=".repeat(80));
 
   const categories = [...new Set(results.map((r) => r.category))];
   const totalTests = results.length;
@@ -860,89 +860,89 @@ async function printSummary() {
     ).length;
     const skipped = categoryResults.filter((r) => r.status === "SKIP").length;
 
-    console.log(`\n📂 ${category}:`);
-    console.log(`   ✅ Passed: ${passed}`);
-    console.log(`   ❌ Failed: ${failed}`);
-    console.log(`   ⚠️  Warnings: ${warnings}`);
-    console.log(`   ⏭️  Skipped: ${skipped}`);
-    console.log(`   📊 Total: ${categoryResults.length}`);
+    // console.log(`\n📂 ${category}:`);
+    // console.log(`   ✅ Passed: ${passed}`);
+    // console.log(`   ❌ Failed: ${failed}`);
+    // console.log(`   ⚠️  Warnings: ${warnings}`);
+    // console.log(`   ⏭️  Skipped: ${skipped}`);
+    // console.log(`   📊 Total: ${categoryResults.length}`);
   });
 
-  console.log("\n" + "-".repeat(80));
-  console.log(`🎯 OVERALL RESULTS:`);
-  console.log(`   ✅ Total Passed: ${totalPassed}`);
-  console.log(`   ❌ Total Failed: ${totalFailed}`);
-  console.log(`   ⚠️  Total Warnings: ${totalWarnings}`);
-  console.log(`   ⏭️  Total Skipped: ${totalSkipped}`);
-  console.log(`   📊 Total Tests: ${totalTests}`);
+  // console.log("\n" + "-".repeat(80));
+  // console.log(`🎯 OVERALL RESULTS:`);
+  // console.log(`   ✅ Total Passed: ${totalPassed}`);
+  // console.log(`   ❌ Total Failed: ${totalFailed}`);
+  // console.log(`   ⚠️  Total Warnings: ${totalWarnings}`);
+  // console.log(`   ⏭️  Total Skipped: ${totalSkipped}`);
+  // console.log(`   📊 Total Tests: ${totalTests}`);
 
   const passRate =
     totalTests > 0 ? ((totalPassed / totalTests) * 100).toFixed(1) : "0.0";
-  console.log(`   📈 Pass Rate: ${passRate}%`);
+  // console.log(`   📈 Pass Rate: ${passRate}%`);
 
   // Performance Summary
   const performanceResults = results.filter((r) => r.performance);
   if (performanceResults.length > 0) {
-    console.log("\n⚡ PERFORMANCE SUMMARY:");
+    // console.log("\n⚡ PERFORMANCE SUMMARY:");
     performanceResults.forEach((result) => {
       const { queryTime, threshold } = result.performance!;
       const status = queryTime <= threshold ? "✅" : "❌";
-      console.log(
+      // console.log(
         `   ${status} ${result.test}: ${queryTime}ms (limit: ${threshold}ms)`
       );
     });
   }
 
   if (totalFailed > 0) {
-    console.log("\n❌ FAILED TESTS:");
+    // console.log("\n❌ FAILED TESTS:");
     results
       .filter((r) => r.status === "FAIL")
       .forEach((result) => {
-        console.log(
+        // console.log(
           `   • [${result.category}] ${result.test}: ${result.message}`
         );
       });
   }
 
   if (totalWarnings > 0) {
-    console.log("\n⚠️  WARNINGS:");
+    // console.log("\n⚠️  WARNINGS:");
     results
       .filter((r) => r.status === "WARNING")
       .forEach((result) => {
-        console.log(
+        // console.log(
           `   • [${result.category}] ${result.test}: ${result.message}`
         );
       });
   }
 
-  console.log("\n" + "=".repeat(80));
+  // console.log("\n" + "=".repeat(80));
 
   if (totalFailed === 0) {
     if (totalWarnings > 0) {
-      console.log("✅ ALL CRITICAL INDEXES ARE WORKING OPTIMALLY!");
-      console.log(
+      // console.log("✅ ALL CRITICAL INDEXES ARE WORKING OPTIMALLY!");
+      // console.log(
         "⚠️  Some optimizations recommended - review warnings above."
       );
     } else {
-      console.log("🎉 ALL DATABASE INDEXES ARE PERFECTLY OPTIMIZED!");
+      // console.log("🎉 ALL DATABASE INDEXES ARE PERFECTLY OPTIMIZED!");
     }
   } else {
-    console.log("⚠️  SOME INDEXES NEED ATTENTION. PLEASE REVIEW FAILED TESTS.");
+    // console.log("⚠️  SOME INDEXES NEED ATTENTION. PLEASE REVIEW FAILED TESTS.");
   }
 
-  console.log("=".repeat(80));
+  // console.log("=".repeat(80));
 
   return totalFailed === 0;
 }
 
 async function main() {
-  console.log("📊 Starting Database Index Performance Verification...");
-  console.log("=".repeat(80));
+  // console.log("📊 Starting Database Index Performance Verification...");
+  // console.log("=".repeat(80));
 
   try {
     // Connect to database
     await prisma.$connect();
-    console.log("✅ Connected to database successfully\n");
+    // console.log("✅ Connected to database successfully\n");
 
     // Run all tests
     await testPrimaryKeyIndexes();
@@ -961,7 +961,7 @@ async function main() {
     // Exit with appropriate code
     process.exit(allPassed ? 0 : 1);
   } catch (error) {
-    console.error("❌ Fatal error during index verification:", error);
+    // console.error("❌ Fatal error during index verification:", error);
     process.exit(1);
   } finally {
     await prisma.$disconnect();

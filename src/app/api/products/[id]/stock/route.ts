@@ -57,11 +57,11 @@ export async function GET(
     let validatedParams;
     try {
       validatedParams = paramsSchema.parse(resolvedParams);
-    } catch (error) {
-      if (error instanceof z.ZodError) {
+    } catch (_error) {
+      if (_error instanceof z.ZodError) {
         return createApiErrorResponse(400, 'Invalid product ID format');
       }
-      throw error;
+      throw _error;
     }
 
     // Apply rate limiting for public endpoints
@@ -132,8 +132,8 @@ export async function GET(
       });
     }
 
-  } catch (error) {
-    console.error('Error fetching stock information:', error);
+  } catch (_error) {
+    // console.error('Error fetching stock information:', error);
     return createApiErrorResponse(500, 'Failed to fetch stock information');
   }
 }
@@ -166,11 +166,11 @@ export async function PATCH(
     let validatedParams;
     try {
       validatedParams = paramsSchema.parse(resolvedParams);
-    } catch (error) {
-      if (error instanceof z.ZodError) {
+    } catch (_error) {
+      if (_error instanceof z.ZodError) {
         return createApiErrorResponse(400, 'Invalid product ID format');
       }
-      throw error;
+      throw _error;
     }
 
     // Apply rate limiting for admin operations
@@ -195,11 +195,11 @@ export async function PATCH(
     let validatedRequest;
     try {
       validatedRequest = stockUpdateRequestSchema.parse(requestData);
-    } catch (error) {
-      if (error instanceof z.ZodError) {
-        return createApiErrorResponse(400, 'Invalid stock update data', error.issues);
+    } catch (_error) {
+      if (_error instanceof z.ZodError) {
+        return createApiErrorResponse(400, 'Invalid stock update data', _error.issues);
       }
-      throw error;
+      throw _error;
     }
 
     // Get the product before update for audit purposes
@@ -270,22 +270,22 @@ export async function PATCH(
 
     return NextResponse.json(response, { status: 200 });
 
-  } catch (error) {
-    console.error('Error updating stock:', error);
+  } catch (_error) {
+    // console.error('Error updating stock:', error);
     
     // Handle specific business logic errors
-    if (error instanceof Error) {
-      if (error.message.includes('not found')) {
-        return createApiErrorResponse(404, error.message);
+    if (_error instanceof Error) {
+      if (_error.message.includes('not found')) {
+        return createApiErrorResponse(404, _error.message);
       }
-      if (error.message.includes('digital products')) {
+      if (_error.message.includes('digital products')) {
         return createApiErrorResponse(400, 'Cannot manage stock for digital products');
       }
-      if (error.message.includes('negative')) {
+      if (_error.message.includes('negative')) {
         return createApiErrorResponse(400, 'Stock quantity cannot be negative');
       }
-      if (error.message.includes('Invalid stock operation')) {
-        return createApiErrorResponse(400, error.message);
+      if (_error.message.includes('Invalid stock operation')) {
+        return createApiErrorResponse(400, _error.message);
       }
     }
 
@@ -311,11 +311,11 @@ export async function POST(
     let validatedParams;
     try {
       validatedParams = paramsSchema.parse(resolvedParams);
-    } catch (error) {
-      if (error instanceof z.ZodError) {
+    } catch (_error) {
+      if (_error instanceof z.ZodError) {
         return createApiErrorResponse(400, 'Invalid product ID format');
       }
-      throw error;
+      throw _error;
     }
 
     // Apply rate limiting for availability checks
@@ -348,11 +348,11 @@ export async function POST(
     let validatedRequest;
     try {
       validatedRequest = quantitySchema.parse(requestData);
-    } catch (error) {
-      if (error instanceof z.ZodError) {
-        return createApiErrorResponse(400, 'Invalid quantity', error.issues);
+    } catch (_error) {
+      if (_error instanceof z.ZodError) {
+        return createApiErrorResponse(400, 'Invalid quantity', _error.issues);
       }
-      throw error;
+      throw _error;
     }
 
     // Check stock availability
@@ -383,10 +383,10 @@ export async function POST(
       },
     });
 
-  } catch (error) {
-    console.error('Error checking stock availability:', error);
+  } catch (_error) {
+    // console.error('Error checking stock availability:', error);
     
-    if (error instanceof Error && error.message.includes('not found')) {
+    if (_error instanceof Error && _error.message.includes('not found')) {
       return createApiErrorResponse(404, 'Product not found');
     }
 

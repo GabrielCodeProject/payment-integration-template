@@ -96,11 +96,11 @@ export async function GET(request: NextRequest) {
     let validatedQuery: SearchQuery;
     try {
       validatedQuery = searchQuerySchema.parse(queryParams);
-    } catch (error) {
-      if (error instanceof z.ZodError) {
-        return createApiErrorResponse(400, 'Invalid search parameters', error.issues);
+    } catch (_error) {
+      if (_error instanceof z.ZodError) {
+        return createApiErrorResponse(400, 'Invalid search parameters', _error.issues);
       }
-      throw error;
+      throw _error;
     }
 
     // Check if user is admin for access to inactive products
@@ -111,7 +111,7 @@ export async function GET(request: NextRequest) {
     const searchResults = await performProductSearch(validatedQuery, isAdmin);
 
     // Log search analytics (non-blocking)
-    logSearchAnalytics(validatedQuery, searchResults.total, request).catch(console.error);
+    logSearchAnalytics(validatedQuery, searchResults.total, request).catch(// console.error);
 
     // Build response
     const response = {
@@ -148,8 +148,8 @@ export async function GET(request: NextRequest) {
       headers: cacheHeaders,
     });
 
-  } catch (error) {
-    console.error('Error performing product search:', error);
+  } catch (_error) {
+    // console.error('Error performing product search:', error);
     return createApiErrorResponse(500, 'Search request failed');
   }
 }
@@ -474,9 +474,9 @@ async function logSearchAnalytics(query: SearchQuery, resultCount: number, reque
         },
       },
     });
-  } catch (error) {
+  } catch (_error) {
     // Don't let analytics failures break the search
-    console.error('Failed to log search analytics:', error);
+    // console.error('Failed to log search analytics:', error);
   }
 }
 

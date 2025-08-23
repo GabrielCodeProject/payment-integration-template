@@ -57,7 +57,7 @@ describe('Token and Session Validation Edge Cases', () => {
       // Verify token is actually expired
       expect(new Date(errorData.expiredAt).getTime()).toBeLessThan(Date.now());
       
-      console.log('✅ Expired session token detection');
+      // console.log('✅ Expired session token detection');
     });
     
     it('should handle tokens that expire during request processing', async () => {
@@ -98,7 +98,7 @@ describe('Token and Session Validation Edge Cases', () => {
       const errorData = await response.json();
       expect(errorData.code).toBe('TOKEN_EXPIRED_DURING_REQUEST');
       
-      console.log('✅ Token expiration during request processing');
+      // console.log('✅ Token expiration during request processing');
     });
   });
   
@@ -131,7 +131,7 @@ describe('Token and Session Validation Edge Cases', () => {
         expect(errorData.code).toBe('MALFORMED_TOKEN');
       }
       
-      console.log('✅ Malformed JWT token handling');
+      // console.log('✅ Malformed JWT token handling');
     });
     
     it('should handle corrupted session data in storage', async () => {
@@ -164,7 +164,7 @@ describe('Token and Session Validation Edge Cases', () => {
       expect(errorData.code).toBe('SESSION_DATA_CORRUPTED');
       expect(errorData.action).toBe('reauthentication_required');
       
-      console.log('✅ Corrupted session data handling');
+      // console.log('✅ Corrupted session data handling');
     });
   });
   
@@ -223,7 +223,7 @@ describe('Token and Session Validation Edge Cases', () => {
       expect(errorData.code).toBe('TOKEN_REPLAY_ATTACK');
       expect(errorData.securityIncident).toBe(true);
       
-      console.log('✅ Token replay attack detection');
+      // console.log('✅ Token replay attack detection');
     });
     
     it('should implement token binding to prevent session hijacking', async () => {
@@ -284,7 +284,7 @@ describe('Token and Session Validation Edge Cases', () => {
       const errorData = await hijackedResponse.json();
       expect(errorData.code).toBe('SESSION_BINDING_VIOLATION');
       
-      console.log('✅ Token binding for session hijacking prevention');
+      // console.log('✅ Token binding for session hijacking prevention');
     });
   });
   
@@ -319,7 +319,7 @@ describe('Token and Session Validation Edge Cases', () => {
       expect(errorData.code).toBe('REFRESH_TOKEN_EXPIRED');
       expect(errorData.requiresLogin).toBe(true);
       
-      console.log('✅ Refresh token expiration handling');
+      // console.log('✅ Refresh token expiration handling');
     });
     
     it('should handle concurrent refresh attempts', async () => {
@@ -380,7 +380,7 @@ describe('Token and Session Validation Edge Cases', () => {
       expect(conflictData.code).toBe('CONCURRENT_REFRESH');
       expect(conflictData.newToken).toBe('refreshed-token-123');
       
-      console.log('✅ Concurrent refresh attempts handling');
+      // console.log('✅ Concurrent refresh attempts handling');
     });
   });
   
@@ -407,7 +407,7 @@ describe('Token and Session Validation Edge Cases', () => {
       expect(errorData.code).toBe('INVALID_SIGNATURE');
       expect(errorData.securityViolation).toBe(true);
       
-      console.log('✅ Tampered JWT signature detection');
+      // console.log('✅ Tampered JWT signature detection');
     });
     
     it('should handle tokens signed with wrong key', async () => {
@@ -432,7 +432,7 @@ describe('Token and Session Validation Edge Cases', () => {
       expect(errorData.code).toBe('WRONG_SIGNING_KEY');
       expect(errorData.keyId).toBe('unknown');
       
-      console.log('✅ Wrong signing key detection');
+      // console.log('✅ Wrong signing key detection');
     });
   });
   
@@ -466,7 +466,7 @@ describe('Token and Session Validation Edge Cases', () => {
         writable: true
       });
       
-      console.log('✅ localStorage unavailability handling');
+      // console.log('✅ localStorage unavailability handling');
     });
     
     it('should handle sessionStorage quota exceeded', async () => {
@@ -500,7 +500,7 @@ describe('Token and Session Validation Edge Cases', () => {
         writable: true
       });
       
-      console.log('✅ sessionStorage quota exceeded handling');
+      // console.log('✅ sessionStorage quota exceeded handling');
     });
   });
   
@@ -537,7 +537,7 @@ describe('Token and Session Validation Edge Cases', () => {
         expect(errorData.code).toBe('INVALID_TOKEN_FORMAT');
       }
       
-      console.log('✅ Token format validation');
+      // console.log('✅ Token format validation');
     });
     
     it('should validate token length constraints', async () => {
@@ -565,7 +565,7 @@ describe('Token and Session Validation Edge Cases', () => {
       expect(errorData.code).toBe('TOKEN_LENGTH_EXCEEDED');
       expect(errorData.receivedLength).toBeGreaterThan(errorData.maxLength);
       
-      console.log('✅ Token length constraint validation');
+      // console.log('✅ Token length constraint validation');
     });
   });
   
@@ -605,7 +605,7 @@ describe('Token and Session Validation Edge Cases', () => {
       expect(errorData.code).toBe('TOKEN_USER_MISMATCH');
       expect(errorData.securityViolation).toBe(true);
       
-      console.log('✅ Cross-user token usage prevention');
+      // console.log('✅ Cross-user token usage prevention');
     });
   });
   

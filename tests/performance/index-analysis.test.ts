@@ -14,7 +14,7 @@ describe('Database Index Performance Analysis', () => {
     performanceBenchmark = new PerformanceBenchmark(prisma);
     
     // Generate test data for performance testing
-    console.log('🔄 Generating performance test data...');
+    // console.log('🔄 Generating performance test data...');
     await testDataGenerator.generateBulkTestData({
       users: 1000,
       products: 500,
@@ -356,11 +356,11 @@ describe('Database Index Performance Analysis', () => {
       expect(report.connectionStats.utilization).toBeLessThan(90);
       
       // Log the report for manual inspection
-      console.log('📊 Performance Report Summary:');
-      console.log(`   Total queries: ${report.summary.totalQueries}`);
-      console.log(`   Average execution time: ${report.summary.averageExecutionTime.toFixed(2)}ms`);
-      console.log(`   Index efficiency: ${report.indexEfficiency.efficiency.toFixed(2)}%`);
-      console.log(`   Connection utilization: ${report.connectionStats.utilization.toFixed(2)}%`);
+      // console.log('📊 Performance Report Summary:');
+      // console.log(`   Total queries: ${report.summary.totalQueries}`);
+      // console.log(`   Average execution time: ${report.summary.averageExecutionTime.toFixed(2)}ms`);
+      // console.log(`   Index efficiency: ${report.indexEfficiency.efficiency.toFixed(2)}%`);
+      // console.log(`   Connection utilization: ${report.connectionStats.utilization.toFixed(2)}%`);
     });
   });
 });

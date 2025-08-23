@@ -110,8 +110,8 @@ export function ProfileForm() {
         } else {
           toast.error(result?.data?.error || 'Failed to load profile');
         }
-      } catch (error) {
-        console.error('Profile load error:', error);
+      } catch (_error) {
+        // console.error('Profile load error:', error);
         toast.error('Failed to load profile information');
       } finally {
         setLoading(false);
@@ -135,9 +135,9 @@ export function ProfileForm() {
       } else {
         throw new Error(result?.data?.error || 'Failed to update profile');
       }
-    } catch (error) {
-      console.error('Profile update error:', error);
-      toast.error(error instanceof Error ? error.message : 'Failed to update profile');
+    } catch (_error) {
+      // console.error('Profile update error:', error);
+      toast.error(error instanceof Error ? _error.message : 'Failed to update profile');
     } finally {
       setSaving(false);
     }

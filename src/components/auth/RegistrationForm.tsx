@@ -63,7 +63,7 @@ export function RegistrationForm({ onSuccess }: RegistrationFormProps) {
 
       if (response.error) {
         // Handle specific errors
-        switch (response.error.message) {
+        switch (response._error.message) {
           case "User already exists":
             toast.error("An account with this email already exists. Please sign in instead.");
             break;
@@ -74,7 +74,7 @@ export function RegistrationForm({ onSuccess }: RegistrationFormProps) {
             toast.error("Please choose a stronger password.");
             break;
           default:
-            toast.error(response.error.message || "Registration failed. Please try again.");
+            toast.error(response._error.message || "Registration failed. Please try again.");
         }
         return;
       }
@@ -87,9 +87,9 @@ export function RegistrationForm({ onSuccess }: RegistrationFormProps) {
       } else {
         router.push(`/verify-email?email=${encodeURIComponent(data.email)}`);
       }
-    } catch (error) {
+    } catch (_error) {
       // eslint-disable-next-line no-console
-      console.error("Registration error:", error);
+      // console.error("Registration error:", error);
       toast.error("An unexpected error occurred. Please try again.");
     } finally {
       setIsLoading(false);

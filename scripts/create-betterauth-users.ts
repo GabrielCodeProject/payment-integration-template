@@ -10,7 +10,7 @@ import * as bcrypt from 'bcryptjs';
 const prisma = new PrismaClient();
 
 async function createBetterAuthUsers() {
-  console.log('👤 Creating BetterAuth users...\n');
+  // console.log('👤 Creating BetterAuth users...\n');
   
   try {
     const targetUsers = [
@@ -29,7 +29,7 @@ async function createBetterAuthUsers() {
     ];
 
     for (const userData of targetUsers) {
-      console.log(`Creating user: ${userData.email}`);
+      // console.log(`Creating user: ${userData.email}`);
       
       // Check if user already exists
       const existingUser = await prisma.user.findUnique({
@@ -37,7 +37,7 @@ async function createBetterAuthUsers() {
       });
 
       if (existingUser) {
-        console.log(`  - User already exists, skipping...`);
+        // console.log(`  - User already exists, skipping...`);
         continue;
       }
 
@@ -55,7 +55,7 @@ async function createBetterAuthUsers() {
         }
       });
 
-      console.log(`  - Created user: ${user.id}`);
+      // console.log(`  - Created user: ${user.id}`);
 
       // Create BetterAuth account
       const hashedPassword = await bcrypt.hash(userData.password, 12);
@@ -71,7 +71,7 @@ async function createBetterAuthUsers() {
         }
       });
 
-      console.log(`  - Created BetterAuth account: ${account.id}`);
+      // console.log(`  - Created BetterAuth account: ${account.id}`);
     }
 
     // Verify final state
@@ -87,17 +87,17 @@ async function createBetterAuthUsers() {
       }
     });
 
-    console.log('\n📊 Final user state:');
-    console.log('==================');
+    // console.log('\n📊 Final user state:');
+    // console.log('==================');
     allUsers.forEach(user => {
       const hasBetterAuth = user.accounts.some(acc => acc.password);
-      console.log(`- ${user.email} (${user.role}) - BetterAuth: ${hasBetterAuth ? 'YES' : 'NO'}`);
+      // console.log(`- ${user.email} (${user.role}) - BetterAuth: ${hasBetterAuth ? 'YES' : 'NO'}`);
     });
 
-    console.log('\n✅ BetterAuth users created successfully!');
+    // console.log('\n✅ BetterAuth users created successfully!');
 
   } catch (error) {
-    console.error('❌ Error creating BetterAuth users:', error);
+    // console.error('❌ Error creating BetterAuth users:', error);
   } finally {
     await prisma.$disconnect();
   }

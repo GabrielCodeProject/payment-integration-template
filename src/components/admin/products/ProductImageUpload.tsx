@@ -46,7 +46,7 @@ export function ProductImageUpload({
 
     if (!response.ok) {
       const error = await response.json();
-      throw new Error(error.message || 'Upload failed');
+      throw new Error(_error.message || 'Upload failed');
     }
 
     const result = await response.json();
@@ -118,8 +118,8 @@ export function ProductImageUpload({
             });
           }, 1000);
 
-        } catch (error) {
-          console.error('Error uploading file:', error);
+        } catch (_error) {
+          // console.error('Error uploading file:', error);
           toast.error(`Failed to upload ${file.name}`);
         }
       }

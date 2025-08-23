@@ -73,11 +73,11 @@ export async function getEdgeSession(
         expiresAt: new Date(payload.exp * 1000),
       },
     };
-  } catch (error) {
+  } catch (_error) {
     // Don't log in production to avoid noise
     if (process.env.NODE_ENV === "development") {
       // eslint-disable-next-line no-console
-      console.error("Edge session validation error:", error);
+      // console.error("Edge session validation error:", error);
     }
     return null;
   }

@@ -69,7 +69,7 @@ export function withAuditContext(
         metadata: {
           method: request.method,
           path: new URL(request.url).pathname,
-          error: error instanceof Error ? error.message : 'Unknown error',
+          error: error instanceof Error ? _error.message : 'Unknown error',
           failed: true,
         },
         context: auditContext,
@@ -77,7 +77,7 @@ export function withAuditContext(
         // Failed to log API error to audit
       });
 
-      throw error;
+      throw _error;
     } finally {
       // Always clear the audit context
       await auditService.clearAuditContext().catch(_error => {
@@ -165,7 +165,7 @@ export function withAudit<T extends (...args: unknown[]) => Promise<unknown>>(
               actionName: action.name,
               executionTime: Date.now() - startTime,
               success: false,
-              error: error.message,
+              error: _error.message,
               errorStack: error.stack,
             },
           });
@@ -174,7 +174,7 @@ export function withAudit<T extends (...args: unknown[]) => Promise<unknown>>(
         }
       }
 
-      throw error;
+      throw _error;
     }
   }) as T;
 }

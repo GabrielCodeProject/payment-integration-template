@@ -122,11 +122,11 @@ export const GET = withPermission(
         },
       });
 
-    } catch (error) {
-      console.error("[API] Roles information error:", error);
+    } catch (_error) {
+      // console.error("[API] Roles information error:", error);
       
-      if (error instanceof Error && error.message.includes("permission")) {
-        return createApiErrorResponse(403, error.message);
+      if (_error instanceof Error && _error.message.includes("permission")) {
+        return createApiErrorResponse(403, _error.message);
       }
       
       return createApiErrorResponse(500, "Failed to retrieve role information");
@@ -186,8 +186,8 @@ export async function getPermissions(request: NextRequest, session: any) {
       },
     });
 
-  } catch (error) {
-    console.error("[API] Permissions information error:", error);
+  } catch (_error) {
+    // console.error("[API] Permissions information error:", error);
     return createApiErrorResponse(500, "Failed to retrieve permission information");
   }
 }
@@ -286,8 +286,8 @@ async function logRoleViewEvent(auditContext: any): Promise<void> {
         },
       },
     });
-  } catch (error) {
-    console.error("Failed to log role view event:", error);
+  } catch (_error) {
+    // console.error("Failed to log role view event:", error);
   }
 }
 
@@ -311,8 +311,8 @@ async function logPermissionViewEvent(auditContext: any): Promise<void> {
         },
       },
     });
-  } catch (error) {
-    console.error("Failed to log permission view event:", error);
+  } catch (_error) {
+    // console.error("Failed to log permission view event:", error);
   }
 }
 

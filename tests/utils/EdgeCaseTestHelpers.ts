@@ -1,5 +1,4 @@
 import { jest } from '@jest/globals';
-import { PrismaClient } from '@prisma/client';
 
 // Network simulation utilities
 export class NetworkSimulator {
@@ -354,13 +353,13 @@ export class BrowserSimulator {
 export class ErrorMockFactory {
   static createNetworkErrorMock(errorType: string) {
     return jest.fn().mockRejectedValue(
-      NetworkSimulator.simulateNetworkFailure(errorType as any)
+      NetworkSimulator.simulateNetworkFailure(errorType as 'timeout' | 'dns' | 'connection' | 'ssl')
     );
   }
   
   static createServerErrorMock(statusCode: number, retryAfter?: number) {
     return jest.fn().mockResolvedValue(
-      ServerErrorSimulator.create5xxError(statusCode as any, retryAfter)
+      ServerErrorSimulator.create5xxError(statusCode as 500 | 502 | 503 | 504, retryAfter)
     );
   }
   
@@ -493,7 +492,7 @@ export class EdgeCaseAssertions {
   }
 }
 
-export default {
+const EdgeCaseTestHelpers = {
   NetworkSimulator,
   ServerErrorSimulator,
   AuthStateSimulator,
@@ -504,3 +503,5 @@ export default {
   EdgeCaseDataGenerator,
   EdgeCaseAssertions
 };
+
+export default EdgeCaseTestHelpers;

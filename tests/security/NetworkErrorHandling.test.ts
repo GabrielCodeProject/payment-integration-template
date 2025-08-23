@@ -47,7 +47,7 @@ describe('Network Error Handling in Authentication', () => {
         headers: { 'Content-Type': 'application/json' }
       }));
       
-      console.log('✅ Network disconnection handling during login');
+      // console.log('✅ Network disconnection handling during login');
     });
     
     it('should handle DNS resolution failures', async () => {
@@ -68,7 +68,7 @@ describe('Network Error Handling in Authentication', () => {
         expect((error as Error).message).toContain('ENOTFOUND');
       }
       
-      console.log('✅ DNS resolution failure handling');
+      // console.log('✅ DNS resolution failure handling');
     });
     
     it('should handle timeout conditions for authentication requests', async () => {
@@ -91,7 +91,7 @@ describe('Network Error Handling in Authentication', () => {
         expect(elapsed).toBeLessThan(1000); // Should fail quickly in test
       }
       
-      console.log('✅ Timeout condition handling');
+      // console.log('✅ Timeout condition handling');
     });
     
     it('should handle intermittent connectivity issues', async () => {
@@ -136,7 +136,7 @@ describe('Network Error Handling in Authentication', () => {
       expect(attempts).toBe(3);
       expect(mockFetch).toHaveBeenCalledTimes(3);
       
-      console.log('✅ Intermittent connectivity handling with retry');
+      // console.log('✅ Intermittent connectivity handling with retry');
     });
   });
   
@@ -170,7 +170,7 @@ describe('Network Error Handling in Authentication', () => {
       expect(response.ok).toBe(true);
       expect(elapsed).toBeGreaterThanOrEqual(100);
       
-      console.log('✅ Slow network condition handling');
+      // console.log('✅ Slow network condition handling');
     });
     
     it('should handle partial response data', async () => {
@@ -187,13 +187,13 @@ describe('Network Error Handling in Authentication', () => {
         });
         
         const data = await response.json();
-        console.log('Unexpected success:', data);
+        // console.log('Unexpected success:', data);
       } catch (error) {
         expect(error).toBeInstanceOf(Error);
         // Should fail to parse JSON
       }
       
-      console.log('✅ Partial response data handling');
+      // console.log('✅ Partial response data handling');
     });
   });
   
@@ -222,7 +222,7 @@ describe('Network Error Handling in Authentication', () => {
         expect((error as Error).message).toContain('Failed to fetch');
       }
       
-      console.log('✅ Offline state detection');
+      // console.log('✅ Offline state detection');
     });
     
     it('should queue authentication requests when offline', async () => {
@@ -267,7 +267,7 @@ describe('Network Error Handling in Authentication', () => {
         expect(response.ok).toBe(true);
       }
       
-      console.log('✅ Offline request queueing');
+      // console.log('✅ Offline request queueing');
     });
   });
   
@@ -295,7 +295,7 @@ describe('Network Error Handling in Authentication', () => {
         expect((error as Error).message).toContain('CORS');
       }
       
-      console.log('✅ CORS preflight failure handling');
+      // console.log('✅ CORS preflight failure handling');
     });
     
     it('should handle blocked cross-origin requests', async () => {
@@ -317,7 +317,7 @@ describe('Network Error Handling in Authentication', () => {
       expect(response.status).toBe(0);
       expect(response.ok).toBe(false);
       
-      console.log('✅ Blocked cross-origin request handling');
+      // console.log('✅ Blocked cross-origin request handling');
     });
   });
   
@@ -342,7 +342,7 @@ describe('Network Error Handling in Authentication', () => {
         expect((error as Error).message).toContain('SSL certificate');
       }
       
-      console.log('✅ SSL certificate error handling');
+      // console.log('✅ SSL certificate error handling');
     });
     
     it('should handle self-signed certificate warnings', async () => {
@@ -363,7 +363,7 @@ describe('Network Error Handling in Authentication', () => {
         expect((error as Error).message).toContain('SELF_SIGNED_CERT');
       }
       
-      console.log('✅ Self-signed certificate handling');
+      // console.log('✅ Self-signed certificate handling');
     });
   });
   
@@ -387,7 +387,7 @@ describe('Network Error Handling in Authentication', () => {
       expect(response.status).toBe(407);
       expect(response.statusText).toBe('Proxy Authentication Required');
       
-      console.log('✅ Proxy authentication failure handling');
+      // console.log('✅ Proxy authentication failure handling');
     });
     
     it('should handle firewall blocking', async () => {
@@ -410,7 +410,7 @@ describe('Network Error Handling in Authentication', () => {
       expect(response.status).toBe(403);
       expect(response.headers.get('X-Firewall')).toBe('blocked');
       
-      console.log('✅ Firewall blocking handling');
+      // console.log('✅ Firewall blocking handling');
     });
   });
   
@@ -464,7 +464,7 @@ describe('Network Error Handling in Authentication', () => {
         expect(delay2).toBeGreaterThan(delay1);
       }
       
-      console.log('✅ Exponential backoff implementation');
+      // console.log('✅ Exponential backoff implementation');
     });
     
     it('should cache successful authentication responses', async () => {
@@ -518,7 +518,7 @@ describe('Network Error Handling in Authentication', () => {
       expect(cachedData).toBeDefined();
       expect(cachedData.user.id).toBe('123');
       
-      console.log('✅ Authentication response caching');
+      // console.log('✅ Authentication response caching');
     });
   });
   

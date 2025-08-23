@@ -39,8 +39,8 @@ export async function GET(request: NextRequest) {
       message: 'Product statistics retrieved successfully',
     }, { status: 200 });
 
-  } catch (error) {
-    console.error('Error fetching product statistics:', error);
+  } catch (_error) {
+    // console.error('Error fetching product statistics:', error);
     return createApiErrorResponse(500, 'Failed to fetch product statistics');
   }
 }

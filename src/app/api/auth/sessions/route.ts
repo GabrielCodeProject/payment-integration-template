@@ -117,8 +117,8 @@ export async function GET(request: NextRequest) {
       },
     });
 
-  } catch (error) {
-    console.error('Session listing error:', error);
+  } catch (_error) {
+    // console.error('Session listing error:', error);
     
     return NextResponse.json(
       { 
@@ -247,8 +247,8 @@ export async function DELETE(request: NextRequest) {
       },
     });
 
-  } catch (error) {
-    console.error('Session bulk operation error:', error);
+  } catch (_error) {
+    // console.error('Session bulk operation error:', error);
     
     return NextResponse.json(
       { 
@@ -358,8 +358,8 @@ export async function POST(request: NextRequest) {
       },
     });
 
-  } catch (error) {
-    console.error('Session creation error:', error);
+  } catch (_error) {
+    // console.error('Session creation error:', error);
     
     return NextResponse.json(
       { 

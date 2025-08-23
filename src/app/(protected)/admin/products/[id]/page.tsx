@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useCallback } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { toast } from 'sonner';
 import { formatDistanceToNow, format } from 'date-fns';
@@ -40,6 +40,7 @@ import {
 } from '@/components/ui/alert-dialog';
 
 import { StockIndicator, StockLevelBar, StockAlert } from '@/components/admin/products/StockIndicator';
+import { PricingTierManager } from '@/components/admin/products/PricingTierManager';
 import type { Product } from '@/lib/validations/base/product';
 
 interface ProductAnalytics {
@@ -64,7 +65,7 @@ export default function ProductDetailPage() {
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
 
   // Fetch product data
-  const fetchProduct = async () => {
+  const fetchProduct = useCallback(async () => {
     try {
       setLoading(true);
       setError(null);
@@ -80,17 +81,17 @@ export default function ProductDetailPage() {
 
       const data = await response.json();
       setProduct(data.product);
-    } catch (error) {
-      console.error('Error fetching product:', error);
-      const errorMessage = error instanceof Error ? error.message : 'Failed to fetch product';
+    } catch (_error) {
+      // console.error('Error fetching product:', error);
+      const errorMessage = _error instanceof Error ? _error.message : 'Failed to fetch product';
       setError(errorMessage);
     } finally {
       setLoading(false);
     }
-  };
+  }, [productId]);
 
   // Fetch analytics data (mock for now)
-  const fetchAnalytics = async () => {
+  const fetchAnalytics = useCallback(async () => {
     try {
       // Mock analytics data - in real app, this would come from your analytics API
       setAnalytics({
@@ -102,17 +103,17 @@ export default function ProductDetailPage() {
         ordersLastMonth: 23,
         revenueLastMonth: 2300,
       });
-    } catch (error) {
-      console.error('Error fetching analytics:', error);
+    } catch (_error) {
+      // console.error('Error fetching analytics:', error);
     }
-  };
+  }, []);
 
   useEffect(() => {
     if (productId) {
       fetchProduct();
       fetchAnalytics();
     }
-  }, [productId]);
+  }, [productId, fetchProduct, fetchAnalytics]);
 
   // Handle delete
   const handleDelete = async () => {
@@ -127,8 +128,8 @@ export default function ProductDetailPage() {
 
       toast.success('Product deleted successfully');
       router.push('/admin/products');
-    } catch (error) {
-      console.error('Error deleting product:', error);
+    } catch (_error) {
+      // console.error('Error deleting product:', error);
       toast.error('Failed to delete product');
     }
   };
@@ -169,8 +170,8 @@ export default function ProductDetailPage() {
 
       setProduct(prev => prev ? { ...prev, isActive: !prev.isActive } : null);
       toast.success(`Product ${!product.isActive ? 'activated' : 'deactivated'} successfully`);
-    } catch (error) {
-      console.error('Error updating product status:', error);
+    } catch (_error) {
+      // console.error('Error updating product status:', error);
       toast.error('Failed to update product status');
     }
   };
@@ -583,6 +584,15 @@ export default function ProductDetailPage() {
             </CardContent>
           </Card>
         </div>
+      </div>
+
+      {/* Pricing Tier Management */}
+      <div className="mt-8">
+        <PricingTierManager 
+          productId={product.id}
+          productName={product.name}
+          productType={product.type}
+        />
       </div>
 
       {/* Delete Confirmation Dialog */}

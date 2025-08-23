@@ -156,7 +156,7 @@ export function UserActivityFeed({
 
       setActivities(filteredActivities);
     } catch (err) {
-      console.error("Error fetching activities:", err);
+      // console.error("Error fetching activities:", err);
       setError(err instanceof Error ? err.message : "Failed to load activities");
     } finally {
       setIsLoading(false);

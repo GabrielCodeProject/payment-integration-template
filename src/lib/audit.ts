@@ -90,7 +90,7 @@ export class AuditService {
       this.defaultContext = { ...context };
     } catch (_error) {
       // Failed to set audit context - don't block operations
-      console.warn('Failed to set audit context:', _error);
+      // console.warn('Failed to set audit context:', _error);
       // Still store context for manual operations
       this.defaultContext = { ...context };
     }
@@ -105,7 +105,7 @@ export class AuditService {
       this.defaultContext = {};
     } catch (_error) {
       // Failed to clear audit context - don't block operations
-      console.warn('Failed to clear audit context:', _error);
+      // console.warn('Failed to clear audit context:', _error);
       this.defaultContext = {};
     }
   }
@@ -169,7 +169,7 @@ export class AuditService {
         });
       } catch (fallbackError) {
         // Don't fail the main operation if audit logging fails
-        console.warn('Audit logging failed:', fallbackError);
+        // console.warn('Audit logging failed:', fallbackError);
       }
     }
   }

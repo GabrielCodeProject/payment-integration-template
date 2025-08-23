@@ -1,4 +1,4 @@
-import { PrismaClient, Product, Prisma } from '@prisma/client';
+import { PrismaClient, Product, PricingTier, Prisma } from '@prisma/client';
 import {
   CreateProduct,
   UpdateProduct,
@@ -12,6 +12,7 @@ import {
   updateStockSchema,
   updatePriceSchema,
 } from '@/lib/validations/base/product';
+import { PricingTierService } from '../pricing-tier.service';
 
 /**
  * Product Service
@@ -31,9 +32,11 @@ import {
 
 export class ProductService {
   private prisma: PrismaClient;
+  private pricingTierService: PricingTierService;
 
   constructor(prisma: PrismaClient) {
     this.prisma = prisma;
+    this.pricingTierService = new PricingTierService(prisma);
   }
 
   // ==========================================================================
@@ -67,18 +70,47 @@ export class ProductService {
       throw new Error(`Product with slug '${validatedData.slug}' already exists`);
     }
 
-    // Create the product
+    // Extract category and tag IDs for separate handling
+    const { categoryIds, tagIds, ...productData } = validatedData;
+
+    // Create the product with relationships
     const product = await this.prisma.product.create({
       data: {
-        ...validatedData,
+        ...productData,
         // Ensure proper type conversion for Prisma
-        price: new Prisma.Decimal(validatedData.price),
-        compareAtPrice: validatedData.compareAtPrice 
-          ? new Prisma.Decimal(validatedData.compareAtPrice) 
+        price: new Prisma.Decimal(productData.price),
+        compareAtPrice: productData.compareAtPrice 
+          ? new Prisma.Decimal(productData.compareAtPrice) 
           : null,
         // Set defaults for digital products
-        requiresShipping: validatedData.isDigital ? false : validatedData.requiresShipping ?? true,
-        stockQuantity: validatedData.isDigital ? null : validatedData.stockQuantity,
+        requiresShipping: productData.isDigital ? false : productData.requiresShipping ?? true,
+        stockQuantity: productData.isDigital ? null : productData.stockQuantity,
+        
+        // Create category relationships
+        categories: categoryIds?.length ? {
+          create: categoryIds.map(categoryId => ({
+            categoryId,
+          })),
+        } : undefined,
+
+        // Create tag relationships
+        tags: tagIds?.length ? {
+          create: tagIds.map(tagId => ({
+            tagId,
+          })),
+        } : undefined,
+      },
+      include: {
+        categories: {
+          include: {
+            category: true,
+          },
+        },
+        tags: {
+          include: {
+            tag: true,
+          },
+        },
       },
     });
 
@@ -147,30 +179,65 @@ export class ProductService {
       }
     }
 
-    // Prepare update data with proper type conversion
-    const preparedUpdateData: Partial<Prisma.ProductUpdateInput> = { ...updateData };
+    // Extract category and tag IDs for separate handling
+    const { categoryIds, tagIds, ...productUpdateData } = updateData;
 
-    if (updateData.price !== undefined) {
-      preparedUpdateData.price = new Prisma.Decimal(updateData.price);
+    // Prepare update data with proper type conversion
+    const preparedUpdateData: Partial<Prisma.ProductUpdateInput> = { ...productUpdateData };
+
+    if (productUpdateData.price !== undefined) {
+      preparedUpdateData.price = new Prisma.Decimal(productUpdateData.price);
     }
 
-    if (updateData.compareAtPrice !== undefined) {
-      preparedUpdateData.compareAtPrice = updateData.compareAtPrice 
-        ? new Prisma.Decimal(updateData.compareAtPrice) 
+    if (productUpdateData.compareAtPrice !== undefined) {
+      preparedUpdateData.compareAtPrice = productUpdateData.compareAtPrice 
+        ? new Prisma.Decimal(productUpdateData.compareAtPrice) 
         : null;
     }
 
     // Handle digital product logic
-    if (updateData.isDigital !== undefined) {
-      if (updateData.isDigital) {
+    if (productUpdateData.isDigital !== undefined) {
+      if (productUpdateData.isDigital) {
         preparedUpdateData.requiresShipping = false;
         preparedUpdateData.stockQuantity = null;
       }
     }
 
+    // Handle category relationships
+    if (categoryIds !== undefined) {
+      preparedUpdateData.categories = {
+        deleteMany: {}, // Remove all existing category relationships
+        create: categoryIds.map(categoryId => ({
+          categoryId,
+        })),
+      };
+    }
+
+    // Handle tag relationships
+    if (tagIds !== undefined) {
+      preparedUpdateData.tags = {
+        deleteMany: {}, // Remove all existing tag relationships
+        create: tagIds.map(tagId => ({
+          tagId,
+        })),
+      };
+    }
+
     return await this.prisma.product.update({
       where: { id },
       data: preparedUpdateData,
+      include: {
+        categories: {
+          include: {
+            category: true,
+          },
+        },
+        tags: {
+          include: {
+            tag: true,
+          },
+        },
+      },
     });
   }
 
@@ -279,9 +346,23 @@ export class ProductService {
       }
     }
 
-    if (validatedFilters.tags && validatedFilters.tags.length > 0) {
+    if (validatedFilters.categoryIds && validatedFilters.categoryIds.length > 0) {
+      where.categories = {
+        some: {
+          categoryId: {
+            in: validatedFilters.categoryIds,
+          },
+        },
+      };
+    }
+
+    if (validatedFilters.tagIds && validatedFilters.tagIds.length > 0) {
       where.tags = {
-        hasSome: validatedFilters.tags,
+        some: {
+          tagId: {
+            in: validatedFilters.tagIds,
+          },
+        },
       };
     }
 
@@ -309,6 +390,18 @@ export class ProductService {
         orderBy,
         skip: offset,
         take: limit,
+        include: {
+          categories: {
+            include: {
+              category: true,
+            },
+          },
+          tags: {
+            include: {
+              tag: true,
+            },
+          },
+        },
       }),
       this.prisma.product.count({ where }),
     ]);
@@ -622,5 +715,136 @@ export class ProductService {
       lowStock,
       outOfStock,
     };
+  }
+
+  // ==========================================================================
+  // PRICING TIER MANAGEMENT
+  // ==========================================================================
+
+  /**
+   * Get all pricing tiers for a product
+   */
+  async getPricingTiers(productId: string, includeInactive = false): Promise<PricingTier[]> {
+    return await this.pricingTierService.findByProductId(productId, includeInactive);
+  }
+
+  /**
+   * Get pricing tier statistics for a product
+   */
+  async getPricingTierStats(productId: string) {
+    return await this.pricingTierService.getStats(productId);
+  }
+
+  /**
+   * Get freemium tier for a product
+   */
+  async getFreemiumTier(productId: string): Promise<PricingTier | null> {
+    return await this.pricingTierService.getFreemiumTier(productId);
+  }
+
+  /**
+   * Check if a product has multiple pricing tiers
+   */
+  async hasMultiplePricingTiers(productId: string): Promise<boolean> {
+    const tiers = await this.getPricingTiers(productId);
+    return tiers.length > 1;
+  }
+
+  /**
+   * Get product with pricing tiers
+   */
+  async findByIdWithPricingTiers(id: string): Promise<(Product & { pricingTiers: PricingTier[] }) | null> {
+    return await this.prisma.product.findUnique({
+      where: { id },
+      include: {
+        pricingTiers: {
+          where: { isActive: true },
+          orderBy: { sortOrder: 'asc' },
+        },
+        categories: {
+          include: {
+            category: true,
+          },
+        },
+        tags: {
+          include: {
+            tag: true,
+          },
+        },
+      },
+    });
+  }
+
+  /**
+   * Get cheapest pricing tier for a product
+   */
+  async getCheapestTier(productId: string): Promise<PricingTier | null> {
+    return await this.prisma.pricingTier.findFirst({
+      where: {
+        productId,
+        isActive: true,
+      },
+      orderBy: { price: 'asc' },
+    });
+  }
+
+  /**
+   * Get most expensive pricing tier for a product
+   */
+  async getMostExpensiveTier(productId: string): Promise<PricingTier | null> {
+    return await this.prisma.pricingTier.findFirst({
+      where: {
+        productId,
+        isActive: true,
+      },
+      orderBy: { price: 'desc' },
+    });
+  }
+
+  /**
+   * Create default pricing tier when creating a product
+   */
+  async createDefaultPricingTier(productId: string, productData: CreateProduct): Promise<PricingTier> {
+    return await this.pricingTierService.create({
+      productId,
+      name: 'Standard',
+      description: 'Standard pricing tier',
+      price: productData.price,
+      currency: productData.currency || 'usd',
+      billingInterval: productData.billingInterval,
+      features: [],
+      isFreemium: false,
+      isActive: true,
+      sortOrder: 1,
+    });
+  }
+
+  /**
+   * Migrate existing products to use pricing tiers
+   */
+  async migrateToMultiplePricingTiers(productId: string): Promise<PricingTier[]> {
+    const product = await this.findById(productId);
+    if (!product) {
+      throw new Error(`Product with ID '${productId}' not found`);
+    }
+
+    // Check if product already has pricing tiers
+    const existingTiers = await this.getPricingTiers(productId);
+    if (existingTiers.length > 0) {
+      return existingTiers;
+    }
+
+    // Create default pricing tier based on product price
+    const defaultTier = await this.createDefaultPricingTier(productId, {
+      name: product.name,
+      price: parseFloat(product.price.toString()),
+      currency: product.currency,
+      slug: product.slug,
+      type: product.type,
+      billingInterval: product.billingInterval,
+      isDigital: product.isDigital,
+    });
+
+    return [defaultTier];
   }
 }

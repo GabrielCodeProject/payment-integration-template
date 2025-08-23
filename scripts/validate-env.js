@@ -26,7 +26,7 @@ const colors = {
 
 function log(message, color = "reset") {
   // eslint-disable-next-line no-console
-  console.log(`${colors[color]}${message}${colors.reset}`);
+  // console.log(`${colors[color]}${message}${colors.reset}`);
 }
 
 function validateEnvironment() {

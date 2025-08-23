@@ -84,15 +84,15 @@ export async function GET(
           },
         });
 
-      } catch (error) {
-        console.error("[API] Get user details error:", error);
+      } catch (_error) {
+        // console.error("[API] Get user details error:", error);
         
-        if (error instanceof Error) {
-          if (error.message.includes("permission")) {
-            return createApiErrorResponse(403, error.message);
+        if (_error instanceof Error) {
+          if (_error.message.includes("permission")) {
+            return createApiErrorResponse(403, _error.message);
           }
-          if (error.message.includes("not found")) {
-            return createApiErrorResponse(404, error.message);
+          if (_error.message.includes("not found")) {
+            return createApiErrorResponse(404, _error.message);
           }
         }
         
@@ -132,7 +132,7 @@ export async function PUT(
           return createApiErrorResponse(
             400,
             "Invalid update data",
-            process.env.NODE_ENV === "development" ? validationResult.error.issues : undefined
+            process.env.NODE_ENV === "development" ? validationResult._error.issues : undefined
           );
         }
 
@@ -192,21 +192,21 @@ export async function PUT(
           },
         });
 
-      } catch (error) {
-        console.error("[API] Update user error:", error);
+      } catch (_error) {
+        // console.error("[API] Update user error:", error);
         
-        if (error instanceof Error) {
-          if (error.message.includes("permission")) {
-            return createApiErrorResponse(403, error.message);
+        if (_error instanceof Error) {
+          if (_error.message.includes("permission")) {
+            return createApiErrorResponse(403, _error.message);
           }
-          if (error.message.includes("not found")) {
-            return createApiErrorResponse(404, error.message);
+          if (_error.message.includes("not found")) {
+            return createApiErrorResponse(404, _error.message);
           }
-          if (error.message.includes("Invalid")) {
-            return createApiErrorResponse(400, error.message);
+          if (_error.message.includes("Invalid")) {
+            return createApiErrorResponse(400, _error.message);
           }
-          if (error.message.includes("role transition")) {
-            return createApiErrorResponse(403, error.message);
+          if (_error.message.includes("role transition")) {
+            return createApiErrorResponse(403, _error.message);
           }
         }
         
@@ -274,21 +274,21 @@ export async function DELETE(
           },
         });
 
-      } catch (error) {
-        console.error("[API] Deactivate user error:", error);
+      } catch (_error) {
+        // console.error("[API] Deactivate user error:", error);
         
-        if (error instanceof Error) {
-          if (error.message.includes("permission")) {
-            return createApiErrorResponse(403, error.message);
+        if (_error instanceof Error) {
+          if (_error.message.includes("permission")) {
+            return createApiErrorResponse(403, _error.message);
           }
-          if (error.message.includes("not found")) {
-            return createApiErrorResponse(404, error.message);
+          if (_error.message.includes("not found")) {
+            return createApiErrorResponse(404, _error.message);
           }
-          if (error.message.includes("already deactivated")) {
-            return createApiErrorResponse(409, error.message);
+          if (_error.message.includes("already deactivated")) {
+            return createApiErrorResponse(409, _error.message);
           }
-          if (error.message.includes("Cannot delete")) {
-            return createApiErrorResponse(403, error.message);
+          if (_error.message.includes("Cannot delete")) {
+            return createApiErrorResponse(403, _error.message);
           }
         }
         
@@ -356,18 +356,18 @@ export async function PATCH(
           },
         });
 
-      } catch (error) {
-        console.error("[API] Activate user error:", error);
+      } catch (_error) {
+        // console.error("[API] Activate user error:", error);
         
-        if (error instanceof Error) {
-          if (error.message.includes("permission")) {
-            return createApiErrorResponse(403, error.message);
+        if (_error instanceof Error) {
+          if (_error.message.includes("permission")) {
+            return createApiErrorResponse(403, _error.message);
           }
-          if (error.message.includes("not found")) {
-            return createApiErrorResponse(404, error.message);
+          if (_error.message.includes("not found")) {
+            return createApiErrorResponse(404, _error.message);
           }
-          if (error.message.includes("already active")) {
-            return createApiErrorResponse(409, error.message);
+          if (_error.message.includes("already active")) {
+            return createApiErrorResponse(409, _error.message);
           }
         }
         

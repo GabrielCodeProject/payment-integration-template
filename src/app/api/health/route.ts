@@ -39,10 +39,10 @@ export async function GET() {
       // TODO: Add database connection check
       // const db = await prisma.$queryRaw`SELECT 1`;
       healthCheck.checks.database = "healthy";
-    } catch (error) {
+    } catch (_error) {
       healthCheck.checks.database = "unhealthy";
       healthCheck.status = "degraded";
-      console.error("Database health check failed:", error);
+      // console.error("Database health check failed:", error);
     }
 
     // Redis check (will be implemented when Redis client is set up)
@@ -50,12 +50,12 @@ export async function GET() {
       // TODO: Add Redis connection check
       // await redis.ping();
       healthCheck.checks.redis = "healthy";
-    } catch (error) {
+    } catch (_error) {
       healthCheck.checks.redis = "unhealthy";
       if (healthCheck.status === "healthy") {
         healthCheck.status = "degraded";
       }
-      console.error("Redis health check failed:", error);
+      // console.error("Redis health check failed:", error);
     }
 
     // External services check (Stripe, Resend, etc.)
@@ -74,12 +74,12 @@ export async function GET() {
           healthCheck.status = "degraded";
         }
       }
-    } catch (error) {
+    } catch (_error) {
       healthCheck.checks.external_services = "unhealthy";
       if (healthCheck.status === "healthy") {
         healthCheck.status = "degraded";
       }
-      console.error("External services health check failed:", error);
+      // console.error("External services health check failed:", error);
     }
 
     // Calculate response time
@@ -106,8 +106,8 @@ export async function GET() {
           : 503;
 
     return NextResponse.json(healthCheck, { status: statusCode });
-  } catch (error) {
-    console.error("Health check error:", error);
+  } catch (_error) {
+    // console.error("Health check error:", error);
 
     return NextResponse.json(
       {

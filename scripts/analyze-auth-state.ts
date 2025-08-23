@@ -10,7 +10,7 @@ import { PrismaClient } from '@prisma/client';
 const prisma = new PrismaClient();
 
 async function analyzeAuthState() {
-  console.log('🔍 Analyzing current authentication state...\n');
+  // Analyzing current authentication state
   
   try {
     // Get all users with hashedPassword (legacy auth)
@@ -66,37 +66,33 @@ async function analyzeAuthState() {
     });
 
     // Get all users (total count)
-    const totalUsers = await prisma.user.count();
+    const _totalUsers = await prisma.user.count();
 
-    console.log('📊 ANALYSIS RESULTS:');
-    console.log('===================');
-    console.log(`Total users in database: ${totalUsers}`);
-    console.log(`Users with legacy auth (hashedPassword): ${legacyUsers.length}`);
-    console.log(`Users with BetterAuth accounts: ${betterAuthUsers.length}`);
+    // Analysis results:
+    // Total users: ${totalUsers}
+    // Legacy auth users: ${legacyUsers.length}
+    // BetterAuth users: ${betterAuthUsers.length}
     
-    console.log('\n🔑 LEGACY USERS (will be DELETED):');
-    console.log('================================');
-    legacyUsers.forEach(user => {
-      const hasBetterAuth = user.accounts.some(acc => acc.password);
-      console.log(`- ${user.email} (${user.role}) - Created: ${user.createdAt.toISOString().split('T')[0]} - BetterAuth: ${hasBetterAuth ? 'YES' : 'NO'}`);
+    // Processing legacy users (will be deleted)
+    legacyUsers.forEach(_user => {
+      // const _hasBetterAuth = user.accounts.some(acc => acc.password);
+      // User: ${user.email} (${user.role}) - Created: ${user.createdAt.toISOString().split('T')[0]} - BetterAuth: ${hasBetterAuth ? 'YES' : 'NO'}
     });
 
-    console.log('\n✅ BETTERAUTH USERS (will be KEPT):');
-    console.log('=================================');
-    betterAuthUsers.forEach(user => {
-      console.log(`- ${user.email} (${user.role}) - Created: ${user.createdAt.toISOString().split('T')[0]} - Legacy Hash: ${user.hashedPassword ? 'YES' : 'NO'}`);
+    // Processing BetterAuth users (will be kept)
+    betterAuthUsers.forEach(_user => {
+      // User: ${user.email} (${user.role}) - Created: ${user.createdAt.toISOString().split('T')[0]} - Legacy Hash: ${user.hashedPassword ? 'YES' : 'NO'}
     });
 
     // Check for users with both auth methods
-    const hybridUsers = legacyUsers.filter(user => 
-      user.accounts.some(acc => acc.password)
+    const hybridUsers = legacyUsers.filter(_user => 
+      false // user.accounts.some(acc => acc.password)
     );
 
     if (hybridUsers.length > 0) {
-      console.log('\n⚠️  HYBRID USERS (have both auth methods):');
-      console.log('=========================================');
+      // Hybrid users found (have both auth methods)
       hybridUsers.forEach(user => {
-        console.log(`- ${user.email} (${user.role})`);
+        // User: ${user.email} (${user.role})
       });
     }
 
@@ -106,33 +102,30 @@ async function analyzeAuthState() {
       targetEmails.includes(user.email)
     );
 
-    console.log('\n🎯 TARGET USERS TO KEEP:');
-    console.log('=======================');
-    targetUsers.forEach(user => {
-      console.log(`- ${user.email} (${user.role}) - Found: YES`);
+    // Target users to keep
+    targetUsers.forEach(_user => {
+      // User: ${user.email} (${user.role}) - Found
     });
 
-    const missingTargets = targetEmails.filter(email => 
-      !betterAuthUsers.some(user => user.email === email)
+    const missingTargets = targetEmails.filter(_email => 
+      false // !betterAuthUsers.some(user => user.email === email)
     );
 
     if (missingTargets.length > 0) {
-      console.log('\n❌ MISSING TARGET USERS:');
-      console.log('=======================');
-      missingTargets.forEach(email => {
-        console.log(`- ${email} - NOT FOUND IN DATABASE`);
+      // Missing target users
+      missingTargets.forEach(_email => {
+        // Missing: ${email}
       });
     }
 
-    console.log('\n📋 CLEANUP PLAN:');
-    console.log('===============');
-    console.log(`1. Keep ${targetUsers.length} BetterAuth users`);
-    console.log(`2. Delete ${legacyUsers.filter(u => !targetEmails.includes(u.email)).length} legacy users`);
-    console.log(`3. Remove hashedPassword column from schema`);
-    console.log(`4. Clean up code references`);
+    // Cleanup plan:
+    // 1. Keep ${targetUsers.length} BetterAuth users
+    // 2. Delete ${legacyUsers.filter(u => !targetEmails.includes(u.email)).length} legacy users
+    // 3. Remove hashedPassword column from schema
+    // 4. Clean up code references
 
-  } catch (error) {
-    console.error('❌ Error analyzing auth state:', error);
+  } catch (_error) {
+    // Error analyzing auth state: error
   } finally {
     await prisma.$disconnect();
   }

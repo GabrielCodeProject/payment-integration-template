@@ -71,9 +71,9 @@ export function EmailVerificationStatus({
             setError(errorMessage);
           }
         }
-      } catch (error) {
+      } catch (_error) {
         // eslint-disable-next-line no-console
-        console.error("Verification error:", error);
+        // console.error("Verification error:", error);
         setState("error");
         setError("An unexpected error occurred during verification.");
       }
@@ -114,9 +114,9 @@ export function EmailVerificationStatus({
         setState("error");
         setError(result.error || "Failed to resend verification email.");
       }
-    } catch (error) {
+    } catch (_error) {
       // eslint-disable-next-line no-console
-      console.error("Resend error:", error);
+      // console.error("Resend error:", error);
       setState("error");
       setError("Failed to resend verification email.");
     }

@@ -47,11 +47,11 @@ async function getUserStatistics(request: NextRequest, session: any) {
       },
     });
 
-  } catch (error) {
-    console.error("[API] User statistics error:", error);
+  } catch (_error) {
+    // console.error("[API] User statistics error:", error);
     
-    if (error instanceof Error && error.message.includes("permission")) {
-      return createApiErrorResponse(403, error.message);
+    if (_error instanceof Error && _error.message.includes("permission")) {
+      return createApiErrorResponse(403, _error.message);
     }
     
     return createApiErrorResponse(500, "Failed to retrieve user statistics");
@@ -80,7 +80,7 @@ const GET_ENHANCED = withPermission(
         return createApiErrorResponse(
           400,
           "Invalid query parameters",
-          process.env.NODE_ENV === "development" ? validationResult.error.issues : undefined
+          process.env.NODE_ENV === "development" ? validationResult._error.issues : undefined
         );
       }
 
@@ -104,16 +104,16 @@ const GET_ENHANCED = withPermission(
         },
       });
 
-    } catch (error) {
-      console.error("[API] Admin users list error:", error);
+    } catch (_error) {
+      // console.error("[API] Admin users list error:", error);
       
       // Return appropriate error response
-      if (error instanceof Error) {
-        if (error.message.includes("permission")) {
-          return createApiErrorResponse(403, error.message);
+      if (_error instanceof Error) {
+        if (_error.message.includes("permission")) {
+          return createApiErrorResponse(403, _error.message);
         }
-        if (error.message.includes("Invalid")) {
-          return createApiErrorResponse(400, error.message);
+        if (_error.message.includes("Invalid")) {
+          return createApiErrorResponse(400, _error.message);
         }
       }
       
@@ -154,7 +154,7 @@ export const POST = withPermission(
         return createApiErrorResponse(
           400,
           "Invalid user data",
-          process.env.NODE_ENV === "development" ? validationResult.error.issues : undefined
+          process.env.NODE_ENV === "development" ? validationResult._error.issues : undefined
         );
       }
 
@@ -171,18 +171,18 @@ export const POST = withPermission(
         "User creation through this endpoint is not implemented. Please use the authentication flow."
       );
 
-    } catch (error) {
-      console.error("[API] Create user error:", error);
+    } catch (_error) {
+      // console.error("[API] Create user error:", error);
       
-      if (error instanceof Error) {
-        if (error.message.includes("permission")) {
-          return createApiErrorResponse(403, error.message);
+      if (_error instanceof Error) {
+        if (_error.message.includes("permission")) {
+          return createApiErrorResponse(403, _error.message);
         }
-        if (error.message.includes("Invalid")) {
-          return createApiErrorResponse(400, error.message);
+        if (_error.message.includes("Invalid")) {
+          return createApiErrorResponse(400, _error.message);
         }
-        if (error.message.includes("already exists")) {
-          return createApiErrorResponse(409, error.message);
+        if (_error.message.includes("already exists")) {
+          return createApiErrorResponse(409, _error.message);
         }
       }
       

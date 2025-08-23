@@ -2,7 +2,7 @@ import { Client } from 'pg';
 import { PrismaClient } from '@prisma/client';
 
 export default async function globalTeardown() {
-  console.log('🧹 Starting global test environment teardown...');
+  // console.log('🧹 Starting global test environment teardown...');
   
   try {
     // Close any open Prisma connections
@@ -16,9 +16,9 @@ export default async function globalTeardown() {
       await dropTestDatabase();
     }
     
-    console.log('✅ Global test environment teardown complete');
+    // console.log('✅ Global test environment teardown complete');
   } catch (error) {
-    console.error('❌ Error during global teardown:', error);
+    // console.error('❌ Error during global teardown:', error);
   }
 }
 
@@ -33,9 +33,9 @@ async function closePrismaConnections() {
     });
     
     await prisma.$disconnect();
-    console.log('✅ Prisma connections closed');
+    // console.log('✅ Prisma connections closed');
   } catch (error) {
-    console.error('❌ Error closing Prisma connections:', error);
+    // console.error('❌ Error closing Prisma connections:', error);
   }
 }
 
@@ -58,12 +58,12 @@ async function generatePerformanceReport() {
       : 0
   };
   
-  console.log('📊 Test Performance Report:');
-  console.log(`   Queries executed: ${report.queriesExecuted}`);
-  console.log(`   Average query time: ${report.averageQueryTime}ms`);
-  console.log(`   Slowest query: ${report.slowestQuery}ms`);
-  console.log(`   Connections created: ${report.connectionsCreated}`);
-  console.log(`   Average connection time: ${report.averageConnectionTime}ms`);
+  // console.log('📊 Test Performance Report:');
+  // console.log(`   Queries executed: ${report.queriesExecuted}`);
+  // console.log(`   Average query time: ${report.averageQueryTime}ms`);
+  // console.log(`   Slowest query: ${report.slowestQuery}ms`);
+  // console.log(`   Connections created: ${report.connectionsCreated}`);
+  // console.log(`   Average connection time: ${report.averageConnectionTime}ms`);
   
   // Write detailed report to file if needed
   if (process.env.WRITE_PERFORMANCE_REPORT === 'true') {
@@ -77,7 +77,7 @@ async function generatePerformanceReport() {
       detailedMetrics: metrics
     }, null, 2));
     
-    console.log(`📄 Detailed performance report written to: ${reportPath}`);
+    // console.log(`📄 Detailed performance report written to: ${reportPath}`);
   }
 }
 
@@ -103,10 +103,10 @@ async function dropTestDatabase() {
     
     // Drop test database
     await adminClient.query(`DROP DATABASE IF EXISTS "${testDbName}"`);
-    console.log('✅ Test database dropped');
+    // console.log('✅ Test database dropped');
     
   } catch (error) {
-    console.error('❌ Error dropping test database:', error);
+    // console.error('❌ Error dropping test database:', error);
   } finally {
     await adminClient.end();
   }

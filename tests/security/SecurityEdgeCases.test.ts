@@ -60,7 +60,7 @@ describe('Security-Related Edge Cases', () => {
         expect(errorData.securityViolation).toBe(true);
       }
       
-      console.log('✅ XSS attack prevention in authentication fields');
+      // console.log('✅ XSS attack prevention in authentication fields');
     });
     
     it('should prevent SQL injection attempts in user inputs', async () => {
@@ -100,7 +100,7 @@ describe('Security-Related Edge Cases', () => {
         expect(errorData.securityIncident).toBe(true);
       }
       
-      console.log('✅ SQL injection prevention');
+      // console.log('✅ SQL injection prevention');
     });
     
     it('should handle extremely long input values', async () => {
@@ -137,7 +137,7 @@ describe('Security-Related Edge Cases', () => {
       expect(errorData.code).toBe('INPUT_LENGTH_EXCEEDED');
       expect(errorData.received.email).toBeGreaterThan(errorData.limits.email);
       
-      console.log('✅ Extremely long input handling');
+      // console.log('✅ Extremely long input handling');
     });
     
     it('should sanitize Unicode and special characters', async () => {
@@ -176,7 +176,7 @@ describe('Security-Related Edge Cases', () => {
         expect(responseData.user.sanitized).toBe(true);
       }
       
-      console.log('✅ Unicode and special character sanitization');
+      // console.log('✅ Unicode and special character sanitization');
     });
   });
   
@@ -249,7 +249,7 @@ describe('Security-Related Edge Cases', () => {
       
       expect(lockedResponse.status).toBe(423);
       
-      console.log('✅ Brute force protection with account lockout');
+      // console.log('✅ Brute force protection with account lockout');
     });
     
     it('should implement progressive delays for failed attempts', async () => {
@@ -302,7 +302,7 @@ describe('Security-Related Edge Cases', () => {
       expect(attemptTimes[1]).toBeGreaterThan(attemptTimes[0]);
       expect(attemptTimes[2]).toBeGreaterThan(attemptTimes[1]);
       
-      console.log('✅ Progressive delay implementation');
+      // console.log('✅ Progressive delay implementation');
     });
   });
   
@@ -347,7 +347,7 @@ describe('Security-Related Edge Cases', () => {
         expect(errorData.pattern).toBe(pattern.pattern);
       }
       
-      console.log('✅ Suspicious activity pattern detection');
+      // console.log('✅ Suspicious activity pattern detection');
     });
     
     it('should implement CAPTCHA after multiple failures', async () => {
@@ -405,7 +405,7 @@ describe('Security-Related Edge Cases', () => {
       expect(captchaData.code).toBe('CAPTCHA_REQUIRED');
       expect(captchaData.captchaChallenge).toBeDefined();
       
-      console.log('✅ CAPTCHA requirement after multiple failures');
+      // console.log('✅ CAPTCHA requirement after multiple failures');
     });
   });
   
@@ -442,7 +442,7 @@ describe('Security-Related Edge Cases', () => {
       expect(errorData.code).toBe('SESSION_FIXATION_ATTEMPT');
       expect(errorData.newSessionGenerated).toBe(true);
       
-      console.log('✅ Session fixation attack detection');
+      // console.log('✅ Session fixation attack detection');
     });
     
     it('should prevent CSRF attacks in authentication', async () => {
@@ -475,7 +475,7 @@ describe('Security-Related Edge Cases', () => {
       expect(errorData.code).toBe('CSRF_TOKEN_MISMATCH');
       expect(errorData.receivedOrigin).toBe('https://malicious-site.com');
       
-      console.log('✅ CSRF attack prevention');
+      // console.log('✅ CSRF attack prevention');
     });
   });
   
@@ -517,7 +517,7 @@ describe('Security-Related Edge Cases', () => {
         expect(errorData.sourceIP).toBe(maliciousIP);
       }
       
-      console.log('✅ Malicious IP address blocking');
+      // console.log('✅ Malicious IP address blocking');
     });
     
     it('should implement geolocation-based restrictions', async () => {
@@ -551,7 +551,7 @@ describe('Security-Related Edge Cases', () => {
         expect(errorData.countryCode).toBe(countryCode);
       }
       
-      console.log('✅ Geolocation-based restrictions');
+      // console.log('✅ Geolocation-based restrictions');
     });
   });
   
@@ -603,7 +603,7 @@ describe('Security-Related Edge Cases', () => {
         }
       }
       
-      console.log('✅ Credential stuffing attack detection');
+      // console.log('✅ Credential stuffing attack detection');
     });
     
     it('should implement honeypot fields for bot detection', async () => {
@@ -633,7 +633,7 @@ describe('Security-Related Edge Cases', () => {
       expect(errorData.code).toBe('BOT_DETECTED');
       expect(errorData.honeypotTriggered).toBe(true);
       
-      console.log('✅ Honeypot field bot detection');
+      // console.log('✅ Honeypot field bot detection');
     });
   });
   

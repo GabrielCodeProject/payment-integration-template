@@ -74,7 +74,7 @@ export function ResetPasswordForm({ onSuccess }: ResetPasswordFormProps) {
 
       if (response.error) {
         // Handle specific errors
-        switch (response.error.message) {
+        switch (response._error.message) {
           case "Invalid token":
           case "Token not found":
             setTokenError("This reset link is invalid. Please request a new password reset.");
@@ -97,7 +97,7 @@ export function ResetPasswordForm({ onSuccess }: ResetPasswordFormProps) {
             toast.error("New password must be different from your current password.");
             break;
           default:
-            toast.error(response.error.message || "Failed to reset password. Please try again.");
+            toast.error(response._error.message || "Failed to reset password. Please try again.");
         }
         return;
       }
@@ -114,14 +114,14 @@ export function ResetPasswordForm({ onSuccess }: ResetPasswordFormProps) {
           router.push("/login?message=password-reset-success");
         }, 3000);
       }
-    } catch (error) {
+    } catch (_error) {
       // eslint-disable-next-line no-console
-      console.error("Reset password error:", error);
+      // console.error("Reset password error:", error);
       // Handle network errors specifically
-      if (error instanceof Error) {
-        if (error.message.includes("fetch") || error.message.includes("network")) {
+      if (_error instanceof Error) {
+        if (_error.message.includes("fetch") || _error.message.includes("network")) {
           toast.error("Network error. Please check your connection and try again.");
-        } else if (error.message.includes("timeout")) {
+        } else if (_error.message.includes("timeout")) {
           toast.error("Request timed out. Please try again.");
         } else {
           toast.error("An unexpected error occurred. Please try again.");

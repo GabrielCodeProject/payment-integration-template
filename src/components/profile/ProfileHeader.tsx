@@ -34,8 +34,8 @@ export function ProfileHeader() {
         } else {
           toast.error(result?.data?.error || 'Failed to load profile');
         }
-      } catch (error) {
-        console.error('Profile load error:', error);
+      } catch (_error) {
+        // console.error('Profile load error:', error);
         toast.error('Failed to load profile information');
       } finally {
         setLoading(false);

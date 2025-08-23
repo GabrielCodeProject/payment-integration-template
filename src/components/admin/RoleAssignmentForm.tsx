@@ -24,6 +24,7 @@ import {
   validateRoleTransition,
   PERMISSION_GROUPS,
 } from "@/lib/permissions";
+import { createAPIHeaders } from "@/lib/utils";
 import {
   Shield,
   AlertTriangle,
@@ -92,9 +93,7 @@ export function RoleAssignmentForm({
 
       const response = await fetch(`/api/admin/users/${user.id}`, {
         method: "PUT",
-        headers: {
-          "Content-Type": "application/json",
-        },
+        headers: createAPIHeaders(),
         body: JSON.stringify({
           role: selectedRole,
         }),
@@ -117,7 +116,7 @@ export function RoleAssignmentForm({
         onRoleUpdated();
       }
     } catch (err) {
-      console.error("Error updating role:", err);
+      // console.error("Error updating role:", err);
       setError(err instanceof Error ? err.message : "Failed to update role");
     } finally {
       setIsLoading(false);

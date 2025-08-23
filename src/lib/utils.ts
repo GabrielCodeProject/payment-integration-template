@@ -31,9 +31,9 @@ export function getCSRFToken(): string | null {
     }
     
     return null;
-  } catch (error) {
+  } catch (_error) {
     // eslint-disable-next-line no-console
-    console.warn('Error reading CSRF token:', error);
+    // console.warn('Error reading CSRF token:', error);
     return null;
   }
 }

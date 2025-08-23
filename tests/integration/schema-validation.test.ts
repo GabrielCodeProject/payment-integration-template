@@ -81,7 +81,7 @@ describe('Database Schema Validation Integration Tests', () => {
       expect(indexNames).toContain('subscriptions_stripeSubscriptionId_key');
       expect(indexNames).toContain('subscriptions_userId_status_idx');
       
-      console.log(`✅ Validated ${indexes.length} database indexes`);
+      // console.log(`✅ Validated ${indexes.length} database indexes`);
     });
     
     it('should validate foreign key constraints', async () => {
@@ -117,7 +117,7 @@ describe('Database Schema Validation Integration Tests', () => {
       expect(fkNames).toContain('subscriptions.productId -> products.id');
       expect(fkNames).toContain('payment_methods.userId -> users.id');
       
-      console.log(`✅ Validated ${foreignKeys.length} foreign key constraints`);
+      // console.log(`✅ Validated ${foreignKeys.length} foreign key constraints`);
     });
     
     it('should validate column constraints and data types', async () => {
@@ -151,7 +151,7 @@ describe('Database Schema Validation Integration Tests', () => {
       expect(orderTotalColumn?.data_type).toBe('numeric');
       expect(orderTotalColumn?.is_nullable).toBe('NO');
       
-      console.log(`✅ Validated ${columns.length} column definitions`);
+      // console.log(`✅ Validated ${columns.length} column definitions`);
     });
   });
   
@@ -177,7 +177,7 @@ describe('Database Schema Validation Integration Tests', () => {
         expect(count).toBeGreaterThanOrEqual(0);
       }
       
-      console.log(`✅ Validated ${modelTests.length} Prisma models`);
+      // console.log(`✅ Validated ${modelTests.length} Prisma models`);
     });
     
     it('should validate all enum values are correctly mapped', async () => {
@@ -205,7 +205,7 @@ describe('Database Schema Validation Integration Tests', () => {
       const discountCode = await testDataGenerator.createTestDiscountCode({ type: 'PERCENTAGE' });
       expect(discountCode.type).toBe('PERCENTAGE');
       
-      console.log('✅ Validated all enum mappings');
+      // console.log('✅ Validated all enum mappings');
     });
   });
   
@@ -228,7 +228,7 @@ describe('Database Schema Validation Integration Tests', () => {
       expect(order.total).toBeGreaterThan(0);
       expect(order.orderNumber).toMatch(/^ORD-/);
       
-      console.log('✅ Validated data format consistency');
+      // console.log('✅ Validated data format consistency');
     });
   });
   
@@ -325,7 +325,7 @@ describe('Database Schema Validation Integration Tests', () => {
         expect(lastMigration.finished_at).not.toBeNull();
         expect(lastMigration.rolled_back_at).toBeNull();
         
-        console.log(`✅ Latest migration: ${lastMigration.migration_name}`);
+        // console.log(`✅ Latest migration: ${lastMigration.migration_name}`);
       }
     });
     
@@ -344,7 +344,7 @@ describe('Database Schema Validation Integration Tests', () => {
       const auditTriggers = triggers.filter(t => t.trigger_name.includes('audit'));
       
       if (auditTriggers.length > 0) {
-        console.log(`✅ Found ${auditTriggers.length} audit triggers`);
+        // console.log(`✅ Found ${auditTriggers.length} audit triggers`);
       }
     });
     
@@ -353,7 +353,7 @@ describe('Database Schema Validation Integration Tests', () => {
       const versionString = version[0].version;
       
       expect(versionString).toContain('PostgreSQL');
-      console.log(`✅ Database version: ${versionString.split(',')[0]}`);
+      // console.log(`✅ Database version: ${versionString.split(',')[0]}`);
     });
   });
 });

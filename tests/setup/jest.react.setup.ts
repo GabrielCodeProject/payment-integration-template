@@ -154,11 +154,11 @@ declare global {
 }
 
 // Silence console errors/warnings in tests unless explicitly needed
-const originalError = console.error;
-const originalWarn = console.warn;
+const originalError = // console.error;
+const originalWarn = // console.warn;
 
 beforeAll(() => {
-  console.error = (...args: any[]) => {
+  // console.error = (...args: any[]) => {
     if (
       typeof args[0] === 'string' &&
       (args[0].includes('Warning:') ||
@@ -170,7 +170,7 @@ beforeAll(() => {
     originalError.call(console, ...args);
   };
 
-  console.warn = (...args: any[]) => {
+  // console.warn = (...args: any[]) => {
     if (
       typeof args[0] === 'string' &&
       (args[0].includes('Warning:') || args[0].includes('React does not recognize'))
@@ -182,8 +182,8 @@ beforeAll(() => {
 });
 
 afterAll(() => {
-  console.error = originalError;
-  console.warn = originalWarn;
+  // console.error = originalError;
+  // console.warn = originalWarn;
 });
 
 // Clean up after each test

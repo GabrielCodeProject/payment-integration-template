@@ -154,15 +154,15 @@ export async function POST(request: NextRequest) {
     let validatedOperation: BulkOperation;
     try {
       validatedOperation = bulkOperationSchema.parse(requestData);
-    } catch (error) {
-      if (error instanceof z.ZodError) {
+    } catch (_error) {
+      if (_error instanceof z.ZodError) {
         return createApiErrorResponse(
           400,
           "Invalid bulk operation data",
-          error.issues
+          _error.issues
         );
       }
-      throw error;
+      throw _error;
     }
 
     // Get audit context for logging
@@ -255,18 +255,18 @@ export async function POST(request: NextRequest) {
       },
       { status: 200 }
     );
-  } catch (error) {
-    console.error("Error performing bulk operation:", error);
+  } catch (_error) {
+    // console.error("Error performing bulk operation:", error);
 
     // Handle specific business logic errors
-    if (error instanceof Error) {
-      if (error.message.includes("not found")) {
-        return createApiErrorResponse(404, error.message);
+    if (_error instanceof Error) {
+      if (_error.message.includes("not found")) {
+        return createApiErrorResponse(404, _error.message);
       }
-      if (error.message.includes("validation")) {
-        return createApiErrorResponse(400, error.message);
+      if (_error.message.includes("validation")) {
+        return createApiErrorResponse(400, _error.message);
       }
-      if (error.message.includes("transaction")) {
+      if (_error.message.includes("transaction")) {
         return createApiErrorResponse(
           500,
           "Operation failed - data consistency maintained"

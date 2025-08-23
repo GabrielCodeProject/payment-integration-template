@@ -40,7 +40,8 @@ const getProductsQuerySchema = z.object({
   inStock: z.string().optional().transform(val => val === undefined ? undefined : val === 'true'),
   priceMin: z.coerce.number().min(0).optional(),
   priceMax: z.coerce.number().min(0).optional(),
-  tags: z.string().optional().transform(val => val ? val.split(',').filter(Boolean) : undefined),
+  categoryIds: z.string().optional().transform(val => val ? val.split(',').filter(Boolean) : undefined),
+  tagIds: z.string().optional().transform(val => val ? val.split(',').filter(Boolean) : undefined),
   createdAfter: z.string().optional().transform(val => val ? new Date(val) : undefined),
   createdBefore: z.string().optional().transform(val => val ? new Date(val) : undefined),
   
@@ -67,7 +68,8 @@ type GetProductsQuery = z.infer<typeof getProductsQuerySchema>;
  * - isDigital: Filter by digital products
  * - inStock: Filter by stock availability
  * - priceMin/priceMax: Price range filtering
- * - tags: Comma-separated list of tags
+ * - categoryIds: Comma-separated list of category IDs
+ * - tagIds: Comma-separated list of tag IDs
  * - sort: Sort field (name, price, createdAt, etc.)
  * - sortDirection: Sort direction (asc, desc)
  * - search: Full-text search query
@@ -96,11 +98,11 @@ export async function GET(request: NextRequest) {
     let validatedQuery: GetProductsQuery;
     try {
       validatedQuery = getProductsQuerySchema.parse(queryParams);
-    } catch (error) {
-      if (error instanceof z.ZodError) {
-        return createApiErrorResponse(400, 'Invalid query parameters', error.issues);
+    } catch (_error) {
+      if (_error instanceof z.ZodError) {
+        return createApiErrorResponse(400, 'Invalid query parameters', _error.issues);
       }
-      throw error;
+      throw _error;
     }
 
     // Build filter object
@@ -112,7 +114,8 @@ export async function GET(request: NextRequest) {
       inStock: validatedQuery.inStock,
       priceMin: validatedQuery.priceMin,
       priceMax: validatedQuery.priceMax,
-      tags: validatedQuery.tags,
+      categoryIds: validatedQuery.categoryIds,
+      tagIds: validatedQuery.tagIds,
       createdAfter: validatedQuery.createdAfter,
       createdBefore: validatedQuery.createdBefore,
     });
@@ -138,7 +141,18 @@ export async function GET(request: NextRequest) {
       slug: product.slug,
       metaTitle: product.metaTitle,
       metaDescription: product.metaDescription,
-      tags: product.tags,
+      // Transform categories and tags
+      categories: product.categories?.map(pc => ({
+        id: pc.category.id,
+        name: pc.category.name,
+        slug: pc.category.slug,
+      })) || [],
+      tags: product.tags?.map(pt => ({
+        id: pt.tag.id,
+        name: pt.tag.name,
+        slug: pt.tag.slug,
+        color: pt.tag.color,
+      })) || [],
       images: product.images,
       thumbnail: product.thumbnail,
       type: product.type,
@@ -181,8 +195,8 @@ export async function GET(request: NextRequest) {
       headers: cacheHeaders,
     });
 
-  } catch (error) {
-    console.error('Error fetching products:', error);
+  } catch (_error) {
+    // console.error('Error fetching products:', error);
     return createApiErrorResponse(500, 'Failed to fetch products');
   }
 }
@@ -227,11 +241,11 @@ export async function POST(request: NextRequest) {
     let validatedData;
     try {
       validatedData = createProductSchema.parse(requestData);
-    } catch (error) {
-      if (error instanceof z.ZodError) {
-        return createApiErrorResponse(400, 'Invalid product data', error.issues);
+    } catch (_error) {
+      if (_error instanceof z.ZodError) {
+        return createApiErrorResponse(400, 'Invalid product data', _error.issues);
       }
-      throw error;
+      throw _error;
     }
 
     // Create the product
@@ -262,16 +276,16 @@ export async function POST(request: NextRequest) {
       message: 'Product created successfully',
     }, { status: 201 });
 
-  } catch (error) {
-    console.error('Error creating product:', error);
+  } catch (_error) {
+    // console.error('Error creating product:', error);
     
     // Handle specific business logic errors
-    if (error instanceof Error) {
-      if (error.message.includes('already exists')) {
-        return createApiErrorResponse(409, error.message);
+    if (_error instanceof Error) {
+      if (_error.message.includes('already exists')) {
+        return createApiErrorResponse(409, _error.message);
       }
-      if (error.message.includes('validation')) {
-        return createApiErrorResponse(400, error.message);
+      if (_error.message.includes('validation')) {
+        return createApiErrorResponse(400, _error.message);
       }
     }
 

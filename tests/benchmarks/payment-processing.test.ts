@@ -87,9 +87,9 @@ describe('Payment Processing Benchmarks', () => {
       expect(paymentLookup?.opsPerSecond).toBeGreaterThan(100);        // At least 100 ops/sec
       expect(paymentCompletion?.opsPerSecond).toBeGreaterThan(50);     // At least 50 ops/sec
       
-      console.log('💳 Payment Processing Benchmark Results:');
+      // console.log('💳 Payment Processing Benchmark Results:');
       benchmarkResults.forEach(result => {
-        console.log(`   ${result.name}: ${result.opsPerSecond.toFixed(2)} ops/sec`);
+        // console.log(`   ${result.name}: ${result.opsPerSecond.toFixed(2)} ops/sec`);
       });
     });
     
@@ -421,23 +421,23 @@ describe('Payment Processing Benchmarks', () => {
     it('should generate detailed payment processing performance report', async () => {
       const report = await performanceBenchmark.generatePerformanceReport();
       
-      console.log('📊 Payment Processing Performance Report:');
-      console.log('='.repeat(50));
-      console.log(`Total Queries Executed: ${report.summary.totalQueries}`);
-      console.log(`Average Execution Time: ${report.summary.averageExecutionTime.toFixed(2)}ms`);
-      console.log(`Fastest Query: ${report.summary.fastestQuery?.operation} (${report.summary.fastestQuery?.executionTime.toFixed(2)}ms)`);
-      console.log(`Slowest Query: ${report.summary.slowestQuery?.operation} (${report.summary.slowestQuery?.executionTime.toFixed(2)}ms)`);
-      console.log('');
-      console.log('Index Efficiency:');
-      console.log(`  Index Scans: ${report.indexEfficiency.indexScans}`);
-      console.log(`  Sequential Scans: ${report.indexEfficiency.seqScans}`);
-      console.log(`  Index Efficiency: ${report.indexEfficiency.efficiency.toFixed(2)}%`);
-      console.log('');
-      console.log('Connection Pool Status:');
-      console.log(`  Active Connections: ${report.connectionStats.activeConnections}`);
-      console.log(`  Total Connections: ${report.connectionStats.totalConnections}`);
-      console.log(`  Max Connections: ${report.connectionStats.maxConnections}`);
-      console.log(`  Utilization: ${report.connectionStats.utilization.toFixed(2)}%`);
+      // console.log('📊 Payment Processing Performance Report:');
+      // console.log('='.repeat(50));
+      // console.log(`Total Queries Executed: ${report.summary.totalQueries}`);
+      // console.log(`Average Execution Time: ${report.summary.averageExecutionTime.toFixed(2)}ms`);
+      // console.log(`Fastest Query: ${report.summary.fastestQuery?.operation} (${report.summary.fastestQuery?.executionTime.toFixed(2)}ms)`);
+      // console.log(`Slowest Query: ${report.summary.slowestQuery?.operation} (${report.summary.slowestQuery?.executionTime.toFixed(2)}ms)`);
+      // console.log('');
+      // console.log('Index Efficiency:');
+      // console.log(`  Index Scans: ${report.indexEfficiency.indexScans}`);
+      // console.log(`  Sequential Scans: ${report.indexEfficiency.seqScans}`);
+      // console.log(`  Index Efficiency: ${report.indexEfficiency.efficiency.toFixed(2)}%`);
+      // console.log('');
+      // console.log('Connection Pool Status:');
+      // console.log(`  Active Connections: ${report.connectionStats.activeConnections}`);
+      // console.log(`  Total Connections: ${report.connectionStats.totalConnections}`);
+      // console.log(`  Max Connections: ${report.connectionStats.maxConnections}`);
+      // console.log(`  Utilization: ${report.connectionStats.utilization.toFixed(2)}%`);
       
       // Performance assertions
       expect(report.summary.averageExecutionTime).toBeLessThan(500);

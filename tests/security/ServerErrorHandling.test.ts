@@ -49,7 +49,7 @@ describe('Server Error Handling in Authentication', () => {
       expect(errorData.error).toBe('Internal Server Error');
       expect(errorData.code).toBe('INTERNAL_ERROR');
       
-      console.log('✅ 500 Internal Server Error handling');
+      // console.log('✅ 500 Internal Server Error handling');
     });
     
     it('should handle 502 Bad Gateway errors', async () => {
@@ -72,7 +72,7 @@ describe('Server Error Handling in Authentication', () => {
       expect(response.status).toBe(502);
       expect(response.statusText).toBe('Bad Gateway');
       
-      console.log('✅ 502 Bad Gateway error handling');
+      // console.log('✅ 502 Bad Gateway error handling');
     });
     
     it('should handle 503 Service Unavailable during maintenance', async () => {
@@ -101,7 +101,7 @@ describe('Server Error Handling in Authentication', () => {
       const errorData = await response.json();
       expect(errorData.retryAfter).toBe(300);
       
-      console.log('✅ 503 Service Unavailable with retry-after');
+      // console.log('✅ 503 Service Unavailable with retry-after');
     });
     
     it('should handle 504 Gateway Timeout errors', async () => {
@@ -127,7 +127,7 @@ describe('Server Error Handling in Authentication', () => {
       expect(errorData.error).toBe('Gateway Timeout');
       expect(errorData.timestamp).toBeDefined();
       
-      console.log('✅ 504 Gateway Timeout error handling');
+      // console.log('✅ 504 Gateway Timeout error handling');
     });
   });
   
@@ -169,7 +169,7 @@ describe('Server Error Handling in Authentication', () => {
       expect(errorData.retryAfter).toBe(60);
       expect(errorData.remaining).toBe(0);
       
-      console.log('✅ Rate limiting with retry headers');
+      // console.log('✅ Rate limiting with retry headers');
     });
     
     it('should handle sliding window rate limiting', async () => {
@@ -218,7 +218,7 @@ describe('Server Error Handling in Authentication', () => {
       const rateLimitedResponse = await fetch('/api/auth/refresh', { method: 'POST' });
       expect(rateLimitedResponse.status).toBe(429);
       
-      console.log('✅ Sliding window rate limiting');
+      // console.log('✅ Sliding window rate limiting');
     });
   });
   
@@ -246,7 +246,7 @@ describe('Server Error Handling in Authentication', () => {
         expect((error as Error).message).toMatch(/JSON|parse|Unexpected/i);
       }
       
-      console.log('✅ Invalid JSON response handling');
+      // console.log('✅ Invalid JSON response handling');
     });
     
     it('should handle missing required response fields', async () => {
@@ -275,7 +275,7 @@ describe('Server Error Handling in Authentication', () => {
       expect(data.error).toBeUndefined();
       expect(data.timestamp).toBeDefined();
       
-      console.log('✅ Missing required response fields handling');
+      // console.log('✅ Missing required response fields handling');
     });
     
     it('should handle unexpected response content type', async () => {
@@ -300,7 +300,7 @@ describe('Server Error Handling in Authentication', () => {
       const text = await response.text();
       expect(text).toContain('<html>');
       
-      console.log('✅ Unexpected content type handling');
+      // console.log('✅ Unexpected content type handling');
     });
     
     it('should handle empty response body', async () => {
@@ -327,7 +327,7 @@ describe('Server Error Handling in Authentication', () => {
         expect(text).toBe('');
       }
       
-      console.log('✅ Empty response body handling');
+      // console.log('✅ Empty response body handling');
     });
   });
   
@@ -365,7 +365,7 @@ describe('Server Error Handling in Authentication', () => {
       const errorData = await response.json();
       expect(errorData.supportedVersions).toEqual(['v2', 'v3']);
       
-      console.log('✅ Deprecated API version handling');
+      // console.log('✅ Deprecated API version handling');
     });
     
     it('should handle unsupported API version', async () => {
@@ -396,7 +396,7 @@ describe('Server Error Handling in Authentication', () => {
       expect(errorData.error).toBe('Unsupported API Version');
       expect(errorData.supportedVersions).toContain('v1');
       
-      console.log('✅ Unsupported API version handling');
+      // console.log('✅ Unsupported API version handling');
     });
   });
   
@@ -430,7 +430,7 @@ describe('Server Error Handling in Authentication', () => {
       expect(errorData.code).toBe('DB_POOL_EXHAUSTED');
       expect(errorData.retryAfter).toBe(30);
       
-      console.log('✅ Database connection pool exhaustion');
+      // console.log('✅ Database connection pool exhaustion');
     });
     
     it('should handle database timeout errors', async () => {
@@ -460,7 +460,7 @@ describe('Server Error Handling in Authentication', () => {
       expect(errorData.code).toBe('DB_TIMEOUT');
       expect(errorData.timeout).toBe(30000);
       
-      console.log('✅ Database timeout error handling');
+      // console.log('✅ Database timeout error handling');
     });
   });
   
@@ -487,7 +487,7 @@ describe('Server Error Handling in Authentication', () => {
       expect(errorData.code).toBe('CACHE_UNAVAILABLE');
       expect(errorData.fallback).toBe('database');
       
-      console.log('✅ Cache unavailability handling');
+      // console.log('✅ Cache unavailability handling');
     });
     
     it('should handle session store corruption', async () => {
@@ -515,7 +515,7 @@ describe('Server Error Handling in Authentication', () => {
       expect(errorData.code).toBe('SESSION_CORRUPTED');
       expect(errorData.action).toBe('reauthentication_required');
       
-      console.log('✅ Session store corruption handling');
+      // console.log('✅ Session store corruption handling');
     });
   });
   
@@ -559,7 +559,7 @@ describe('Server Error Handling in Authentication', () => {
       const errorData = await circuitResponse.json();
       expect(errorData.error).toBe('Circuit Breaker Open');
       
-      console.log('✅ Circuit breaker pattern implementation');
+      // console.log('✅ Circuit breaker pattern implementation');
     });
     
     it('should handle graceful degradation during partial outages', async () => {
@@ -598,7 +598,7 @@ describe('Server Error Handling in Authentication', () => {
       const registerResponse = await fetch('/api/auth/register', { method: 'POST' });
       expect(registerResponse.status).toBe(503);
       
-      console.log('✅ Graceful degradation during partial outages');
+      // console.log('✅ Graceful degradation during partial outages');
     });
   });
   

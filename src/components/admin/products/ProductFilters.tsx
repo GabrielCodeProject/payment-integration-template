@@ -15,6 +15,8 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
+import { Checkbox } from "@/components/ui/checkbox";
+import { Skeleton } from "@/components/ui/skeleton";
 import { Calendar } from "@/components/ui/calendar";
 import {
   Popover,
@@ -38,7 +40,50 @@ export function ProductFilters({
     min: filters.priceMin?.toString() || "",
     max: filters.priceMax?.toString() || "",
   });
-  const [tagsInput, setTagsInput] = useState(filters.tags?.join(", ") || "");
+  const [selectedCategoryIds, setSelectedCategoryIds] = useState<string[]>(filters.categoryIds || []);
+  const [selectedTagIds, setSelectedTagIds] = useState<string[]>(filters.tagIds || []);
+  const [availableCategories, setAvailableCategories] = useState<any[]>([]);
+  const [availableTags, setAvailableTags] = useState<any[]>([]);
+  const [loadingCategories, setLoadingCategories] = useState(true);
+  const [loadingTags, setLoadingTags] = useState(true);
+
+  // Fetch available categories
+  useEffect(() => {
+    const fetchCategories = async () => {
+      try {
+        const response = await fetch('/api/categories?limit=100');
+        if (response.ok) {
+          const data = await response.json();
+          setAvailableCategories(data.categories);
+        }
+      } catch (_error) {
+        // console.error('Error fetching categories:', error);
+      } finally {
+        setLoadingCategories(false);
+      }
+    };
+
+    fetchCategories();
+  }, []);
+
+  // Fetch available tags
+  useEffect(() => {
+    const fetchTags = async () => {
+      try {
+        const response = await fetch('/api/tags?limit=100');
+        if (response.ok) {
+          const data = await response.json();
+          setAvailableTags(data.tags);
+        }
+      } catch (_error) {
+        // console.error('Error fetching tags:', error);
+      } finally {
+        setLoadingTags(false);
+      }
+    };
+
+    fetchTags();
+  }, []);
 
   // Update local state when filters prop changes
   useEffect(() => {
@@ -47,7 +92,8 @@ export function ProductFilters({
       min: filters.priceMin?.toString() || "",
       max: filters.priceMax?.toString() || "",
     });
-    setTagsInput(filters.tags?.join(", ") || "");
+    setSelectedCategoryIds(filters.categoryIds || []);
+    setSelectedTagIds(filters.tagIds || []);
   }, [filters]);
 
   // Apply filters
@@ -67,14 +113,18 @@ export function ProductFilters({
       delete newFilters.priceMax;
     }
 
-    // Handle tags
-    if (tagsInput.trim()) {
-      newFilters.tags = tagsInput
-        .split(",")
-        .map((tag) => tag.trim())
-        .filter(Boolean);
+    // Handle categories
+    if (selectedCategoryIds.length > 0) {
+      newFilters.categoryIds = selectedCategoryIds;
     } else {
-      delete newFilters.tags;
+      delete newFilters.categoryIds;
+    }
+
+    // Handle tags
+    if (selectedTagIds.length > 0) {
+      newFilters.tagIds = selectedTagIds;
+    } else {
+      delete newFilters.tagIds;
     }
 
     onFiltersChange(newFilters);
@@ -84,7 +134,8 @@ export function ProductFilters({
   const clearFilters = () => {
     setLocalFilters({});
     setPriceRange({ min: "", max: "" });
-    setTagsInput("");
+    setSelectedCategoryIds([]);
+    setSelectedTagIds([]);
     onFiltersChange({});
   };
 
@@ -98,8 +149,10 @@ export function ProductFilters({
       setPriceRange((prev) => ({ ...prev, min: "" }));
     } else if (key === "priceMax") {
       setPriceRange((prev) => ({ ...prev, max: "" }));
-    } else if (key === "tags") {
-      setTagsInput("");
+    } else if (key === "categoryIds") {
+      setSelectedCategoryIds([]);
+    } else if (key === "tagIds") {
+      setSelectedTagIds([]);
     }
 
     onFiltersChange(newFilters);
@@ -289,15 +342,102 @@ export function ProductFilters({
           />
         </div>
 
+        {/* Categories */}
+        <div className="space-y-2">
+          <Label>Categories</Label>
+          {loadingCategories ? (
+            <Skeleton className="h-10 w-full" />
+          ) : (
+            <Popover>
+              <PopoverTrigger asChild>
+                <Button variant="outline" className="w-full justify-start">
+                  {selectedCategoryIds.length === 0 
+                    ? "Select categories..." 
+                    : `${selectedCategoryIds.length} selected`
+                  }
+                </Button>
+              </PopoverTrigger>
+              <PopoverContent className="w-80 p-3">
+                <div className="space-y-2">
+                  <Label className="text-sm font-medium">Select Categories</Label>
+                  <div className="max-h-48 overflow-y-auto space-y-2">
+                    {availableCategories.map((category) => (
+                      <div key={category.id} className="flex items-center space-x-2">
+                        <Checkbox
+                          id={`filter-category-${category.id}`}
+                          checked={selectedCategoryIds.includes(category.id)}
+                          onCheckedChange={(checked) => {
+                            if (checked) {
+                              setSelectedCategoryIds([...selectedCategoryIds, category.id]);
+                            } else {
+                              setSelectedCategoryIds(selectedCategoryIds.filter(id => id !== category.id));
+                            }
+                          }}
+                        />
+                        <Label 
+                          htmlFor={`filter-category-${category.id}`}
+                          className="text-sm cursor-pointer"
+                        >
+                          {category.name}
+                        </Label>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              </PopoverContent>
+            </Popover>
+          )}
+        </div>
+
         {/* Tags */}
         <div className="space-y-2">
-          <Label htmlFor="filter-tags">Tags</Label>
-          <Input
-            id="filter-tags"
-            placeholder="tag1, tag2, tag3"
-            value={tagsInput}
-            onChange={(e) => setTagsInput(e.target.value)}
-          />
+          <Label>Tags</Label>
+          {loadingTags ? (
+            <Skeleton className="h-10 w-full" />
+          ) : (
+            <Popover>
+              <PopoverTrigger asChild>
+                <Button variant="outline" className="w-full justify-start">
+                  {selectedTagIds.length === 0 
+                    ? "Select tags..." 
+                    : `${selectedTagIds.length} selected`
+                  }
+                </Button>
+              </PopoverTrigger>
+              <PopoverContent className="w-80 p-3">
+                <div className="space-y-2">
+                  <Label className="text-sm font-medium">Select Tags</Label>
+                  <div className="max-h-48 overflow-y-auto space-y-2">
+                    {availableTags.map((tag) => (
+                      <div key={tag.id} className="flex items-center space-x-2">
+                        <Checkbox
+                          id={`filter-tag-${tag.id}`}
+                          checked={selectedTagIds.includes(tag.id)}
+                          onCheckedChange={(checked) => {
+                            if (checked) {
+                              setSelectedTagIds([...selectedTagIds, tag.id]);
+                            } else {
+                              setSelectedTagIds(selectedTagIds.filter(id => id !== tag.id));
+                            }
+                          }}
+                        />
+                        <div
+                          className="w-3 h-3 rounded-full"
+                          style={{ backgroundColor: tag.color || '#6366f1' }}
+                        />
+                        <Label 
+                          htmlFor={`filter-tag-${tag.id}`}
+                          className="text-sm cursor-pointer"
+                        >
+                          {tag.name}
+                        </Label>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              </PopoverContent>
+            </Popover>
+          )}
         </div>
 
         {/* Created After */}
@@ -454,14 +594,27 @@ export function ProductFilters({
                 </Button>
               </Badge>
             )}
-            {filters.tags && filters.tags.length > 0 && (
+            {filters.categoryIds && filters.categoryIds.length > 0 && (
               <Badge variant="secondary" className="gap-1">
-                Tags: {filters.tags.join(", ")}
+                Categories: {filters.categoryIds.length} selected
                 <Button
                   variant="ghost"
                   size="sm"
                   className="ml-1 h-auto w-auto p-0"
-                  onClick={() => clearFilter("tags")}
+                  onClick={() => clearFilter("categoryIds")}
+                >
+                  <X className="h-3 w-3" />
+                </Button>
+              </Badge>
+            )}
+            {filters.tagIds && filters.tagIds.length > 0 && (
+              <Badge variant="secondary" className="gap-1">
+                Tags: {filters.tagIds.length} selected
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="ml-1 h-auto w-auto p-0"
+                  onClick={() => clearFilter("tagIds")}
                 >
                   <X className="h-3 w-3" />
                 </Button>

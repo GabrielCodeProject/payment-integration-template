@@ -45,8 +45,8 @@ export function ProfileImageUpload() {
         if (result?.data?.success && result.data.data) {
           setProfile(result.data.data);
         }
-      } catch (error) {
-        console.error('Failed to load profile:', error);
+      } catch (_error) {
+        // console.error('Failed to load profile:', error);
       } finally {
         setLoading(false);
       }
@@ -143,9 +143,9 @@ export function ProfileImageUpload() {
       } else {
         throw new Error(result?.data?.error || 'Upload failed');
       }
-    } catch (error) {
-      console.error('Upload error:', error);
-      toast.error(error instanceof Error ? error.message : 'Failed to upload image');
+    } catch (_error) {
+      // console.error('Upload error:', error);
+      toast.error(error instanceof Error ? _error.message : 'Failed to upload image');
     } finally {
       setUploading(false);
       setUploadProgress(0);
@@ -172,9 +172,9 @@ export function ProfileImageUpload() {
       } else {
         throw new Error(result?.data?.error || 'Delete failed');
       }
-    } catch (error) {
-      console.error('Delete error:', error);
-      toast.error(error instanceof Error ? error.message : 'Failed to delete image');
+    } catch (_error) {
+      // console.error('Delete error:', error);
+      toast.error(error instanceof Error ? _error.message : 'Failed to delete image');
     } finally {
       setLoading(false);
     }

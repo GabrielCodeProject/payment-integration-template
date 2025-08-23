@@ -55,8 +55,8 @@ export const getProfile = authActionClient
         data: result.data,
         message: 'Profile fetched successfully',
       };
-    } catch (error) {
-      console.error('Get profile action error:', error);
+    } catch (_error) {
+      // console.error('Get profile action error:', error);
       return {
         success: false,
         error: 'Failed to fetch profile',
@@ -109,8 +109,8 @@ export const updateProfile = authActionClient
         data: result.data,
         message: 'Profile updated successfully',
       };
-    } catch (error) {
-      console.error('Update profile action error:', error);
+    } catch (_error) {
+      // console.error('Update profile action error:', error);
       return {
         success: false,
         error: 'Failed to update profile',
@@ -163,8 +163,8 @@ export const uploadProfileImage = authActionClient
         data: { imageUrl: result.imageUrl! },
         message: 'Profile image uploaded successfully',
       };
-    } catch (error) {
-      console.error('Upload profile image action error:', error);
+    } catch (_error) {
+      // console.error('Upload profile image action error:', error);
       return {
         success: false,
         error: 'Failed to upload profile image',
@@ -213,8 +213,8 @@ export const deleteProfileImage = authActionClient
         data: {} as Record<string, never>,
         message: 'Profile image deleted successfully',
       };
-    } catch (error) {
-      console.error('Delete profile image action error:', error);
+    } catch (_error) {
+      // console.error('Delete profile image action error:', error);
       return {
         success: false,
         error: 'Failed to delete profile image',
@@ -237,11 +237,11 @@ export const validateProfileData = authActionClient
         data: validatedData,
         message: 'Profile data is valid',
       };
-    } catch (error) {
-      console.error('Profile validation error:', error);
+    } catch (_error) {
+      // console.error('Profile validation error:', error);
       
-      if (error instanceof z.ZodError) {
-        const firstError = error.issues[0];
+      if (_error instanceof z.ZodError) {
+        const firstError = _error.issues[0];
         return {
           success: false,
           error: firstError?.message || 'Invalid profile data',
@@ -274,8 +274,8 @@ export const checkProfileOperationLimit = authActionClient
         },
         message: result.allowed ? 'Operation allowed' : 'Rate limit exceeded',
       };
-    } catch (error) {
-      console.error('Rate limit check error:', error);
+    } catch (_error) {
+      // console.error('Rate limit check error:', error);
       return {
         success: false,
         error: 'Failed to check operation limits',

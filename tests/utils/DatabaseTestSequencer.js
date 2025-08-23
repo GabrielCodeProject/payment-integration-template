@@ -30,7 +30,7 @@ class DatabaseTestSequencer extends Sequencer {
       return testA.path.localeCompare(testB.path);
     });
     
-    console.log(`🔄 Test execution order optimized for ${sortedTests.length} tests`);
+    // console.log(`🔄 Test execution order optimized for ${sortedTests.length} tests`);
     return sortedTests;
   }
   

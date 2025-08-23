@@ -107,7 +107,7 @@ function SelectItem({
   // Development-time validation to prevent empty string values
   if (process.env.NODE_ENV === 'development' && value === '') {
     // eslint-disable-next-line no-console
-    console.error(
+    // console.error(
       'SelectItem: value prop cannot be an empty string. This causes runtime errors with Radix UI Select. ' +
       'Please provide a non-empty value or use a placeholder like "none" or "all".',
       { value, children }

@@ -37,9 +37,9 @@ export default function EditProductPage() {
 
       const data = await response.json();
       setProduct(data.product);
-    } catch (error) {
-      console.error('Error fetching product:', error);
-      const errorMessage = error instanceof Error ? error.message : 'Failed to fetch product';
+    } catch (_error) {
+      // console.error('Error fetching product:', error);
+      const errorMessage = error instanceof Error ? _error.message : 'Failed to fetch product';
       setError(errorMessage);
       toast.error(errorMessage);
     } finally {

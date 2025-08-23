@@ -122,6 +122,7 @@
     "@eslint/eslintrc": "^3",
     "@faker-js/faker": "^9.9.0",
     "@jest/types": "^30.0.5",
+    "@playwright/test": "^1.55.0",
     "@tailwindcss/postcss": "^4",
     "@testing-library/jest-dom": "^6.7.0",
     "@testing-library/react": "^16.3.0",

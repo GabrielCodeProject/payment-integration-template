@@ -31,7 +31,7 @@ describe('Authentication and Authorization Security Tests', () => {
       expect(userKeys).not.toContain('plainPassword');
       expect(userKeys).not.toContain('rawPassword');
       
-      console.log('✅ Password security: No plaintext storage');
+      // console.log('✅ Password security: No plaintext storage');
     });
     
     it('should support password hash validation', async () => {
@@ -42,7 +42,7 @@ describe('Authentication and Authorization Security Tests', () => {
       // Hash should look like a proper bcrypt hash
       expect(user).toMatch(/^\$2b\$\d+\$/);
       
-      console.log('✅ Password hash format validation');
+      // console.log('✅ Password hash format validation');
     });
     
     it('should handle null passwords for OAuth users', async () => {
@@ -53,7 +53,7 @@ describe('Authentication and Authorization Security Tests', () => {
       expect(oauthUser).toBeNull();
       expect(oauthUser.email).toBe('oauth-user@example.com');
       
-      console.log('✅ OAuth user password handling');
+      // console.log('✅ OAuth user password handling');
     });
   });
   
@@ -74,7 +74,7 @@ describe('Authentication and Authorization Security Tests', () => {
       expect(session.expires).toBeInstanceOf(Date);
       expect(session.expires.getTime()).toBeGreaterThan(Date.now());
       
-      console.log('✅ Session token security');
+      // console.log('✅ Session token security');
     });
     
     it('should enforce session expiration', async () => {
@@ -108,7 +108,7 @@ describe('Authentication and Authorization Security Tests', () => {
       expect(validSessions).toHaveLength(1);
       expect(validSessions[0].sessionToken).toBe('valid_token_456');
       
-      console.log('✅ Session expiration enforcement');
+      // console.log('✅ Session expiration enforcement');
     });
     
     it('should handle session cleanup', async () => {
@@ -156,7 +156,7 @@ describe('Authentication and Authorization Security Tests', () => {
       expect(remainingSessions).toHaveLength(1);
       expect(remainingSessions[0].sessionToken).toBe('session_3');
       
-      console.log('✅ Session cleanup functionality');
+      // console.log('✅ Session cleanup functionality');
     });
   });
   
@@ -182,7 +182,7 @@ describe('Authentication and Authorization Security Tests', () => {
       expect(oauthAccount.providerAccountId).toBe('google_123456789');
       expect(oauthAccount.userId).toBe(user.id);
       
-      console.log('✅ OAuth account linking');
+      // console.log('✅ OAuth account linking');
     });
     
     it('should enforce OAuth account uniqueness', async () => {
@@ -211,7 +211,7 @@ describe('Authentication and Authorization Security Tests', () => {
         })
       ).rejects.toThrow();
       
-      console.log('✅ OAuth account uniqueness enforcement');
+      // console.log('✅ OAuth account uniqueness enforcement');
     });
     
     it('should handle token refresh security', async () => {
@@ -241,7 +241,7 @@ describe('Authentication and Authorization Security Tests', () => {
       expect(updatedAccount.access_token).toBe('new_access_token');
       expect(updatedAccount.expires_at).toBeGreaterThan(Math.floor(Date.now() / 1000));
       
-      console.log('✅ Token refresh security');
+      // console.log('✅ Token refresh security');
     });
   });
   
@@ -271,7 +271,7 @@ describe('Authentication and Authorization Security Tests', () => {
       expect(adminUsers).toHaveLength(1);
       expect(adminUsers[0].email).toBe('admin@test.com');
       
-      console.log('✅ Role-based access control assignment');
+      // console.log('✅ Role-based access control assignment');
     });
     
     it('should validate role-based data access', async () => {
@@ -301,7 +301,7 @@ describe('Authentication and Authorization Security Tests', () => {
       expect(customerData?.paymentMethods).toHaveLength(1);
       expect(customerData?.orders[0].id).toBe(customerOrder.id);
       
-      console.log('✅ Role-based data access validation');
+      // console.log('✅ Role-based data access validation');
     });
     
     it('should validate administrative privileges', async () => {
@@ -325,7 +325,7 @@ describe('Authentication and Authorization Security Tests', () => {
       expect(allOrders).toBeDefined();
       expect(auditLogs).toBeDefined();
       
-      console.log('✅ Administrative privileges validation');
+      // console.log('✅ Administrative privileges validation');
     });
   });
   
@@ -344,7 +344,7 @@ describe('Authentication and Authorization Security Tests', () => {
       
       expect(updatedUser.twoFactorEnabled).toBe(true);
       
-      console.log('✅ 2FA enablement support');
+      // console.log('✅ 2FA enablement support');
     });
     
     it('should track 2FA-enabled users', async () => {
@@ -369,7 +369,7 @@ describe('Authentication and Authorization Security Tests', () => {
       
       expect(users2FA).toHaveLength(2);
       
-      console.log('✅ 2FA user tracking');
+      // console.log('✅ 2FA user tracking');
     });
   });
   
@@ -393,7 +393,7 @@ describe('Authentication and Authorization Security Tests', () => {
       expect(activeUsers.some(u => u.id === activeUser.id)).toBe(true);
       expect(activeUsers.some(u => u.id === inactiveUser.id)).toBe(false);
       
-      console.log('✅ User activation status tracking');
+      // console.log('✅ User activation status tracking');
     });
     
     it('should track login timestamps', async () => {
@@ -419,7 +419,7 @@ describe('Authentication and Authorization Security Tests', () => {
       
       expect(recentLogins.some(u => u.id === user.id)).toBe(true);
       
-      console.log('✅ Login timestamp tracking');
+      // console.log('✅ Login timestamp tracking');
     });
     
     it('should handle account lockout simulation', async () => {
@@ -443,7 +443,7 @@ describe('Authentication and Authorization Security Tests', () => {
       
       expect(activeUsers.some(u => u.id === user.id)).toBe(false);
       
-      console.log('✅ Account lockout functionality');
+      // console.log('✅ Account lockout functionality');
     });
   });
   
@@ -493,7 +493,7 @@ describe('Authentication and Authorization Security Tests', () => {
       
       expect(authEvents).toHaveLength(2);
       
-      console.log('✅ Authentication event audit trails');
+      // console.log('✅ Authentication event audit trails');
     });
   });
 });

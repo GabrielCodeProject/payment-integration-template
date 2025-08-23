@@ -161,9 +161,9 @@ export class UserManagementService {
           hasPrev: page > 1,
         },
       };
-    } catch (error) {
+    } catch (_error) {
       // Log error for security monitoring
-      console.error("[USER_MANAGEMENT] Query error:", error);
+      // console.error("[USER_MANAGEMENT] Query error:", error);
       throw new Error("Failed to retrieve users");
     }
   }
@@ -215,8 +215,8 @@ export class UserManagementService {
       });
 
       return user;
-    } catch (error) {
-      console.error("[USER_MANAGEMENT] Get user error:", error);
+    } catch (_error) {
+      // console.error("[USER_MANAGEMENT] Get user error:", error);
       throw new Error("Failed to retrieve user");
     }
   }
@@ -258,7 +258,7 @@ export class UserManagementService {
 
       // Log high-risk transitions
       if (transition.securityRisk === "HIGH") {
-        console.warn("[SECURITY] High-risk role transition:", {
+        // console.warn("[SECURITY] High-risk role transition:", {
           userId,
           from: currentUser.role,
           to: updateData.role,
@@ -360,15 +360,15 @@ export class UserManagementService {
         return user;
       });
 
-      console.log("[USER_MANAGEMENT] User updated:", {
+      // console.log("[USER_MANAGEMENT] User updated:", {
         userId,
         changedFields,
         adminUserId: auditContext.adminUserId,
       });
 
       return updatedUser;
-    } catch (error) {
-      console.error("[USER_MANAGEMENT] Update error:", error);
+    } catch (_error) {
+      // console.error("[USER_MANAGEMENT] Update error:", error);
       throw new Error("Failed to update user");
     }
   }
@@ -442,14 +442,14 @@ export class UserManagementService {
         return user;
       });
 
-      console.log("[USER_MANAGEMENT] User deactivated:", {
+      // console.log("[USER_MANAGEMENT] User deactivated:", {
         userId,
         adminUserId: auditContext.adminUserId,
       });
 
       return updatedUser;
-    } catch (error) {
-      console.error("[USER_MANAGEMENT] Deactivation error:", error);
+    } catch (_error) {
+      // console.error("[USER_MANAGEMENT] Deactivation error:", error);
       throw new Error("Failed to deactivate user");
     }
   }
@@ -513,14 +513,14 @@ export class UserManagementService {
         return user;
       });
 
-      console.log("[USER_MANAGEMENT] User activated:", {
+      // console.log("[USER_MANAGEMENT] User activated:", {
         userId,
         adminUserId: auditContext.adminUserId,
       });
 
       return updatedUser;
-    } catch (error) {
-      console.error("[USER_MANAGEMENT] Activation error:", error);
+    } catch (_error) {
+      // console.error("[USER_MANAGEMENT] Activation error:", error);
       throw new Error("Failed to activate user");
     }
   }
@@ -617,8 +617,8 @@ export class UserManagementService {
         roleDistribution,
         recentActivity,
       };
-    } catch (error) {
-      console.error("[USER_MANAGEMENT] Statistics error:", error);
+    } catch (_error) {
+      // console.error("[USER_MANAGEMENT] Statistics error:", error);
       throw new Error("Failed to retrieve user statistics");
     }
   }
@@ -647,9 +647,9 @@ export class UserManagementService {
           },
         },
       });
-    } catch (error) {
+    } catch (_error) {
       // Don't throw on audit log failures, but log the error
-      console.error("[USER_MANAGEMENT] Audit log error:", error);
+      // console.error("[USER_MANAGEMENT] Audit log error:", error);
     }
   }
 }

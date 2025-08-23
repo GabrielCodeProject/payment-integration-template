@@ -42,7 +42,7 @@ describe('Database Migration Integrity Tests', () => {
         expect(migration.applied_steps_count).toBeGreaterThan(0);
       });
       
-      console.log(`✅ Validated ${migrations.length} applied migrations`);
+      // console.log(`✅ Validated ${migrations.length} applied migrations`);
     });
     
     it('should validate migration checksums', async () => {
@@ -57,7 +57,7 @@ describe('Database Migration Integrity Tests', () => {
         expect(migration.checksum).toMatch(/^[a-f0-9]+$/); // Valid hex checksum
       });
       
-      console.log(`✅ Validated checksums for ${migrations.length} migrations`);
+      // console.log(`✅ Validated checksums for ${migrations.length} migrations`);
     });
     
     it('should validate migration order and dependencies', async () => {
@@ -80,7 +80,7 @@ describe('Database Migration Integrity Tests', () => {
         }
       });
       
-      console.log('✅ Migration order validated');
+      // console.log('✅ Migration order validated');
     });
   });
   
@@ -117,7 +117,7 @@ describe('Database Migration Integrity Tests', () => {
       expect(userWithOrders?.orders).toHaveLength(1);
       expect(userWithOrders?.orders[0].id).toBe(order.id);
       
-      console.log('✅ Data integrity preserved during schema validation');
+      // console.log('✅ Data integrity preserved during schema validation');
     });
     
     it('should handle constraint additions without data loss', async () => {
@@ -147,7 +147,7 @@ describe('Database Migration Integrity Tests', () => {
         expect(users.find(u => u.id === order.userId)).toBeDefined();
       });
       
-      console.log('✅ Constraint compatibility validated');
+      // console.log('✅ Constraint compatibility validated');
     });
   });
   
@@ -189,7 +189,7 @@ describe('Database Migration Integrity Tests', () => {
         expect(indexNames).toContain(expectedIndex);
       });
       
-      console.log(`✅ Validated ${indexes.length} performance indexes`);
+      // console.log(`✅ Validated ${indexes.length} performance indexes`);
     });
     
     it('should validate index performance with test data', async () => {
@@ -226,7 +226,7 @@ describe('Database Migration Integrity Tests', () => {
       const totalTime = endTime - startTime;
       
       expect(totalTime).toBeLessThan(500); // Should complete within 500ms
-      console.log(`✅ Index performance test completed in ${totalTime.toFixed(2)}ms`);
+      // console.log(`✅ Index performance test completed in ${totalTime.toFixed(2)}ms`);
     });
   });
   
@@ -252,7 +252,7 @@ describe('Database Migration Integrity Tests', () => {
         expect(actualColumns).toContain(expectedCol);
       });
       
-      console.log(`✅ Validated audit log table with ${auditColumns.length} columns`);
+      // console.log(`✅ Validated audit log table with ${auditColumns.length} columns`);
     });
     
     it('should validate audit log functionality', async () => {
@@ -277,7 +277,7 @@ describe('Database Migration Integrity Tests', () => {
       expect(auditRecord.action).toBe('CREATE');
       expect(auditRecord.timestamp).toBeDefined();
       
-      console.log('✅ Audit log functionality validated');
+      // console.log('✅ Audit log functionality validated');
     });
   });
   
@@ -313,7 +313,7 @@ describe('Database Migration Integrity Tests', () => {
       
       expect(userWithRelations).toBeDefined();
       
-      console.log('✅ Rollback scenario simulation completed');
+      // console.log('✅ Rollback scenario simulation completed');
     });
   });
   
@@ -354,7 +354,7 @@ describe('Database Migration Integrity Tests', () => {
       
       expect(totalTime).toBeLessThan(2000); // Should complete within 2 seconds
       
-      console.log(`✅ Migration performance impact test: ${totalTime.toFixed(2)}ms`);
+      // console.log(`✅ Migration performance impact test: ${totalTime.toFixed(2)}ms`);
     });
   });
   

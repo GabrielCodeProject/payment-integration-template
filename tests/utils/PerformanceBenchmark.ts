@@ -68,7 +68,7 @@ export class PerformanceBenchmark {
       const plan = await this.prisma.$queryRaw`EXPLAIN (ANALYZE, BUFFERS, FORMAT JSON) ${sql}`;
       return plan;
     } catch (error) {
-      console.warn('Could not analyze query plan:', error);
+      // console.warn('Could not analyze query plan:', error);
       return null;
     }
   }
@@ -162,7 +162,7 @@ export class PerformanceBenchmark {
       suite
         .on('cycle', (event: any) => {
           const benchmark = event.target;
-          console.log(`📊 ${String(benchmark)}`);
+          // console.log(`📊 ${String(benchmark)}`);
           
           results.push({
             name: benchmark.name,
@@ -184,8 +184,8 @@ export class PerformanceBenchmark {
             result.slowest = slowest.some((b: any) => b.name === result.name);
           });
           
-          console.log(`🏆 Fastest is ${fastest.map((b: any) => b.name).join(', ')}`);
-          console.log(`🐌 Slowest is ${slowest.map((b: any) => b.name).join(', ')}`);
+          // console.log(`🏆 Fastest is ${fastest.map((b: any) => b.name).join(', ')}`);
+          // console.log(`🐌 Slowest is ${slowest.map((b: any) => b.name).join(', ')}`);
           
           resolve(results);
         })
@@ -252,7 +252,7 @@ export class PerformanceBenchmark {
   }
   
   async warmupDatabase(): Promise<void> {
-    console.log('🔥 Warming up database connections and cache...');
+    // console.log('🔥 Warming up database connections and cache...');
     
     // Perform some basic operations to warm up the connection pool
     await this.prisma.user.count();
@@ -269,6 +269,6 @@ export class PerformanceBenchmark {
       take: 1 
     });
     
-    console.log('✅ Database warmup complete');
+    // console.log('✅ Database warmup complete');
   }
 }

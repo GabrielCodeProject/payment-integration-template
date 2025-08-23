@@ -49,11 +49,11 @@ export async function GET(
     let validatedParams;
     try {
       validatedParams = paramsSchema.parse(resolvedParams);
-    } catch (error) {
-      if (error instanceof z.ZodError) {
+    } catch (_error) {
+      if (_error instanceof z.ZodError) {
         return createApiErrorResponse(400, 'Invalid product ID format');
       }
-      throw error;
+      throw _error;
     }
 
     // Apply rate limiting for public endpoints
@@ -160,8 +160,8 @@ export async function GET(
       headers: cacheHeaders,
     });
 
-  } catch (error) {
-    console.error('Error fetching product:', error);
+  } catch (_error) {
+    // console.error('Error fetching product:', error);
     return createApiErrorResponse(500, 'Failed to fetch product details');
   }
 }
@@ -194,11 +194,11 @@ export async function PUT(
     let validatedParams;
     try {
       validatedParams = paramsSchema.parse(resolvedParams);
-    } catch (error) {
-      if (error instanceof z.ZodError) {
+    } catch (_error) {
+      if (_error instanceof z.ZodError) {
         return createApiErrorResponse(400, 'Invalid product ID format');
       }
-      throw error;
+      throw _error;
     }
 
     // Apply rate limiting for admin operations
@@ -226,11 +226,11 @@ export async function PUT(
     let validatedData;
     try {
       validatedData = updateProductSchema.parse(updateData);
-    } catch (error) {
-      if (error instanceof z.ZodError) {
-        return createApiErrorResponse(400, 'Invalid product data', error.issues);
+    } catch (_error) {
+      if (_error instanceof z.ZodError) {
+        return createApiErrorResponse(400, 'Invalid product data', _error.issues);
       }
-      throw error;
+      throw _error;
     }
 
     // Get original product for audit comparison
@@ -278,19 +278,19 @@ export async function PUT(
       message: 'Product updated successfully',
     }, { status: 200 });
 
-  } catch (error) {
-    console.error('Error updating product:', error);
+  } catch (_error) {
+    // console.error('Error updating product:', error);
     
     // Handle specific business logic errors
-    if (error instanceof Error) {
-      if (error.message.includes('already exists')) {
-        return createApiErrorResponse(409, error.message);
+    if (_error instanceof Error) {
+      if (_error.message.includes('already exists')) {
+        return createApiErrorResponse(409, _error.message);
       }
-      if (error.message.includes('not found')) {
-        return createApiErrorResponse(404, error.message);
+      if (_error.message.includes('not found')) {
+        return createApiErrorResponse(404, _error.message);
       }
-      if (error.message.includes('validation')) {
-        return createApiErrorResponse(400, error.message);
+      if (_error.message.includes('validation')) {
+        return createApiErrorResponse(400, _error.message);
       }
     }
 
@@ -326,11 +326,11 @@ export async function DELETE(
     let validatedParams;
     try {
       validatedParams = paramsSchema.parse(resolvedParams);
-    } catch (error) {
-      if (error instanceof z.ZodError) {
+    } catch (_error) {
+      if (_error instanceof z.ZodError) {
         return createApiErrorResponse(400, 'Invalid product ID format');
       }
-      throw error;
+      throw _error;
     }
 
     // Apply rate limiting for admin operations
@@ -386,16 +386,16 @@ export async function DELETE(
       },
     }, { status: 200 });
 
-  } catch (error) {
-    console.error('Error deleting product:', error);
+  } catch (_error) {
+    // console.error('Error deleting product:', error);
     
     // Handle specific business logic errors
-    if (error instanceof Error) {
-      if (error.message.includes('not found')) {
-        return createApiErrorResponse(404, error.message);
+    if (_error instanceof Error) {
+      if (_error.message.includes('not found')) {
+        return createApiErrorResponse(404, _error.message);
       }
-      if (error.message.includes('Cannot delete')) {
-        return createApiErrorResponse(409, error.message);
+      if (_error.message.includes('Cannot delete')) {
+        return createApiErrorResponse(409, _error.message);
       }
     }
 

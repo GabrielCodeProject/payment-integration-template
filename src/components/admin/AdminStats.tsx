@@ -99,7 +99,7 @@ export function AdminStats() {
         throw new Error(data.error || "Invalid response format");
       }
     } catch (err) {
-      console.error("Error fetching admin stats:", err);
+      // console.error("Error fetching admin stats:", err);
       setError(err instanceof Error ? err.message : "Failed to load statistics");
       
       // Set fallback empty stats to prevent further errors

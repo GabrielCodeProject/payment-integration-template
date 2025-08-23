@@ -88,8 +88,8 @@ export async function POST(request: NextRequest) {
       message: 'File uploaded successfully',
     }, { status: 201 });
 
-  } catch (error) {
-    console.error('Error uploading file:', error);
+  } catch (_error) {
+    // console.error('Error uploading file:', error);
     return createApiErrorResponse(500, 'Failed to upload file');
   }
 }

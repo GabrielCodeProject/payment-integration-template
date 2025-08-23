@@ -127,7 +127,7 @@ export function UserDetailModal({
         throw new Error(data.error || "Failed to fetch user details");
       }
     } catch (err) {
-      console.error("Error fetching user details:", err);
+      // console.error("Error fetching user details:", err);
       setError(err instanceof Error ? err.message : "Failed to load user details");
     } finally {
       setIsLoading(false);

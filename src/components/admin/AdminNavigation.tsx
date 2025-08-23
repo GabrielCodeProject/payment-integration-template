@@ -20,6 +20,8 @@ import {
   Package,
   ShoppingCart,
   CreditCard,
+  Tag,
+  Hash,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -75,6 +77,20 @@ export function AdminNavigation() {
           icon: Package,
           permission: PERMISSIONS.USER_READ, // Update with proper product permission when created
           description: "Manage product catalog",
+        },
+        {
+          name: "Categories",
+          href: "/admin/categories",
+          icon: Tag,
+          permission: PERMISSIONS.USER_READ, // Update with proper category permission when created
+          description: "Manage product categories",
+        },
+        {
+          name: "Tags",
+          href: "/admin/tags",
+          icon: Hash,
+          permission: PERMISSIONS.USER_READ, // Update with proper tag permission when created
+          description: "Manage product tags",
         },
         {
           name: "Orders",

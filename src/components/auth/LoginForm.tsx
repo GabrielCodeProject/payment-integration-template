@@ -57,7 +57,7 @@ export function LoginForm({ onSuccess }: LoginFormProps) {
 
       if (response.error) {
         // Handle specific errors
-        switch (response.error.message) {
+        switch (response._error.message) {
           case "Invalid email or password":
           case "Invalid credentials":
             toast.error("Invalid email or password. Please check your credentials and try again.");
@@ -83,7 +83,7 @@ export function LoginForm({ onSuccess }: LoginFormProps) {
             // TODO: Redirect to 2FA page when implemented
             break;
           default:
-            toast.error(response.error.message || "Sign in failed. Please try again.");
+            toast.error(response._error.message || "Sign in failed. Please try again.");
         }
         return;
       }
@@ -99,9 +99,9 @@ export function LoginForm({ onSuccess }: LoginFormProps) {
         const redirectUrl = isValidRedirect ? returnTo : "/dashboard";
         router.push(redirectUrl);
       }
-    } catch (error) {
+    } catch (_error) {
       // eslint-disable-next-line no-console
-      console.error("Sign in error:", error);
+      // console.error("Sign in error:", error);
       toast.error("An unexpected error occurred. Please try again.");
     } finally {
       setIsLoading(false);

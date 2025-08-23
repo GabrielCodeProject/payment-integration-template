@@ -15,6 +15,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Switch } from '@/components/ui/switch';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
+import { Checkbox } from '@/components/ui/checkbox';
+import { Skeleton } from '@/components/ui/skeleton';
 // import { Separator } from '@/components/ui/separator'; // Reserved for future use
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import {
@@ -44,8 +46,12 @@ interface ProductFormProps {
 export function ProductForm({ product, mode, onSubmit, loading = false }: ProductFormProps) {
   const router = useRouter();
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [tags, setTags] = useState<string[]>(product?.tags || []);
-  const [tagInput, setTagInput] = useState('');
+  const [selectedCategories, setSelectedCategories] = useState<string[]>([]);
+  const [selectedTags, setSelectedTags] = useState<string[]>([]);
+  const [availableCategories, setAvailableCategories] = useState<any[]>([]);
+  const [availableTags, setAvailableTags] = useState<any[]>([]);
+  const [loadingCategories, setLoadingCategories] = useState(true);
+  const [loadingTags, setLoadingTags] = useState(true);
   const [images, setImages] = useState<string[]>(product?.images || []);
 
   const schema = mode === 'create' ? createProductSchema : updateProductSchema;
@@ -71,7 +77,8 @@ export function ProductForm({ product, mode, onSubmit, loading = false }: Produc
       isDigital: false,
       requiresShipping: true,
       type: 'ONE_TIME',
-      tags: [],
+      categoryIds: [],
+      tagIds: [],
       images: [],
       stockQuantity: undefined,
       lowStockThreshold: undefined,
@@ -105,20 +112,82 @@ export function ProductForm({ product, mode, onSubmit, loading = false }: Produc
     }
   }, [watchedFields.name, mode, form]);
 
-  // Handle tag operations
-  const addTag = () => {
-    if (tagInput.trim() && !tags.includes(tagInput.trim())) {
-      const newTags = [...tags, tagInput.trim()];
-      setTags(newTags);
-      form.setValue('tags', newTags);
-      setTagInput('');
+  // Fetch available categories
+  useEffect(() => {
+    const fetchCategories = async () => {
+      try {
+        const response = await fetch('/api/categories?limit=100');
+        if (response.ok) {
+          const data = await response.json();
+          setAvailableCategories(data.categories);
+        }
+      } catch (_error) {
+        // console.error('Error fetching categories:', error);
+      } finally {
+        setLoadingCategories(false);
+      }
+    };
+
+    fetchCategories();
+  }, []);
+
+  // Fetch available tags
+  useEffect(() => {
+    const fetchTags = async () => {
+      try {
+        const response = await fetch('/api/tags?limit=100');
+        if (response.ok) {
+          const data = await response.json();
+          setAvailableTags(data.tags);
+        }
+      } catch (_error) {
+        // console.error('Error fetching tags:', error);
+      } finally {
+        setLoadingTags(false);
+      }
+    };
+
+    fetchTags();
+  }, []);
+
+  // Initialize selected categories and tags for edit mode
+  useEffect(() => {
+    if (product && mode === 'edit') {
+      if (product.categories) {
+        const categoryIds = product.categories.map((cat: any) => cat.id);
+        setSelectedCategories(categoryIds);
+        form.setValue('categoryIds', categoryIds);
+      }
+      if (product.tags) {
+        const tagIds = product.tags.map((tag: any) => tag.id);
+        setSelectedTags(tagIds);
+        form.setValue('tagIds', tagIds);
+      }
     }
+  }, [product, mode, form]);
+
+  // Handle category operations
+  const handleCategoryChange = (categoryId: string, checked: boolean) => {
+    let newCategories: string[];
+    if (checked) {
+      newCategories = [...selectedCategories, categoryId];
+    } else {
+      newCategories = selectedCategories.filter(id => id !== categoryId);
+    }
+    setSelectedCategories(newCategories);
+    form.setValue('categoryIds', newCategories);
   };
 
-  const removeTag = (tagToRemove: string) => {
-    const newTags = tags.filter(tag => tag !== tagToRemove);
-    setTags(newTags);
-    form.setValue('tags', newTags);
+  // Handle tag operations
+  const handleTagChange = (tagId: string, checked: boolean) => {
+    let newTags: string[];
+    if (checked) {
+      newTags = [...selectedTags, tagId];
+    } else {
+      newTags = selectedTags.filter(id => id !== tagId);
+    }
+    setSelectedTags(newTags);
+    form.setValue('tagIds', newTags);
   };
 
   // Handle image operations
@@ -132,8 +201,9 @@ export function ProductForm({ product, mode, onSubmit, loading = false }: Produc
     try {
       setIsSubmitting(true);
       
-      // Add tags and images to form data
-      data.tags = tags;
+      // Add categories, tags and images to form data
+      data.categoryIds = selectedCategories;
+      data.tagIds = selectedTags;
       data.images = images;
 
       if (onSubmit) {
@@ -163,9 +233,9 @@ export function ProductForm({ product, mode, onSubmit, loading = false }: Produc
         toast.success(`Product ${mode === 'create' ? 'created' : 'updated'} successfully`);
         router.push('/admin/products');
       }
-    } catch (error) {
-      console.error(`Error ${mode}ing product:`, error);
-      toast.error(error instanceof Error ? error.message : `Failed to ${mode} product`);
+    } catch (_error) {
+      // console.error(`Error ${mode}ing product:`, error);
+      toast.error(_error instanceof Error ? _error.message : `Failed to ${mode} product`);
     } finally {
       setIsSubmitting(false);
     }
@@ -682,40 +752,84 @@ export function ProductForm({ product, mode, onSubmit, loading = false }: Produc
                     )}
                   />
 
-                  {/* Tags */}
-                  <div className="space-y-2">
-                    <Label>Product Tags</Label>
-                    <div className="flex gap-2">
-                      <Input
-                        placeholder="Add a tag"
-                        value={tagInput}
-                        onChange={(e) => setTagInput(e.target.value)}
-                        onKeyPress={(e) => e.key === 'Enter' && (e.preventDefault(), addTag())}
-                      />
-                      <Button type="button" variant="outline" onClick={addTag}>
-                        <Plus className="h-4 w-4" />
-                      </Button>
-                    </div>
-                    {tags.length > 0 && (
-                      <div className="flex flex-wrap gap-2 mt-2">
-                        {tags.map((tag) => (
-                          <Badge key={tag} variant="secondary" className="gap-1">
-                            {tag}
-                            <Button
-                              type="button"
-                              variant="ghost"
-                              size="sm"
-                              className="h-auto w-auto p-0 ml-1"
-                              onClick={() => removeTag(tag)}
+                  {/* Categories */}
+                  <div className="space-y-3">
+                    <Label>Product Categories</Label>
+                    {loadingCategories ? (
+                      <div className="space-y-2">
+                        {Array.from({ length: 3 }).map((_, i) => (
+                          <Skeleton key={i} className="h-4 w-full" />
+                        ))}
+                      </div>
+                    ) : (
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-3 max-h-48 overflow-y-auto">
+                        {availableCategories.map((category) => (
+                          <div key={category.id} className="flex items-center space-x-2">
+                            <Checkbox
+                              id={`category-${category.id}`}
+                              checked={selectedCategories.includes(category.id)}
+                              onCheckedChange={(checked) => 
+                                handleCategoryChange(category.id, checked as boolean)
+                              }
+                            />
+                            <Label 
+                              htmlFor={`category-${category.id}`}
+                              className="flex-1 cursor-pointer"
                             >
-                              <X className="h-3 w-3" />
-                            </Button>
-                          </Badge>
+                              <div>
+                                <p className="font-medium">{category.name}</p>
+                                {category.description && (
+                                  <p className="text-xs text-muted-foreground">
+                                    {category.description}
+                                  </p>
+                                )}
+                              </div>
+                            </Label>
+                          </div>
                         ))}
                       </div>
                     )}
                     <p className="text-sm text-muted-foreground">
-                      Tags help organize and filter products
+                      Categories help organize products into groups
+                    </p>
+                  </div>
+
+                  {/* Tags */}
+                  <div className="space-y-3">
+                    <Label>Product Tags</Label>
+                    {loadingTags ? (
+                      <div className="space-y-2">
+                        {Array.from({ length: 4 }).map((_, i) => (
+                          <Skeleton key={i} className="h-4 w-full" />
+                        ))}
+                      </div>
+                    ) : (
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-3 max-h-48 overflow-y-auto">
+                        {availableTags.map((tag) => (
+                          <div key={tag.id} className="flex items-center space-x-2">
+                            <Checkbox
+                              id={`tag-${tag.id}`}
+                              checked={selectedTags.includes(tag.id)}
+                              onCheckedChange={(checked) => 
+                                handleTagChange(tag.id, checked as boolean)
+                              }
+                            />
+                            <Label 
+                              htmlFor={`tag-${tag.id}`}
+                              className="flex-1 cursor-pointer flex items-center gap-2"
+                            >
+                              <div
+                                className="w-3 h-3 rounded-full"
+                                style={{ backgroundColor: tag.color || '#6366f1' }}
+                              />
+                              <span>{tag.name}</span>
+                            </Label>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                    <p className="text-sm text-muted-foreground">
+                      Tags help with filtering and organization
                     </p>
                   </div>
                 </CardContent>

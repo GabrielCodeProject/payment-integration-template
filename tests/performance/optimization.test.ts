@@ -50,9 +50,9 @@ describe('Database Performance Optimization Tests', () => {
       const highUsageIndexes = indexAnalyses.filter(idx => idx.scans > 10);
       expect(highUsageIndexes.length).toBeGreaterThan(0);
       
-      console.log(`📊 Analyzed ${indexAnalyses.length} indexes`);
-      console.log(`   High usage indexes: ${highUsageIndexes.length}`);
-      console.log(`   Unused indexes: ${indexAnalyses.filter(idx => idx.scans === 0).length}`);
+      // console.log(`📊 Analyzed ${indexAnalyses.length} indexes`);
+      // console.log(`   High usage indexes: ${highUsageIndexes.length}`);
+      // console.log(`   Unused indexes: ${indexAnalyses.filter(idx => idx.scans === 0).length}`);
     });
     
     it('should identify unused indexes', async () => {
@@ -61,9 +61,9 @@ describe('Database Performance Optimization Tests', () => {
       
       // Log unused indexes for manual review
       if (unusedIndexes.length > 0) {
-        console.log('⚠️  Unused indexes found:');
+        // console.log('⚠️  Unused indexes found:');
         unusedIndexes.forEach(idx => {
-          console.log(`   ${idx.indexName} on ${idx.tableName}(${idx.columns.join(', ')})`);
+          // console.log(`   ${idx.indexName} on ${idx.tableName}(${idx.columns.join(', ')})`);
         });
       }
       
@@ -78,9 +78,9 @@ describe('Database Performance Optimization Tests', () => {
       );
       
       if (inefficientIndexes.length > 0) {
-        console.log('⚠️  Inefficient indexes found:');
+        // console.log('⚠️  Inefficient indexes found:');
         inefficientIndexes.forEach(idx => {
-          console.log(`   ${idx.indexName}: ${idx.efficiency.toFixed(1)}% efficiency`);
+          // console.log(`   ${idx.indexName}: ${idx.efficiency.toFixed(1)}% efficiency`);
         });
       }
       
@@ -131,10 +131,10 @@ describe('Database Performance Optimization Tests', () => {
       
       // Log slow queries if found
       if (queryAnalyses.length > 0) {
-        console.log(`🐌 Found ${queryAnalyses.length} queries for analysis`);
+        // console.log(`🐌 Found ${queryAnalyses.length} queries for analysis`);
         queryAnalyses.forEach(query => {
           if (query.executionTime > 100) {
-            console.log(`   Slow query: ${query.executionTime.toFixed(2)}ms`);
+            // console.log(`   Slow query: ${query.executionTime.toFixed(2)}ms`);
           }
         });
       }
@@ -165,17 +165,17 @@ describe('Database Performance Optimization Tests', () => {
       const mediumPriority = recommendations.filter(r => r.priority === 'MEDIUM');
       const lowPriority = recommendations.filter(r => r.priority === 'LOW');
       
-      console.log(`💡 Generated ${recommendations.length} optimization recommendations:`);
-      console.log(`   High priority: ${highPriority.length}`);
-      console.log(`   Medium priority: ${mediumPriority.length}`);
-      console.log(`   Low priority: ${lowPriority.length}`);
+      // console.log(`💡 Generated ${recommendations.length} optimization recommendations:`);
+      // console.log(`   High priority: ${highPriority.length}`);
+      // console.log(`   Medium priority: ${mediumPriority.length}`);
+      // console.log(`   Low priority: ${lowPriority.length}`);
       
       if (highPriority.length > 0) {
-        console.log('\n🔥 High Priority Recommendations:');
+        // console.log('\n🔥 High Priority Recommendations:');
         highPriority.forEach((rec, index) => {
-          console.log(`   ${index + 1}. ${rec.description}`);
-          console.log(`      Impact: ${rec.impact}`);
-          console.log(`      Implementation: ${rec.implementation}`);
+          // console.log(`   ${index + 1}. ${rec.description}`);
+          // console.log(`      Impact: ${rec.impact}`);
+          // console.log(`      Implementation: ${rec.implementation}`);
         });
       }
     });
@@ -192,10 +192,10 @@ describe('Database Performance Optimization Tests', () => {
       const stats = connectionStats[0];
       const utilizationPercent = (Number(stats.current_connections) / Number(stats.max_connections)) * 100;
       
-      console.log(`🔌 Connection Pool Status:`);
-      console.log(`   Current connections: ${stats.current_connections}`);
-      console.log(`   Max connections: ${stats.max_connections}`);
-      console.log(`   Utilization: ${utilizationPercent.toFixed(1)}%`);
+      // console.log(`🔌 Connection Pool Status:`);
+      // console.log(`   Current connections: ${stats.current_connections}`);
+      // console.log(`   Max connections: ${stats.max_connections}`);
+      // console.log(`   Utilization: ${utilizationPercent.toFixed(1)}%`);
       
       expect(utilizationPercent).toBeLessThan(90); // Should not exceed 90% utilization
     });
@@ -264,15 +264,15 @@ describe('Database Performance Optimization Tests', () => {
         });
         
         if (executionTime > slowQueryThreshold) {
-          console.log(`⚠️  Slow query detected: ${query.name} (${executionTime.toFixed(2)}ms)`);
+          // console.log(`⚠️  Slow query detected: ${query.name} (${executionTime.toFixed(2)}ms)`);
         }
       }
       
       const averageTime = monitoredQueries.reduce((sum, q) => sum + q.executionTime, 0) / monitoredQueries.length;
       
-      console.log(`⏱️  Query Performance Summary:`);
-      console.log(`   Average execution time: ${averageTime.toFixed(2)}ms`);
-      console.log(`   Queries over threshold: ${monitoredQueries.filter(q => q.executionTime > slowQueryThreshold).length}`);
+      // console.log(`⏱️  Query Performance Summary:`);
+      // console.log(`   Average execution time: ${averageTime.toFixed(2)}ms`);
+      // console.log(`   Queries over threshold: ${monitoredQueries.filter(q => q.executionTime > slowQueryThreshold).length}`);
       
       expect(averageTime).toBeLessThan(slowQueryThreshold);
     });
@@ -289,15 +289,15 @@ describe('Database Performance Optimization Tests', () => {
         ORDER BY pg_total_relation_size(schemaname||'.'||tablename) DESC
       ` as any[];
       
-      console.log(`📏 Database Table Sizes:`);
+      // console.log(`📏 Database Table Sizes:`);
       tableSizes.forEach(table => {
-        console.log(`   ${table.tablename}: ${table.size}`);
+        // console.log(`   ${table.tablename}: ${table.size}`);
       });
       
       const totalSize = tableSizes.reduce((sum, table) => sum + Number(table.size_bytes), 0);
       const totalSizeMB = totalSize / (1024 * 1024);
       
-      console.log(`   Total database size: ${totalSizeMB.toFixed(2)} MB`);
+      // console.log(`   Total database size: ${totalSizeMB.toFixed(2)} MB`);
       
       expect(totalSizeMB).toBeLessThan(1000); // Should be under 1GB for test database
     });
@@ -318,13 +318,13 @@ describe('Database Performance Optimization Tests', () => {
       // Update statistics for tables that need it
       await optimizer.optimizeTableStatistics();
       
-      console.log(`📊 Table Statistics Summary:`);
+      // console.log(`📊 Table Statistics Summary:`);
       tableStats.forEach(stat => {
         const accuracy = stat.estimatedRows > 0 
           ? (Math.min(stat.actualRows, stat.estimatedRows) / Math.max(stat.actualRows, stat.estimatedRows)) * 100
           : 0;
         
-        console.log(`   ${stat.tableName}: ${stat.actualRows} rows, ${accuracy.toFixed(1)}% accurate`);
+        // console.log(`   ${stat.tableName}: ${stat.actualRows} rows, ${accuracy.toFixed(1)}% accurate`);
       });
     });
     
@@ -336,12 +336,12 @@ describe('Database Performance Optimization Tests', () => {
       expect(report.queryAnalyses).toBeDefined();
       expect(report.recommendations).toBeDefined();
       
-      console.log(`📊 Performance Report Summary:`);
-      console.log(`   Total indexes: ${report.summary.totalIndexes}`);
-      console.log(`   Unused indexes: ${report.summary.unusedIndexes}`);
-      console.log(`   Slow queries: ${report.summary.slowQueries}`);
-      console.log(`   Connection utilization: ${report.summary.connectionUtilization.toFixed(1)}%`);
-      console.log(`   Optimization recommendations: ${report.recommendations.length}`);
+      // console.log(`📊 Performance Report Summary:`);
+      // console.log(`   Total indexes: ${report.summary.totalIndexes}`);
+      // console.log(`   Unused indexes: ${report.summary.unusedIndexes}`);
+      // console.log(`   Slow queries: ${report.summary.slowQueries}`);
+      // console.log(`   Connection utilization: ${report.summary.connectionUtilization.toFixed(1)}%`);
+      // console.log(`   Optimization recommendations: ${report.recommendations.length}`);
       
       // Validate performance thresholds
       expect(report.summary.connectionUtilization).toBeLessThan(80);
@@ -396,9 +396,9 @@ describe('Database Performance Optimization Tests', () => {
       }
       
       if (regressions.length > 0) {
-        console.log(`⚠️  Performance regressions detected:`);
+        // console.log(`⚠️  Performance regressions detected:`);
         regressions.forEach(reg => {
-          console.log(`   ${reg.query}: ${reg.actual.toFixed(2)}ms (${reg.ratio.toFixed(1)}x slower)`);
+          // console.log(`   ${reg.query}: ${reg.actual.toFixed(2)}ms (${reg.ratio.toFixed(1)}x slower)`);
         });
       }
       
@@ -447,9 +447,9 @@ describe('Database Performance Optimization Tests', () => {
         });
       }
       
-      console.log(`🔍 Index Effectiveness Tests:`);
+      // console.log(`🔍 Index Effectiveness Tests:`);
       results.forEach(result => {
-        console.log(`   ${result.name}: ${result.executionTime.toFixed(2)}ms`);
+        // console.log(`   ${result.name}: ${result.executionTime.toFixed(2)}ms`);
       });
       
       // All index-based queries should be fast

@@ -46,15 +46,15 @@ function addResult(
 ) {
   results.push({ category, test, status, message, error });
   const icon = status === "PASS" ? "✅" : status === "FAIL" ? "❌" : "⚠️";
-  console.log(`${icon} [${category}] ${test}: ${message}`);
+  // console.log(`${icon} [${category}] ${test}: ${message}`);
   if (error) {
     const errorMessage = error instanceof Error ? error.message : String(error);
-    console.log(`   Error details: ${errorMessage}`);
+    // console.log(`   Error details: ${errorMessage}`);
   }
 }
 
 async function testForeignKeyConstraints() {
-  console.log("\n🔑 Testing Foreign Key Constraints...");
+  // console.log("\n🔑 Testing Foreign Key Constraints...");
 
   // Test 1: Valid foreign key references work
   try {
@@ -154,7 +154,7 @@ async function testForeignKeyConstraints() {
 }
 
 async function testCascadeDeletes() {
-  console.log("\n🗑️ Testing Cascade Delete Rules...");
+  // console.log("\n🗑️ Testing Cascade Delete Rules...");
 
   // Test 1: User deletion cascades to sessions and accounts
   try {
@@ -327,7 +327,7 @@ async function testCascadeDeletes() {
 }
 
 async function testSetNullConstraints() {
-  console.log("\n🔗 Testing SET NULL Constraints...");
+  // console.log("\n🔗 Testing SET NULL Constraints...");
 
   // Test 1: Order userId set to NULL when user is deleted (for guest orders)
   try {
@@ -451,7 +451,7 @@ async function testSetNullConstraints() {
 }
 
 async function testRestrictConstraints() {
-  console.log("\n🚫 Testing RESTRICT Constraints...");
+  // console.log("\n🚫 Testing RESTRICT Constraints...");
 
   // Test 1: Cannot delete product that has order items (RESTRICT)
   try {
@@ -620,7 +620,7 @@ async function testRestrictConstraints() {
 }
 
 async function testUniqueConstraints() {
-  console.log("\n🔒 Testing Unique Constraints...");
+  // console.log("\n🔒 Testing Unique Constraints...");
 
   // Test 1: User email uniqueness
   try {
@@ -817,7 +817,7 @@ async function testUniqueConstraints() {
 }
 
 async function testRelationshipQueries() {
-  console.log("\n🔍 Testing Relationship Queries...");
+  // console.log("\n🔍 Testing Relationship Queries...");
 
   try {
     // Create test data with relationships
@@ -1018,7 +1018,7 @@ async function testRelationshipQueries() {
 }
 
 async function testIndexPerformance() {
-  console.log("\n📊 Testing Index Performance...");
+  // console.log("\n📊 Testing Index Performance...");
 
   try {
     // Test if indexes are working by checking query plans
@@ -1072,9 +1072,9 @@ async function testIndexPerformance() {
 }
 
 async function printSummary() {
-  console.log("\n" + "=".repeat(80));
-  console.log("🏁 DATABASE CONSTRAINT VERIFICATION SUMMARY");
-  console.log("=".repeat(80));
+  // console.log("\n" + "=".repeat(80));
+  // console.log("🏁 DATABASE CONSTRAINT VERIFICATION SUMMARY");
+  // console.log("=".repeat(80));
 
   const categories = [...new Set(results.map((r) => r.category))];
   const totalTests = results.length;
@@ -1088,62 +1088,62 @@ async function printSummary() {
     const failed = categoryResults.filter((r) => r.status === "FAIL").length;
     const skipped = categoryResults.filter((r) => r.status === "SKIP").length;
 
-    console.log(`\n📂 ${category}:`);
-    console.log(`   ✅ Passed: ${passed}`);
-    console.log(`   ❌ Failed: ${failed}`);
-    console.log(`   ⚠️  Skipped: ${skipped}`);
-    console.log(`   📊 Total: ${categoryResults.length}`);
+    // console.log(`\n📂 ${category}:`);
+    // console.log(`   ✅ Passed: ${passed}`);
+    // console.log(`   ❌ Failed: ${failed}`);
+    // console.log(`   ⚠️  Skipped: ${skipped}`);
+    // console.log(`   📊 Total: ${categoryResults.length}`);
   });
 
-  console.log("\n" + "-".repeat(80));
-  console.log(`🎯 OVERALL RESULTS:`);
-  console.log(`   ✅ Total Passed: ${totalPassed}`);
-  console.log(`   ❌ Total Failed: ${totalFailed}`);
-  console.log(`   ⚠️  Total Skipped: ${totalSkipped}`);
-  console.log(`   📊 Total Tests: ${totalTests}`);
+  // console.log("\n" + "-".repeat(80));
+  // console.log(`🎯 OVERALL RESULTS:`);
+  // console.log(`   ✅ Total Passed: ${totalPassed}`);
+  // console.log(`   ❌ Total Failed: ${totalFailed}`);
+  // console.log(`   ⚠️  Total Skipped: ${totalSkipped}`);
+  // console.log(`   📊 Total Tests: ${totalTests}`);
 
   const passRate =
     totalTests > 0 ? ((totalPassed / totalTests) * 100).toFixed(1) : "0.0";
-  console.log(`   📈 Pass Rate: ${passRate}%`);
+  // console.log(`   📈 Pass Rate: ${passRate}%`);
 
   if (totalFailed > 0) {
-    console.log("\n❌ FAILED TESTS:");
+    // console.log("\n❌ FAILED TESTS:");
     results
       .filter((r) => r.status === "FAIL")
       .forEach((result) => {
-        console.log(
+        // console.log(
           `   • [${result.category}] ${result.test}: ${result.message}`
         );
       });
   }
 
-  console.log("\n" + "=".repeat(80));
+  // console.log("\n" + "=".repeat(80));
 
   if (totalFailed === 0) {
-    console.log(
+    // console.log(
       "🎉 ALL DATABASE CONSTRAINTS AND RELATIONSHIPS ARE WORKING CORRECTLY!"
     );
   } else {
-    console.log(
+    // console.log(
       "⚠️  SOME DATABASE CONSTRAINTS NEED ATTENTION. PLEASE REVIEW FAILED TESTS."
     );
   }
 
-  console.log("=".repeat(80));
+  // console.log("=".repeat(80));
 
   return totalFailed === 0;
 }
 
 async function main() {
-  console.log(
+  // console.log(
     "🗄️  Starting Database Relationship and Constraint Verification..."
   );
-  console.log("=".repeat(80));
+  // console.log("=".repeat(80));
 
   try {
     // Connect to database
     await prisma.$connect();
-    console.log("✅ Connected to database successfully\n");
+    // console.log("✅ Connected to database successfully\n");
 
     // Run all tests
     await testForeignKeyConstraints();
@@ -1160,7 +1160,7 @@ async function main() {
     // Exit with appropriate code
     process.exit(allPassed ? 0 : 1);
   } catch (error) {
-    console.error("❌ Fatal error during constraint verification:", error);
+    // console.error("❌ Fatal error during constraint verification:", error);
     process.exit(1);
   } finally {
     await prisma.$disconnect();

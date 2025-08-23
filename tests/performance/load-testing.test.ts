@@ -304,10 +304,10 @@ describe('Database Load Testing', () => {
       const maxTime = Math.max(...results);
       const minTime = Math.min(...results);
       
-      console.log(`📊 Sustained Load Results:`);
-      console.log(`   Average time: ${averageTime.toFixed(2)}ms`);
-      console.log(`   Min time: ${minTime.toFixed(2)}ms`);
-      console.log(`   Max time: ${maxTime.toFixed(2)}ms`);
+      // console.log(`📊 Sustained Load Results:`);
+      // console.log(`   Average time: ${averageTime.toFixed(2)}ms`);
+      // console.log(`   Min time: ${minTime.toFixed(2)}ms`);
+      // console.log(`   Max time: ${maxTime.toFixed(2)}ms`);
       
       expect(averageTime).toBeLessThan(1000); // Average under 1 second
       expect(maxTime).toBeLessThan(2000);     // Max under 2 seconds
@@ -364,9 +364,9 @@ describe('Database Load Testing', () => {
         results.push({ size, time: endTime - startTime });
       }
       
-      console.log('📈 Scalability Results:');
+      // console.log('📈 Scalability Results:');
       results.forEach(({ size, time }) => {
-        console.log(`   ${size} records: ${time.toFixed(2)}ms`);
+        // console.log(`   ${size} records: ${time.toFixed(2)}ms`);
       });
       
       // Performance should not degrade linearly with data size (good indexing)

@@ -79,11 +79,11 @@ export function validateFormData<T extends z.ZodSchema>(
   try {
     const validatedData = schema.parse(data);
     return { success: true, data: validatedData };
-  } catch (error) {
-    if (error instanceof z.ZodError) {
+  } catch (_error) {
+    if (_error instanceof z.ZodError) {
       return { success: false, errors: zodErrorsToFormErrors(error) };
     }
-    throw error;
+    throw _error;
   }
 }
 
@@ -118,8 +118,8 @@ export function validateApiRequest<T extends z.ZodSchema>(
   try {
     const validatedData = schema.parse(data);
     return { success: true, data: validatedData };
-  } catch (error) {
-    if (error instanceof z.ZodError) {
+  } catch (_error) {
+    if (_error instanceof z.ZodError) {
       return {
         success: false,
         error: {
@@ -208,8 +208,8 @@ export function createApiValidationMiddleware<T extends z.ZodSchema>(
       }
       
       next();
-    } catch (error) {
-      if (error instanceof z.ZodError) {
+    } catch (_error) {
+      if (_error instanceof z.ZodError) {
         res.status(400).json({
           success: false,
           error: {
@@ -246,8 +246,8 @@ export function validateWebSocketMessage<T extends z.ZodSchema>(
   try {
     const validatedData = schema.parse(message);
     return { success: true, data: validatedData };
-  } catch (error) {
-    if (error instanceof z.ZodError) {
+  } catch (_error) {
+    if (_error instanceof z.ZodError) {
       return {
         success: false,
         error: `Message validation failed: ${error.errors.map(e => e.message).join(', ')}`,
@@ -273,15 +273,15 @@ export function validateEnvironment<T extends z.ZodSchema>(
 ): z.infer<T> {
   try {
     return schema.parse(env);
-  } catch (error) {
-    if (error instanceof z.ZodError) {
+  } catch (_error) {
+    if (_error instanceof z.ZodError) {
       const errorMessages = error.errors.map(err => 
         `${err.path.join('.')}: ${err.message}`
       ).join(', ');
       
       throw new Error(`Environment validation failed: ${errorMessages}`);
     }
-    throw error;
+    throw _error;
   }
 }
 
@@ -298,15 +298,15 @@ export function validateConfig<T extends z.ZodSchema>(
 ): z.infer<T> {
   try {
     return schema.parse(config);
-  } catch (error) {
-    if (error instanceof z.ZodError) {
+  } catch (_error) {
+    if (_error instanceof z.ZodError) {
       const errorMessages = error.errors.map(err => 
         `${err.path.join('.')}: ${err.message}`
       ).join(', ');
       
       throw new Error(`Configuration validation failed: ${errorMessages}`);
     }
-    throw error;
+    throw _error;
   }
 }
 

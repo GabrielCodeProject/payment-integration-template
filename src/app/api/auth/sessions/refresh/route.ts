@@ -217,8 +217,8 @@ export async function POST(request: NextRequest) {
       headers: responseHeaders,
     });
 
-  } catch (error) {
-    console.error('Session refresh error:', error);
+  } catch (_error) {
+    // console.error('Session refresh error:', error);
     
     // Log the error for monitoring
     try {
@@ -228,7 +228,7 @@ export async function POST(request: NextRequest) {
         action: 'ACCESS',
         metadata: {
           operation: 'refreshSession',
-          error: error instanceof Error ? error.message : 'Unknown error',
+          error: error instanceof Error ? _error.message : 'Unknown error',
           errorType: 'refresh_error',
         },
       });
@@ -313,8 +313,8 @@ export async function GET(request: NextRequest) {
       },
     });
 
-  } catch (error) {
-    console.error('Session refresh status error:', error);
+  } catch (_error) {
+    // console.error('Session refresh status error:', error);
     
     return NextResponse.json(
       { 

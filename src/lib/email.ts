@@ -304,13 +304,13 @@ export async function sendEmail({
     // Check if Resend API key is configured
     if (!process.env.RESEND_API_KEY || process.env.RESEND_API_KEY === "re_placeholder_key_for_development_testing") {
       // eslint-disable-next-line no-console
-      console.warn("⚠️ Email not sent: Resend API key not configured");
+      // console.warn("⚠️ Email not sent: Resend API key not configured");
       // eslint-disable-next-line no-console
-      console.log(`📧 Email would be sent to: ${to}`);
+      // console.log(`📧 Email would be sent to: ${to}`);
       // eslint-disable-next-line no-console
-      console.log(`📧 Subject: ${subject}`);
+      // console.log(`📧 Subject: ${subject}`);
       // eslint-disable-next-line no-console
-      console.log(`📧 From: ${from}`);
+      // console.log(`📧 From: ${from}`);
       return { 
         success: false, 
         error: "Email service not configured. Please set RESEND_API_KEY in your environment variables.",
@@ -332,14 +332,14 @@ export async function sendEmail({
     const result = await resend.emails.send(emailOptions);
 
     // eslint-disable-next-line no-console
-    console.log(`✅ Email sent successfully to ${to} (ID: ${result.data?.id})`);
+    // console.log(`✅ Email sent successfully to ${to} (ID: ${result.data?.id})`);
     return { success: true, id: result.data?.id };
-  } catch (error) {
+  } catch (_error) {
     // Enhanced error logging with more context
-    const errorMessage = error instanceof Error ? error.message : String(error);
+    const errorMessage = error instanceof Error ? _error.message : String(error);
     
     // eslint-disable-next-line no-console
-    console.error("❌ Failed to send email:", {
+    // console.error("❌ Failed to send email:", {
       to,
       subject,
       from,
@@ -350,7 +350,7 @@ export async function sendEmail({
     // Check for common Resend errors
     if (errorMessage.includes("401") || errorMessage.includes("Unauthorized")) {
       // eslint-disable-next-line no-console
-      console.error("🔐 Resend API Key is invalid. Please check your RESEND_API_KEY in .env.local");
+      // console.error("🔐 Resend API Key is invalid. Please check your RESEND_API_KEY in .env.local");
       return { 
         success: false, 
         error: "Invalid API key. Please check your Resend configuration.",
@@ -360,7 +360,7 @@ export async function sendEmail({
 
     if (errorMessage.includes("403") || errorMessage.includes("Forbidden")) {
       // eslint-disable-next-line no-console
-      console.error("🚫 Resend API access denied. Verify your account and sender domain.");
+      // console.error("🚫 Resend API access denied. Verify your account and sender domain.");
       return { 
         success: false, 
         error: "Access denied. Please verify your Resend account and sender domain.",
@@ -370,7 +370,7 @@ export async function sendEmail({
 
     if (errorMessage.includes("rate limit")) {
       // eslint-disable-next-line no-console
-      console.error("⏱️ Resend rate limit exceeded. Please try again later.");
+      // console.error("⏱️ Resend rate limit exceeded. Please try again later.");
       return { 
         success: false, 
         error: "Rate limit exceeded. Please try again later.",

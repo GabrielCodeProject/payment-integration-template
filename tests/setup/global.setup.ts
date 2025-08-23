@@ -5,7 +5,7 @@ import { Client } from 'pg';
 const execAsync = promisify(exec);
 
 export default async function globalSetup() {
-  console.log('🔧 Setting up global test environment...');
+  // console.log('🔧 Setting up global test environment...');
   
   // Set test environment
   // NODE_ENV is read-only in TypeScript, but we can override it
@@ -20,7 +20,7 @@ export default async function globalSetup() {
   // Set up performance monitoring
   setupPerformanceMonitoring();
   
-  console.log('✅ Global test environment setup complete');
+  // console.log('✅ Global test environment setup complete');
 }
 
 async function createTestDatabase() {
@@ -43,15 +43,15 @@ async function createTestDatabase() {
     );
     
     if (result.rows.length === 0) {
-      console.log('📊 Creating test database...');
+      // console.log('📊 Creating test database...');
       await adminClient.query(`CREATE DATABASE "${testDbName}"`);
-      console.log('✅ Test database created');
+      // console.log('✅ Test database created');
     } else {
-      console.log('📊 Test database already exists');
+      // console.log('📊 Test database already exists');
     }
     
   } catch (error) {
-    console.error('❌ Error creating test database:', error);
+    // console.error('❌ Error creating test database:', error);
     throw error;
   } finally {
     await adminClient.end();
@@ -65,16 +65,16 @@ async function createTestDatabase() {
 
 async function runTestMigrations() {
   try {
-    console.log('🔄 Running test database migrations...');
+    // console.log('🔄 Running test database migrations...');
     
     // Use Prisma CLI to run migrations
     await execAsync('npx prisma migrate deploy', {
       env: { ...process.env, DATABASE_URL: process.env.TEST_DATABASE_URL || '' }
     });
     
-    console.log('✅ Test database migrations completed');
+    // console.log('✅ Test database migrations completed');
   } catch (error) {
-    console.error('❌ Error running test migrations:', error);
+    // console.error('❌ Error running test migrations:', error);
     throw error;
   }
 }

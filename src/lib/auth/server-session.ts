@@ -33,11 +33,11 @@ export async function getServerSession(
 
     const session = await auth.api.getSession({ headers });
     return session as Session | null;
-  } catch (error) {
+  } catch (_error) {
     // Don't log in production to avoid noise
     if (process.env.NODE_ENV === "development") {
       // eslint-disable-next-line no-console
-      console.error("Server session validation error:", error);
+      // console.error("Server session validation error:", error);
     }
     return null;
   }
@@ -330,7 +330,7 @@ export function withPermission(
       return await handler(request, session, auditData);
     } catch (handlerError) {
       // Log API errors for security monitoring
-      console.error("API handler error:", {
+      // console.error("API handler error:", {
         error: handlerError,
         permission,
         userId: session.user.id,
@@ -364,7 +364,7 @@ export function withAuth(
       return await handler(request, session);
     } catch (handlerError) {
       // eslint-disable-next-line no-console
-      console.error("API handler error:", handlerError);
+      // console.error("API handler error:", handlerError);
       return createApiErrorResponse(500, "Internal server error");
     }
   };
@@ -400,9 +400,9 @@ async function logSecurityEvent(event: {
         },
       },
     });
-  } catch (error) {
+  } catch (_error) {
     // Don't throw on audit log failures, but log the error
-    console.error("Failed to log security event:", error);
+    // console.error("Failed to log security event:", error);
   }
 }
 

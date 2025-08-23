@@ -10,7 +10,7 @@ import { PrismaClient } from '@prisma/client';
 const prisma = new PrismaClient();
 
 async function cleanupLegacyAuth() {
-  console.log('🧹 Starting legacy authentication cleanup...\n');
+  // Starting legacy authentication cleanup
   
   try {
     const targetEmails = ['gabop2000@gmail.com', 'gabrielprivermsg@gmail.com'];
@@ -18,18 +18,9 @@ async function cleanupLegacyAuth() {
     // First, get all users that will be deleted (for logging)
     const usersToDelete = await prisma.user.findMany({
       where: {
-        AND: [
-          {
-            hashedPassword: {
-              not: null
-            }
-          },
-          {
-            email: {
-              notIn: targetEmails
-            }
-          }
-        ]
+        email: {
+          notIn: targetEmails
+        }
       },
       select: {
         id: true,
@@ -45,71 +36,70 @@ async function cleanupLegacyAuth() {
       }
     });
 
-    console.log('📋 Users scheduled for deletion:');
-    console.log('==============================');
-    usersToDelete.forEach(user => {
-      console.log(`- ${user.email} (${user.role})`);
-      console.log(`  - Orders: ${user.orders.length}`);
-      console.log(`  - Payment Methods: ${user.paymentMethods.length}`);
-      console.log(`  - Subscriptions: ${user.subscriptions.length}`);
-      console.log(`  - Sessions: ${user.sessions.length}`);
-      console.log(`  - Accounts: ${user.accounts.length}`);
+    // Users scheduled for deletion
+    usersToDelete.forEach(_user => {
+      // User: ${user.email} (${user.role})
+      // Orders: ${user.orders.length}
+      // Payment Methods: ${user.paymentMethods.length}
+      // Subscriptions: ${user.subscriptions.length}
+      // Sessions: ${user.sessions.length}
+      // Accounts: ${user.accounts.length}
     });
 
     if (usersToDelete.length === 0) {
-      console.log('✅ No legacy users to delete.');
+      // No legacy users to delete
       return;
     }
 
-    console.log(`\n⚠️  About to delete ${usersToDelete.length} legacy users and all their related data.`);
-    console.log('This action cannot be undone!');
+    // About to delete ${usersToDelete.length} legacy users and all their related data
+    // This action cannot be undone
     
     const userIdsToDelete = usersToDelete.map(user => user.id);
     
-    console.log('\n🗑️  Deleting related data...');
+    // Deleting related data
     
     // Delete subscriptions first (no cascade)
-    const deletedSubscriptions = await prisma.subscription.deleteMany({
+    const _deletedSubscriptions = await prisma.subscription.deleteMany({
       where: { userId: { in: userIdsToDelete } }
     });
-    console.log(`  - Deleted ${deletedSubscriptions.count} subscriptions`);
+    // Deleted ${deletedSubscriptions.count} subscriptions
     
     // Delete orders (should cascade to order items)
-    const deletedOrders = await prisma.order.deleteMany({
+    const _deletedOrders = await prisma.order.deleteMany({
       where: { userId: { in: userIdsToDelete } }
     });
-    console.log(`  - Deleted ${deletedOrders.count} orders`);
+    // Deleted ${deletedOrders.count} orders
     
     // Delete payment methods (should cascade)
-    const deletedPaymentMethods = await prisma.paymentMethod.deleteMany({
+    const _deletedPaymentMethods = await prisma.paymentMethod.deleteMany({
       where: { userId: { in: userIdsToDelete } }
     });
-    console.log(`  - Deleted ${deletedPaymentMethods.count} payment methods`);
+    // Deleted ${deletedPaymentMethods.count} payment methods
     
     // Delete sessions (should cascade)
-    const deletedSessions = await prisma.session.deleteMany({
+    const _deletedSessions = await prisma.session.deleteMany({
       where: { userId: { in: userIdsToDelete } }
     });
-    console.log(`  - Deleted ${deletedSessions.count} sessions`);
+    // Deleted ${deletedSessions.count} sessions
     
     // Delete accounts (should cascade)
-    const deletedAccounts = await prisma.account.deleteMany({
+    const _deletedAccounts = await prisma.account.deleteMany({
       where: { userId: { in: userIdsToDelete } }
     });
-    console.log(`  - Deleted ${deletedAccounts.count} accounts`);
+    // Deleted ${deletedAccounts.count} accounts
     
     // Delete user discount codes
-    const deletedUserDiscountCodes = await prisma.userDiscountCode.deleteMany({
+    const _deletedUserDiscountCodes = await prisma.userDiscountCode.deleteMany({
       where: { userId: { in: userIdsToDelete } }
     });
-    console.log(`  - Deleted ${deletedUserDiscountCodes.count} user discount codes`);
+    // Deleted ${deletedUserDiscountCodes.count} user discount codes
     
     // Finally delete the users
-    const deleteResult = await prisma.user.deleteMany({
+    const _deleteResult = await prisma.user.deleteMany({
       where: { id: { in: userIdsToDelete } }
     });
 
-    console.log(`\n✅ Successfully deleted ${deleteResult.count} legacy users.`);
+    // Successfully deleted ${deleteResult.count} legacy users
 
     // Verify remaining users
     const remainingUsers = await prisma.user.findMany({
@@ -118,31 +108,28 @@ async function cleanupLegacyAuth() {
         email: true,
         name: true,
         role: true,
-        hashedPassword: true,
         accounts: {
           select: {
             id: true,
-            providerId: true,
-            password: true
+            providerId: true
           }
         }
       }
     });
 
-    console.log('\n📊 Remaining users after cleanup:');
-    console.log('================================');
-    remainingUsers.forEach(user => {
-      const hasBetterAuth = user.accounts.some(acc => acc.password);
-      const hasLegacyAuth = !!user.hashedPassword;
-      console.log(`- ${user.email} (${user.role})`);
-      console.log(`  - Legacy Auth: ${hasLegacyAuth ? 'YES' : 'NO'}`);
-      console.log(`  - BetterAuth: ${hasBetterAuth ? 'YES' : 'NO'}`);
+    // Remaining users after cleanup
+    remainingUsers.forEach(_user => {
+      // const _hasBetterAuth = user.accounts.some(acc => acc.password);
+      // const _hasLegacyAuth = !!user.hashedPassword;
+      // User: ${user.email} (${user.role})
+      // Legacy Auth: ${hasLegacyAuth ? 'YES' : 'NO'}
+      // BetterAuth: ${hasBetterAuth ? 'YES' : 'NO'}
     });
 
-    console.log('\n🎉 Legacy user cleanup completed successfully!');
+    // Legacy user cleanup completed successfully
 
   } catch (error) {
-    console.error('❌ Error during cleanup:', error);
+    // Error during cleanup: error
     throw error;
   } finally {
     await prisma.$disconnect();

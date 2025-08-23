@@ -67,7 +67,7 @@ export interface PaymentMethodSeedData {
   expiryYear?: number;
   isDefault: boolean;
   nickname?: string;
-  billingAddress?: Record<string, any>;
+  billingAddress?: Record<string, string | number | boolean>;
 }
 
 export interface OrderSeedData {
@@ -88,14 +88,14 @@ export interface OrderSeedData {
     productId: string;
     quantity: number;
     unitPrice: number;
-    metadata?: Record<string, any>;
+    metadata?: Record<string, string | number | boolean>;
   }>;
   stripePaymentIntentId?: string;
   paymentMethodId?: string;
   discountCodeId?: string;
-  shippingAddress?: Record<string, any>;
-  billingAddress?: Record<string, any>;
-  metadata?: Record<string, any>;
+  shippingAddress?: Record<string, string | number | boolean>;
+  billingAddress?: Record<string, string | number | boolean>;
+  metadata?: Record<string, string | number | boolean>;
   createdDaysAgo: number;
   paidDaysAgo?: number;
   shippedDaysAgo?: number;
@@ -137,5 +137,5 @@ export interface SubscriptionSeedData {
   cancelledDaysAgo?: number;
   endedDaysAgo?: number;
   cancelAtPeriodEnd: boolean;
-  metadata?: Record<string, any>;
+  metadata?: Record<string, string | number | boolean>;
 }

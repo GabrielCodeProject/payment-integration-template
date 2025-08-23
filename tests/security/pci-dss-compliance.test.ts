@@ -34,7 +34,7 @@ describe('PCI DSS Compliance Security Tests', () => {
       expect(paymentMethodData).not.toContain('trackData');
       expect(paymentMethodData).not.toContain('fullCardNumber');
       
-      console.log('✅ PCI DSS Requirement 3: No prohibited cardholder data stored');
+      // console.log('✅ PCI DSS Requirement 3: No prohibited cardholder data stored');
     });
     
     it('should validate encrypted payment references only', async () => {
@@ -47,7 +47,7 @@ describe('PCI DSS Compliance Security Tests', () => {
       expect(paymentMethod.fingerprint).toBeDefined();
       expect(paymentMethod.fingerprint).not.toContain(' '); // No spaces in fingerprint
       
-      console.log('✅ Only encrypted payment references stored');
+      // console.log('✅ Only encrypted payment references stored');
     });
   });
   
@@ -75,7 +75,7 @@ describe('PCI DSS Compliance Security Tests', () => {
       expect(adminUsers).toHaveLength(1);
       expect(adminUsers[0].email).toBe('admin@example.com');
       
-      console.log('✅ PCI DSS Requirement 7: Role-based access controls implemented');
+      // console.log('✅ PCI DSS Requirement 7: Role-based access controls implemented');
     });
     
     it('should validate payment data access restrictions', async () => {
@@ -99,7 +99,7 @@ describe('PCI DSS Compliance Security Tests', () => {
       expect(userOrders).toHaveLength(1);
       expect(userOrders[0].stripePaymentIntentId).toBe('pi_test_123456');
       
-      console.log('✅ Payment data access properly restricted by user');
+      // console.log('✅ Payment data access properly restricted by user');
     });
   });
   
@@ -116,7 +116,7 @@ describe('PCI DSS Compliance Security Tests', () => {
       expect(user).toBeDefined();
       expect(user).not.toBe('plaintext_password');
       
-      console.log('✅ PCI DSS Requirement 8: User identification validated');
+      // console.log('✅ PCI DSS Requirement 8: User identification validated');
     });
     
     it('should validate two-factor authentication support', async () => {
@@ -139,7 +139,7 @@ describe('PCI DSS Compliance Security Tests', () => {
       });
       expect(users2FA).toHaveLength(1);
       
-      console.log('✅ Two-factor authentication support validated');
+      // console.log('✅ Two-factor authentication support validated');
     });
     
     it('should validate session management', async () => {
@@ -164,7 +164,7 @@ describe('PCI DSS Compliance Security Tests', () => {
       });
       expect(foundSession?.userId).toBe(user.id);
       
-      console.log('✅ Session management validated');
+      // console.log('✅ Session management validated');
     });
   });
   
@@ -224,7 +224,7 @@ describe('PCI DSS Compliance Security Tests', () => {
         expect(audit.ipAddress).toBeDefined();
       });
       
-      console.log('✅ PCI DSS Requirement 10: Comprehensive audit logging validated');
+      // console.log('✅ PCI DSS Requirement 10: Comprehensive audit logging validated');
     });
     
     it('should validate audit log queries for compliance reporting', async () => {
@@ -283,7 +283,7 @@ describe('PCI DSS Compliance Security Tests', () => {
       });
       expect(deleteActions.length).toBeGreaterThan(0);
       
-      console.log('✅ Audit log compliance reporting queries validated');
+      // console.log('✅ Audit log compliance reporting queries validated');
     });
   });
   
@@ -306,7 +306,7 @@ describe('PCI DSS Compliance Security Tests', () => {
       expect(parseInt(config.max_connections)).toBeGreaterThan(0);
       expect(config.max_connections).toBeDefined();
       
-      console.log('✅ Database security configuration validated');
+      // console.log('✅ Database security configuration validated');
     });
     
     it('should test for SQL injection vulnerabilities', async () => {
@@ -330,7 +330,7 @@ describe('PCI DSS Compliance Security Tests', () => {
       const userCount = await prisma.user.count();
       expect(userCount).toBeGreaterThanOrEqual(1);
       
-      console.log('✅ SQL injection protection validated');
+      // console.log('✅ SQL injection protection validated');
     });
     
     it('should validate input sanitization', async () => {
@@ -354,7 +354,7 @@ describe('PCI DSS Compliance Security Tests', () => {
         expect(user.email).toContain('@');
       });
       
-      console.log('✅ Input sanitization validated');
+      // console.log('✅ Input sanitization validated');
     });
   });
   
@@ -380,7 +380,7 @@ describe('PCI DSS Compliance Security Tests', () => {
         prisma.order.create({ data: duplicateOrder })
       ).rejects.toThrow(); // Should fail on unique constraint
       
-      console.log('✅ Payment intent security validated');
+      // console.log('✅ Payment intent security validated');
     });
     
     it('should validate subscription security', async () => {
@@ -399,7 +399,7 @@ describe('PCI DSS Compliance Security Tests', () => {
       expect(subscription.userId).toBe(user.id);
       expect(subscription.productId).toBe(product.id);
       
-      console.log('✅ Subscription security validated');
+      // console.log('✅ Subscription security validated');
     });
     
     it('should validate customer data protection', async () => {
@@ -419,7 +419,7 @@ describe('PCI DSS Compliance Security Tests', () => {
         })
       ).rejects.toThrow();
       
-      console.log('✅ Customer data protection validated');
+      // console.log('✅ Customer data protection validated');
     });
   });
   
@@ -457,7 +457,7 @@ describe('PCI DSS Compliance Security Tests', () => {
       expect(user2Data?.orders).toHaveLength(1);
       expect(user2Data?.orders[0].id).toBe(user2Order.id);
       
-      console.log('✅ Data isolation between users validated');
+      // console.log('✅ Data isolation between users validated');
     });
   });
 });

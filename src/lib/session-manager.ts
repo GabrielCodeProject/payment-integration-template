@@ -148,8 +148,8 @@ export class SessionManager {
       });
 
       return sessionInfos;
-    } catch (error) {
-      throw new Error(`Failed to get user sessions: ${error instanceof Error ? error.message : 'Unknown error'}`);
+    } catch (_error) {
+      throw new Error(`Failed to get user sessions: ${error instanceof Error ? _error.message : 'Unknown error'}`);
     }
   }
 
@@ -241,10 +241,10 @@ export class SessionManager {
         expiresAt: newExpiresAt,
         rotated: rotateToken,
       };
-    } catch (error) {
+    } catch (_error) {
       return {
         success: false,
-        error: `Failed to refresh session: ${error instanceof Error ? error.message : 'Unknown error'}`,
+        error: `Failed to refresh session: ${error instanceof Error ? _error.message : 'Unknown error'}`,
         rotated: false,
       };
     }
@@ -293,8 +293,8 @@ export class SessionManager {
       });
 
       return true;
-    } catch (error) {
-      throw new Error(`Failed to terminate session: ${error instanceof Error ? error.message : 'Unknown error'}`);
+    } catch (_error) {
+      throw new Error(`Failed to terminate session: ${error instanceof Error ? _error.message : 'Unknown error'}`);
     }
   }
 
@@ -345,8 +345,8 @@ export class SessionManager {
       });
 
       return result.count;
-    } catch (error) {
-      throw new Error(`Failed to terminate all sessions: ${error instanceof Error ? error.message : 'Unknown error'}`);
+    } catch (_error) {
+      throw new Error(`Failed to terminate all sessions: ${error instanceof Error ? _error.message : 'Unknown error'}`);
     }
   }
 
@@ -435,8 +435,8 @@ export class SessionManager {
       });
 
       return result;
-    } catch (error) {
-      throw new Error(`Failed to enforce session limits: ${error instanceof Error ? error.message : 'Unknown error'}`);
+    } catch (_error) {
+      throw new Error(`Failed to enforce session limits: ${error instanceof Error ? _error.message : 'Unknown error'}`);
     }
   }
 
@@ -471,8 +471,8 @@ export class SessionManager {
         concurrentLimit: this.defaultLimits.maxConcurrentSessions,
         averageSessionDuration,
       };
-    } catch (error) {
-      throw new Error(`Failed to get session stats: ${error instanceof Error ? error.message : 'Unknown error'}`);
+    } catch (_error) {
+      throw new Error(`Failed to get session stats: ${error instanceof Error ? _error.message : 'Unknown error'}`);
     }
   }
 
@@ -540,8 +540,8 @@ export class SessionManager {
         location: this.parseLocation(options.ipAddress),
         isCurrent: true,
       };
-    } catch (error) {
-      throw new Error(`Failed to create session: ${error instanceof Error ? error.message : 'Unknown error'}`);
+    } catch (_error) {
+      throw new Error(`Failed to create session: ${error instanceof Error ? _error.message : 'Unknown error'}`);
     }
   }
 
@@ -578,8 +578,8 @@ export class SessionManager {
       });
 
       return result;
-    } catch (error) {
-      throw new Error(`Failed to cleanup expired sessions: ${error instanceof Error ? error.message : 'Unknown error'}`);
+    } catch (_error) {
+      throw new Error(`Failed to cleanup expired sessions: ${error instanceof Error ? _error.message : 'Unknown error'}`);
     }
   }
 
@@ -753,7 +753,7 @@ export class SessionManager {
       return Math.floor(averageDurationMs / 1000); // Convert to seconds
     } catch (_error) {
       // Return 0 if calculation fails
-      // console.warn('Failed to calculate average session duration:', _error);
+      // // console.warn('Failed to calculate average session duration:', _error);
       return 0;
     }
   }

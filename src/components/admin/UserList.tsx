@@ -118,7 +118,7 @@ export function UserList({
         throw new Error(data.error || "Failed to fetch users");
       }
     } catch (err) {
-      console.error("Error fetching users:", err);
+      // console.error("Error fetching users:", err);
       setError(err instanceof Error ? err.message : "Failed to load users");
     } finally {
       setIsLoading(false);
@@ -151,7 +151,7 @@ export function UserList({
       // Refresh the user list
       await fetchUsers();
     } catch (err) {
-      console.error(`Error ${action}ing user:`, err);
+      // console.error(`Error ${action}ing user:`, err);
       setError(err instanceof Error ? err.message : `Failed to ${action} user`);
     }
   };

@@ -53,8 +53,8 @@ export async function rateLimit(
       resetTime: result.resetTime,
       totalHits: result.totalHits,
     };
-  } catch (error) {
-    console.error('Rate limiting error:', error);
+  } catch (_error) {
+    // console.error('Rate limiting error:', error);
     // On error, allow the request but log the issue
     return { success: true };
   }
@@ -96,9 +96,9 @@ export async function auditAction(params: AuditActionParams): Promise<void> {
         ...params.details,
       },
     });
-  } catch (error) {
+  } catch (_error) {
     // Don't let audit logging failures break the main operation
-    console.error('Audit logging failed:', error);
+    // console.error('Audit logging failed:', error);
   }
 }
 
@@ -182,7 +182,7 @@ export async function parseJsonBody<T = any>(request: NextRequest): Promise<{
   try {
     const data = await request.json();
     return { success: true, data };
-  } catch (error) {
+  } catch (_error) {
     return { 
       success: false, 
       error: 'Invalid JSON in request body' 

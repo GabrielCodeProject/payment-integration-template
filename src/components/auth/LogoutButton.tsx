@@ -62,9 +62,9 @@ export function LogoutButton({
 
       // Redirect to login page
       router.push("/login");
-    } catch (error) {
+    } catch (_error) {
       // eslint-disable-next-line no-console
-      console.error("Logout error:", error);
+      // console.error("Logout error:", error);
       toast.error("An unexpected error occurred during sign out.");
     } finally {
       setIsLoading(false);
@@ -152,9 +152,9 @@ export function useLogout() {
       toast.success("You have been signed out successfully.");
       router.push("/login");
       return true;
-    } catch (error) {
+    } catch (_error) {
       // eslint-disable-next-line no-console
-      console.error("Logout error:", error);
+      // console.error("Logout error:", error);
       toast.error("An unexpected error occurred during sign out.");
       return false;
     } finally {

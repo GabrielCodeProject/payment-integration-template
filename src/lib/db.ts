@@ -81,7 +81,7 @@ export const db = globalThis.__prisma ?? createPrismaClient();
 if (process.env.NODE_ENV === "production") {
   // Log database errors for security monitoring
   db.$on("error", (e) => {
-    console.error("[DB_ERROR]", {
+    // console.error("[DB_ERROR]", {
       timestamp: new Date().toISOString(),
       target: e.target,
       message: e.message,
@@ -91,7 +91,7 @@ if (process.env.NODE_ENV === "production") {
 
   // Log slow queries for performance monitoring
   db.$on("warn", (e) => {
-    console.warn("[DB_WARN]", {
+    // console.warn("[DB_WARN]", {
       timestamp: new Date().toISOString(),
       target: e.target,
       message: e.message,
@@ -100,7 +100,7 @@ if (process.env.NODE_ENV === "production") {
 } else {
   // Development logging with query details
   db.$on("query", (e) => {
-    console.log("[DB_QUERY]", {
+    // console.log("[DB_QUERY]", {
       query: e.query,
       params: e.params,
       duration: `${e.duration}ms`,
@@ -116,12 +116,12 @@ if (process.env.NODE_ENV !== "production") {
 
 // Enhanced graceful shutdown handling
 const gracefulShutdown = async () => {
-  console.log("[DB] Initiating graceful shutdown...");
+  // console.log("[DB] Initiating graceful shutdown...");
   try {
     await db.$disconnect();
-    console.log("[DB] Database connections closed successfully");
-  } catch (error) {
-    console.error("[DB] Error during shutdown:", error);
+    // console.log("[DB] Database connections closed successfully");
+  } catch (_error) {
+    // console.error("[DB] Error during shutdown:", error);
   }
 };
 
@@ -148,21 +148,21 @@ export const secureTransaction = async <T>(
         timeout: 30000, // 30 second timeout for payment operations
         isolationLevel: "Serializable", // Highest isolation level for financial data
       });
-    } catch (error) {
+    } catch (_error) {
       lastError = error as Error;
       
       // Log security-relevant transaction failures
       if (process.env.NODE_ENV === "production") {
-        console.error(`[DB_TRANSACTION_FAILED] Attempt ${attempt}/${maxRetries}:`, {
+        // console.error(`[DB_TRANSACTION_FAILED] Attempt ${attempt}/${maxRetries}:`, {
           timestamp: new Date().toISOString(),
-          error: error instanceof Error ? error.message : "Unknown error",
+          error: error instanceof Error ? _error.message : "Unknown error",
           attempt,
         });
       }
       
       // Don't retry certain types of errors
-      if (error instanceof Error) {
-        const message = error.message.toLowerCase();
+      if (_error instanceof Error) {
+        const message = _error.message.toLowerCase();
         if (
           message.includes("constraint") ||
           message.includes("unique") ||
@@ -190,7 +190,7 @@ export const secureTransaction = async <T>(
  */
 export const createReadOnlyClient = () => {
   if (!process.env.DATABASE_READONLY_URL) {
-    console.warn("[DB] DATABASE_READONLY_URL not configured, falling back to main connection");
+    // console.warn("[DB] DATABASE_READONLY_URL not configured, falling back to main connection");
     return db;
   }
   

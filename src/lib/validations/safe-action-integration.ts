@@ -45,8 +45,8 @@ export const enhancedActionClient = actionClient.use(async ({ next, clientInput:
     }
     
     return result;
-  } catch (error) {
-    console.error('Enhanced action client error:', error);
+  } catch (_error) {
+    // console.error('Enhanced action client error:', error);
     return {
       success: false,
       error: {
@@ -110,8 +110,8 @@ export const enhancedPaymentActionClient = enhancedAuthActionClient.use(async ({
     }
     
     return result;
-  } catch (error) {
-    console.error('Payment action error:', error);
+  } catch (_error) {
+    // console.error('Payment action error:', error);
     return {
       success: false,
       error: createPaymentError(
@@ -154,8 +154,8 @@ export function createValidationMiddleware<T extends z.ZodSchema>(
       }
       
       return next();
-    } catch (error) {
-      if (error instanceof z.ZodError) {
+    } catch (_error) {
+      if (_error instanceof z.ZodError) {
         return {
           success: false,
           error: createValidationError(
@@ -172,7 +172,7 @@ export function createValidationMiddleware<T extends z.ZodSchema>(
         };
       }
       
-      throw error;
+      throw _error;
     }
   };
 }

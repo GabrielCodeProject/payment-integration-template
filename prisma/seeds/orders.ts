@@ -163,7 +163,15 @@ function generateOrderFromScenario(
     const unitPrice = randomBetween(999, 9999) / 100; // $9.99 to $99.99
     const totalPrice = quantity * unitPrice;
     
-    const item: any = {
+    const item: {
+      productId: string;
+      quantity: number;
+      unitPrice: number;
+      metadata?: {
+        size: string;
+        color: string;
+      };
+    } = {
       productId,
       quantity,
       unitPrice
@@ -242,11 +250,11 @@ function generateOrderFromScenario(
     shippingAmount,
     discountAmount,
     total,
-    discountCodeId,
-    paymentMethodId: paymentMethodIds.length > 0 ? randomChoice(paymentMethodIds) : undefined,
+    discountCodeId: discountCodeId || null,
+    paymentMethodId: paymentMethodIds.length > 0 ? randomChoice(paymentMethodIds) : null,
     stripePaymentIntentId: scenario.paymentStatus !== 'PENDING' 
       ? generateStripeId('pi', `order_${orderIndex}`)
-      : undefined,
+      : null,
     createdDaysAgo,
     paidDaysAgo,
     shippedDaysAgo,
@@ -269,7 +277,7 @@ function selectOrderScenario(): typeof ORDER_SCENARIO_TEMPLATES[0] {
     }
   }
   
-  return ORDER_SCENARIO_TEMPLATES[0]; // Fallback
+  return ORDER_SCENARIO_TEMPLATES[0]!; // Fallback
 }
 
 /**

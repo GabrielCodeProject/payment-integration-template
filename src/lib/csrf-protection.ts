@@ -161,7 +161,7 @@ export function validateCSRFProtection(
   // Enhanced development logging for CSRF debugging
   if (isDevelopment) {
     // eslint-disable-next-line no-console
-    console.log('🔒 CSRF Validation Debug:', {
+    // console.log('🔒 CSRF Validation Debug:', {
       pathname,
       method: request.method,
       cookieToken: cookieToken ? `${cookieToken.substring(0, 8)}...` : 'missing',
@@ -179,7 +179,7 @@ export function validateCSRFProtection(
       
     if (isDevelopment) {
       // eslint-disable-next-line no-console
-      console.warn('❌ CSRF Validation Failed:', reason);
+      // console.warn('❌ CSRF Validation Failed:', reason);
     }
     
     return { 
@@ -195,7 +195,7 @@ export function validateCSRFProtection(
     
     if (isDevelopment) {
       // eslint-disable-next-line no-console
-      console.warn('❌ CSRF Validation Failed:', reason);
+      // console.warn('❌ CSRF Validation Failed:', reason);
     }
     
     // Check if custom header requirement is enabled
@@ -221,7 +221,7 @@ export function validateCSRFProtection(
     
     if (isDevelopment) {
       // eslint-disable-next-line no-console
-      console.warn('❌ CSRF Validation Failed:', reason);
+      // console.warn('❌ CSRF Validation Failed:', reason);
     }
     
     return { 
@@ -232,7 +232,7 @@ export function validateCSRFProtection(
 
   if (isDevelopment) {
     // eslint-disable-next-line no-console
-    console.log('✅ CSRF Validation Passed for', pathname);
+    // console.log('✅ CSRF Validation Passed for', pathname);
   }
 
   return { isValid: true };
@@ -290,9 +290,9 @@ export async function getServerCSRFToken(): Promise<string | null> {
     }
     
     return null;
-  } catch (error) {
+  } catch (_error) {
     // eslint-disable-next-line no-console
-    console.warn("Error getting server CSRF token:", error);
+    // console.warn("Error getting server CSRF token:", error);
     return null;
   }
 }

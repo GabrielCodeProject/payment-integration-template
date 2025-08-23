@@ -27,7 +27,7 @@ describe('Audit Logging Integration Tests', () => {
     try {
       await testAuditService.enableAuditTriggers();
     } catch (_error) {
-      console.warn('Could not enable audit triggers, some tests may fail');
+      // console.warn('Could not enable audit triggers, some tests may fail');
     }
   });
 
@@ -753,7 +753,7 @@ describe('Audit Logging Integration Tests', () => {
         expect(status.some(s => s.triggerEnabled)).toBe(true);
       } catch (_error) {
         // Triggers might not be supported in test environment
-        console.warn('Trigger management not available in test environment');
+        // console.warn('Trigger management not available in test environment');
       }
     });
 
@@ -790,7 +790,7 @@ describe('Audit Logging Integration Tests', () => {
         expect(cleanupResult).toBeGreaterThanOrEqual(0);
       } catch (_error) {
         // Cleanup might not be supported in test environment
-        console.warn('Audit cleanup not available in test environment');
+        // console.warn('Audit cleanup not available in test environment');
       }
     });
   });

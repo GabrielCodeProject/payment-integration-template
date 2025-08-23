@@ -64,7 +64,7 @@ describe('Authentication State Edge Cases', () => {
       });
       expect(dbSession?.expires.getTime()).toBeLessThan(Date.now());
       
-      console.log('✅ Session expiration during form submission');
+      // console.log('✅ Session expiration during form submission');
     });
     
     it('should handle race conditions with session renewal', async () => {
@@ -126,7 +126,7 @@ describe('Authentication State Edge Cases', () => {
       expect(results[1].status).toBe(409);
       expect(renewalCount).toBe(2);
       
-      console.log('✅ Race conditions with session renewal');
+      // console.log('✅ Race conditions with session renewal');
     });
   });
   
@@ -188,7 +188,7 @@ describe('Authentication State Edge Cases', () => {
       const conflictData = await results[1].json();
       expect(conflictData.code).toBe('ALREADY_AUTHENTICATED');
       
-      console.log('✅ Multiple login attempts for same user');
+      // console.log('✅ Multiple login attempts for same user');
     });
     
     it('should handle session conflicts across multiple devices', async () => {
@@ -240,7 +240,7 @@ describe('Authentication State Edge Cases', () => {
       
       expect(remainingSessions).toHaveLength(0); // Cleaned up in test
       
-      console.log('✅ Session conflicts across multiple devices');
+      // console.log('✅ Session conflicts across multiple devices');
     });
   });
   
@@ -285,7 +285,7 @@ describe('Authentication State Edge Cases', () => {
       expect(errorData.code).toBe('ALREADY_AUTHENTICATED');
       expect(errorData.currentSession.sessionToken).toBe(activeSession.sessionToken);
       
-      console.log('✅ Login attempt with valid active session');
+      // console.log('✅ Login attempt with valid active session');
     });
     
     it('should handle registration attempt by authenticated user', async () => {
@@ -323,7 +323,7 @@ describe('Authentication State Edge Cases', () => {
       const errorData = await response.json();
       expect(errorData.code).toBe('USER_ALREADY_AUTHENTICATED');
       
-      console.log('✅ Registration attempt by authenticated user');
+      // console.log('✅ Registration attempt by authenticated user');
     });
   });
   
@@ -362,7 +362,7 @@ describe('Authentication State Edge Cases', () => {
       expect(responseData.limitedAccess).toBe(true);
       expect(responseData.user.emailVerified).toBe(false);
       
-      console.log('✅ Pending email verification state');
+      // console.log('✅ Pending email verification state');
     });
     
     it('should handle incomplete 2FA setup state', async () => {
@@ -399,7 +399,7 @@ describe('Authentication State Edge Cases', () => {
       expect(responseData.securityLevel).toBe('basic');
       expect(responseData.user.twoFactorEnabled).toBe(false);
       
-      console.log('✅ Incomplete 2FA setup state');
+      // console.log('✅ Incomplete 2FA setup state');
     });
     
     it('should handle password reset required state', async () => {
@@ -432,7 +432,7 @@ describe('Authentication State Edge Cases', () => {
       expect(errorData.resetToken).toBeDefined();
       expect(errorData.action).toBe('redirect_to_reset');
       
-      console.log('✅ Password reset required state');
+      // console.log('✅ Password reset required state');
     });
   });
   
@@ -465,7 +465,7 @@ describe('Authentication State Edge Cases', () => {
       expect(errorData.code).toBe('ACCOUNT_INACTIVE');
       expect(errorData.activationRequired).toBe(true);
       
-      console.log('✅ Account activation during authentication');
+      // console.log('✅ Account activation during authentication');
     });
     
     it('should handle account suspension during active session', async () => {
@@ -503,7 +503,7 @@ describe('Authentication State Edge Cases', () => {
       expect(errorData.code).toBe('ACCOUNT_SUSPENDED');
       expect(errorData.sessionTerminated).toBe(true);
       
-      console.log('✅ Account suspension during active session');
+      // console.log('✅ Account suspension during active session');
     });
   });
   
@@ -554,7 +554,7 @@ describe('Authentication State Edge Cases', () => {
       });
       expect(userSessions).toHaveLength(maxSessions); // Should still be at limit
       
-      console.log('✅ Maximum session limit per user');
+      // console.log('✅ Maximum session limit per user');
     });
     
     it('should handle session inheritance on device change', async () => {
@@ -598,7 +598,7 @@ describe('Authentication State Edge Cases', () => {
       expect(responseData.previousDevice).toBe('mobile');
       expect(responseData.currentDevice).toBe('desktop');
       
-      console.log('✅ Session inheritance on device change');
+      // console.log('✅ Session inheritance on device change');
     });
   });
   

@@ -91,7 +91,8 @@ model Product {
   slug              String           @unique
   metaTitle         String?
   metaDescription   String?
-  tags              String[]
+  categories        ProductCategory[]
+  tags              ProductTag[]
   images            String[]
   thumbnail         String?
   stripePriceId     String?          @unique
@@ -102,6 +103,7 @@ model Product {
   updatedAt         DateTime         @updatedAt
   orderItems        OrderItem[]
   subscriptions     Subscription[]
+  pricingTiers      PricingTier[]
 
   @@index([isActive])
   @@index([type])
@@ -331,6 +333,91 @@ model Verification {
   updatedAt  DateTime?
 
   @@map("verification")
+}
+
+model Category {
+  id          String            @id @default(cuid())
+  name        String            @unique
+  description String?
+  slug        String            @unique
+  createdAt   DateTime          @default(now())
+  updatedAt   DateTime          @updatedAt
+  products    ProductCategory[]
+
+  @@index([name])
+  @@index([slug])
+  @@index([createdAt])
+  @@map("categories")
+}
+
+model Tag {
+  id        String       @id @default(cuid())
+  name      String       @unique
+  slug      String       @unique
+  color     String?
+  createdAt DateTime     @default(now())
+  updatedAt DateTime     @updatedAt
+  products  ProductTag[]
+
+  @@index([name])
+  @@index([slug])
+  @@index([createdAt])
+  @@map("tags")
+}
+
+model ProductCategory {
+  id         String   @id @default(cuid())
+  productId  String
+  categoryId String
+  createdAt  DateTime @default(now())
+  category   Category @relation(fields: [categoryId], references: [id], onDelete: Cascade)
+  product    Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
+
+  @@unique([productId, categoryId])
+  @@index([productId])
+  @@index([categoryId])
+  @@map("product_categories")
+}
+
+model ProductTag {
+  id        String   @id @default(cuid())
+  productId String
+  tagId     String
+  createdAt DateTime @default(now())
+  product   Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
+  tag       Tag      @relation(fields: [tagId], references: [id], onDelete: Cascade)
+
+  @@unique([productId, tagId])
+  @@index([productId])
+  @@index([tagId])
+  @@map("product_tags")
+}
+
+model PricingTier {
+  id              String           @id @default(cuid())
+  productId       String
+  name            String
+  description     String?
+  price           Decimal          @db.Decimal(10, 2)
+  currency        String           @default("usd")
+  billingInterval BillingInterval?
+  trialDays       Int?
+  features        Json             @default("[]")
+  isFreemium      Boolean          @default(false)
+  isActive        Boolean          @default(true)
+  sortOrder       Int              @default(0)
+  stripePriceId   String?          @unique
+  createdAt       DateTime         @default(now())
+  updatedAt       DateTime         @updatedAt
+  product         Product          @relation(fields: [productId], references: [id], onDelete: Cascade)
+
+  @@unique([productId, name])
+  @@index([productId])
+  @@index([isActive])
+  @@index([sortOrder])
+  @@index([productId, isActive, sortOrder])
+  @@index([stripePriceId])
+  @@map("pricing_tiers")
 }
 
 enum UserRole {

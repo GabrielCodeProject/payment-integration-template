@@ -67,7 +67,7 @@ export async function getEdgeSession(
     if (!secret) {
       if (process.env.NODE_ENV === "development") {
         // eslint-disable-next-line no-console
-        console.warn("BETTER_AUTH_SECRET not found, session validation will be limited");
+        // console.warn("BETTER_AUTH_SECRET not found, session validation will be limited");
       }
       return null;
     }
@@ -116,10 +116,10 @@ export async function getEdgeSession(
     }
 
     return null;
-  } catch (error) {
+  } catch (_error) {
     if (process.env.NODE_ENV === "development") {
       // eslint-disable-next-line no-console
-      console.error("Edge session validation error:", error);
+      // console.error("Edge session validation error:", error);
     }
     return null;
   }
@@ -325,7 +325,7 @@ export function logAuthEvent(
 ): void {
   if (process.env.NODE_ENV === "development") {
     // eslint-disable-next-line no-console
-    console.log(`[AUTH-${event.toUpperCase()}]`, {
+    // console.log(`[AUTH-${event.toUpperCase()}]`, {
       timestamp: new Date().toISOString(),
       ...details,
     });

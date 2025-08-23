@@ -130,8 +130,8 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
       },
     });
 
-  } catch (error) {
-    console.error('Session detail error:', error);
+  } catch (_error) {
+    // console.error('Session detail error:', error);
     
     return NextResponse.json(
       { 
@@ -322,8 +322,8 @@ export async function PUT(request: NextRequest, { params }: RouteParams) {
       },
     });
 
-  } catch (error) {
-    console.error('Session update error:', error);
+  } catch (_error) {
+    // console.error('Session update error:', error);
     
     return NextResponse.json(
       { 
@@ -452,8 +452,8 @@ export async function DELETE(request: NextRequest, { params }: RouteParams) {
       },
     });
 
-  } catch (error) {
-    console.error('Session termination error:', error);
+  } catch (_error) {
+    // console.error('Session termination error:', error);
     
     return NextResponse.json(
       { 

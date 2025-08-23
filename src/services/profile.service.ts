@@ -113,8 +113,8 @@ export class ProfileService {
         success: true,
         data: profile,
       };
-    } catch (error) {
-      console.error('Profile fetch error:', error);
+    } catch (_error) {
+      // console.error('Profile fetch error:', error);
       return {
         success: false,
         error: 'Failed to fetch profile',
@@ -234,8 +234,8 @@ export class ProfileService {
         success: true,
         data: profile,
       };
-    } catch (error) {
-      console.error('Profile update error:', error);
+    } catch (_error) {
+      // console.error('Profile update error:', error);
       
       // Create audit log for failed update
       await auditService.createAuditLog({
@@ -244,16 +244,16 @@ export class ProfileService {
         action: 'UPDATE',
         metadata: {
           operation: 'profile_update_failed',
-          error: error instanceof Error ? error.message : 'Unknown error',
+          error: error instanceof Error ? _error.message : 'Unknown error',
           updateData: updateData,
         },
         context: auditContext,
       }).catch(() => {}); // Don't fail if audit logging fails
 
-      if (error instanceof Error) {
+      if (_error instanceof Error) {
         return {
           success: false,
-          error: error.message.includes('validation') 
+          error: _error.message.includes('validation') 
             ? 'Invalid profile data provided'
             : 'Failed to update profile',
         };
@@ -355,7 +355,7 @@ export class ProfileService {
           await fs.unlink(oldImagePath);
         } catch (deleteError) {
           // Log but don't fail if old image deletion fails
-          console.warn('Failed to delete old profile image:', deleteError);
+          // console.warn('Failed to delete old profile image:', deleteError);
         }
       }
 
@@ -383,8 +383,8 @@ export class ProfileService {
         imageUrl: updatedUser.image || undefined,
         oldImageUrl: existingUser.image || undefined,
       };
-    } catch (error) {
-      console.error('Profile image upload error:', error);
+    } catch (_error) {
+      // console.error('Profile image upload error:', error);
       
       // Create audit log for failed upload
       await auditService.createAuditLog({
@@ -393,7 +393,7 @@ export class ProfileService {
         action: 'UPDATE',
         metadata: {
           operation: 'profile_image_upload_failed',
-          error: error instanceof Error ? error.message : 'Unknown error',
+          error: error instanceof Error ? _error.message : 'Unknown error',
           fileName: imageFile?.name,
           fileSize: imageFile?.size,
           fileType: imageFile?.type,
@@ -403,7 +403,7 @@ export class ProfileService {
 
       return {
         success: false,
-        error: error instanceof Error ? error.message : 'Failed to upload image',
+        error: error instanceof Error ? _error.message : 'Failed to upload image',
       };
     } finally {
       if (auditContext) {
@@ -456,7 +456,7 @@ export class ProfileService {
         const imagePath = path.join(process.cwd(), 'public', existingUser.image);
         await fs.unlink(imagePath);
       } catch (deleteError) {
-        console.warn('Failed to delete profile image file:', deleteError);
+        // console.warn('Failed to delete profile image file:', deleteError);
         // Don't fail the operation if file deletion fails
       }
 
@@ -479,8 +479,8 @@ export class ProfileService {
         success: true,
         oldImageUrl: existingUser.image,
       };
-    } catch (error) {
-      console.error('Profile image deletion error:', error);
+    } catch (_error) {
+      // console.error('Profile image deletion error:', error);
       
       // Create audit log for failed deletion
       await auditService.createAuditLog({
@@ -489,7 +489,7 @@ export class ProfileService {
         action: 'UPDATE',
         metadata: {
           operation: 'profile_image_delete_failed',
-          error: error instanceof Error ? error.message : 'Unknown error',
+          error: error instanceof Error ? _error.message : 'Unknown error',
         },
         context: auditContext,
       }).catch(() => {}); // Don't fail if audit logging fails
@@ -538,8 +538,8 @@ export class ProfileService {
       const resetTime = new Date(Date.now() + windowMs);
 
       return { allowed, resetTime };
-    } catch (error) {
-      console.error('Rate limit check error:', error);
+    } catch (_error) {
+      // console.error('Rate limit check error:', error);
       // Allow operation if rate limit check fails
       return { allowed: true };
     }

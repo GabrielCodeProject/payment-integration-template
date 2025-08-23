@@ -353,7 +353,7 @@ export default function AdminProductsPage() {
 
       const data = await response.json();
       setProductsData(data);
-    } catch (error) {
+    } catch (_error) {
       const enhancedError =
         error && typeof error === "object" && "type" in error
           ? (error as EnhancedError)
@@ -402,9 +402,9 @@ export default function AdminProductsPage() {
 
       const data = await response.json();
       setStats(data.stats);
-    } catch (error) {
+    } catch (_error) {
       // eslint-disable-next-line no-console
-      console.error("Error fetching product stats:", error);
+      // console.error("Error fetching product stats:", error);
     }
   };
 
@@ -505,7 +505,7 @@ export default function AdminProductsPage() {
 
       toast.success("Product deleted successfully");
       await Promise.all([fetchProducts(), fetchStats()]);
-    } catch (error) {
+    } catch (_error) {
       const enhancedError =
         error && typeof error === "object" && "type" in error
           ? (error as EnhancedError)
@@ -652,7 +652,7 @@ export default function AdminProductsPage() {
       // Clear selection and refresh data on success
       setSelectedProducts([]);
       await Promise.all([fetchProducts(), fetchStats()]);
-    } catch (error) {
+    } catch (_error) {
       // Enhanced error handling with detailed categorization
       let enhancedError: EnhancedError;
 
@@ -826,7 +826,7 @@ export default function AdminProductsPage() {
       }, 100);
 
       toast.success("Products exported successfully");
-    } catch (error) {
+    } catch (_error) {
       const enhancedError =
         error && typeof error === "object" && "type" in error
           ? (error as EnhancedError)

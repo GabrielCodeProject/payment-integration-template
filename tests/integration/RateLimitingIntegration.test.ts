@@ -40,7 +40,7 @@ describe('Rate Limiting Integration Tests', () => {
         redisClient = null;
       }
     } catch (_error) {
-      console.warn('Redis not available for testing, using memory fallback');
+      // console.warn('Redis not available for testing, using memory fallback');
       redisClient = null;
     }
   });
@@ -70,7 +70,7 @@ describe('Rate Limiting Integration Tests', () => {
   describe('Redis-based Rate Limiting Persistence', () => {
     it('should persist rate limits across server restarts', async () => {
       if (!redisClient) {
-        console.log('Skipping Redis persistence test - Redis not available');
+        // console.log('Skipping Redis persistence test - Redis not available');
         return;
       }
 
@@ -287,7 +287,7 @@ describe('Rate Limiting Integration Tests', () => {
   describe('Rate Limiting with Distributed Server Instances', () => {
     it('should share rate limits across distributed instances via Redis', async () => {
       if (!redisClient) {
-        console.log('Skipping distributed test - Redis not available');
+        // console.log('Skipping distributed test - Redis not available');
         return;
       }
 

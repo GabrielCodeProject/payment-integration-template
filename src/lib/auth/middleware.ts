@@ -87,11 +87,11 @@ export async function getSessionFromRequest(
     }
 
     return session as Session | null;
-  } catch (error) {
+  } catch (_error) {
     // Don't log in production to avoid noise
     if (process.env.NODE_ENV === "development") {
       // eslint-disable-next-line no-console
-      console.error("Session validation error:", error);
+      // console.error("Session validation error:", error);
     }
     return null;
   }
@@ -385,7 +385,7 @@ export function logAuthEvent(
   // Only log in development to avoid console noise in production
   if (process.env.NODE_ENV === "development") {
     // eslint-disable-next-line no-console
-    console.log(`[AUTH-${event.toUpperCase()}]`, {
+    // console.log(`[AUTH-${event.toUpperCase()}]`, {
       timestamp: new Date().toISOString(),
       ...details,
     });

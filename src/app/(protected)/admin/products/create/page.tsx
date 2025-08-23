@@ -27,9 +27,9 @@ export default function CreateProductPage() {
         } = parsedData;
         
         setInitialData(cleanData);
-      } catch (error) {
+      } catch (_error) {
         // eslint-disable-next-line no-console
-        console.error('Error parsing duplicate data:', error);
+        // console.error('Error parsing duplicate data:', error);
       }
     }
   }, [searchParams]);

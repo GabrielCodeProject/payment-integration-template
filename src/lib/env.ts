@@ -96,9 +96,9 @@ export function getServerEnv() {
 
   try {
     return serverEnvSchema.parse(process.env);
-  } catch (error) {
+  } catch (_error) {
     // eslint-disable-next-line no-console
-    console.error("❌ Invalid server environment variables:", error);
+    // console.error("❌ Invalid server environment variables:", error);
     throw new Error("Server environment validation failed");
   }
 }
@@ -121,9 +121,9 @@ export function getClientEnv() {
       NEXT_PUBLIC_POSTHOG_KEY: process.env.NEXT_PUBLIC_POSTHOG_KEY,
       NEXT_PUBLIC_SENTRY_DSN: process.env.NEXT_PUBLIC_SENTRY_DSN,
     });
-  } catch (error) {
+  } catch (_error) {
     // eslint-disable-next-line no-console
-    console.error("❌ Invalid client environment variables:", error);
+    // console.error("❌ Invalid client environment variables:", error);
     throw new Error("Client environment validation failed");
   }
 }
@@ -174,10 +174,10 @@ const stripePublishableKey = clientEnv.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY;
 
 // Feature flags:
 if (isDebugMode()) {
-  console.log("Debug mode is enabled");
+  // console.log("Debug mode is enabled");
 }
 
 if (isStripeTestMode()) {
-  console.log("Using Stripe test mode");
+  // console.log("Using Stripe test mode");
 }
 */

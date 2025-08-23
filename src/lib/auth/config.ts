@@ -79,7 +79,7 @@ export const auth = betterAuth({
       const result = await sendEmailVerification(user.email, url);
       if (!result.success && process.env.NODE_ENV === "development") {
         // eslint-disable-next-line no-console
-        console.log(`📧 Verification email would be sent to ${user.email} with URL: ${url}`);
+        // console.log(`📧 Verification email would be sent to ${user.email} with URL: ${url}`);
       }
     },
   },
@@ -90,7 +90,7 @@ export const auth = betterAuth({
       const result = await sendPasswordReset(user.email, url);
       if (!result.success && process.env.NODE_ENV === "development") {
         // eslint-disable-next-line no-console
-        console.log(`📧 Password reset email would be sent to ${user.email} with URL: ${url}`);
+        // console.log(`📧 Password reset email would be sent to ${user.email} with URL: ${url}`);
       }
     },
   },
@@ -172,11 +172,11 @@ export async function getServerSession(): Promise<Session | null> {
       headers: new Headers(),
     });
     return session as Session | null;
-  } catch (error) {
+  } catch (_error) {
     // Don't log in production to avoid noise
     if (process.env.NODE_ENV === "development") {
       // eslint-disable-next-line no-console
-      console.error("Failed to get server session:", error);
+      // console.error("Failed to get server session:", error);
     }
     return null;
   }
