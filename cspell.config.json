@@ -141,7 +141,16 @@
     "PGSSLROOTCERT",
     "sslcert",
     "sslkey",
-    "sslrootcert"
+    "sslrootcert",
+    "PREMIUMSHIP",
+    "Paix",
+    "Unter",
+    "Chiyoda",
+    "backlighting",
+    "DATASCIENCE",
+    "Hiroshi",
+    "Tanaka",
+    "maxage"
   ],
   "flagWords": [],
   "ignorePaths": [
