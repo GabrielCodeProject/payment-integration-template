@@ -127,8 +127,8 @@
 - [x] 4.6 Product Media Management with CDN Integration
 - [x] 4.7 Trial Period Configuration System
 - [x] 4.8 Product Visibility and Availability Controls
-- [ ] 4.9 Inventory Management with Stock Tracking
-- [ ] 4.10 Product Search and Filtering APIs
+- [x] 4.9 Inventory Management with Stock Tracking
+- [x] 4.10 Product Search and Filtering APIs
 - [ ] 4.11 Public Product Catalog Pages
 - [ ] 4.12 Individual Product Detail Pages with SEO
 

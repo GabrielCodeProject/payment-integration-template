@@ -340,7 +340,7 @@ export function logAuthEvent(
   }
 ): void {
   if (process.env.NODE_ENV === "development") {
-    console.log(`[AUTH-${event.toUpperCase()}]`, {
+    console.log(`[AUTH-${_event.toUpperCase()}]`, {
       timestamp: new Date().toISOString(),
       ..._details,
     });

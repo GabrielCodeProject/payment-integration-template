@@ -83,6 +83,10 @@ const searchQuerySchema = z.object({
     .string()
     .transform((val) => val === "true")
     .default("false"),
+  facets: z
+    .string()
+    .transform((val) => val === "true")
+    .default("false"),
 });
 
 type SearchQuery = z.infer<typeof searchQuerySchema>;
@@ -100,6 +104,7 @@ type SearchQuery = z.infer<typeof searchQuerySchema>;
  * - sort: Sort results (relevance, price, name, createdAt)
  * - highlight: Include search term highlighting
  * - suggestions: Include search suggestions
+ * - facets: Include faceted search counts
  * - Additional filters: type, priceMin, priceMax, tags, inStock
  */
 export async function GET(request: NextRequest) {
@@ -147,6 +152,12 @@ export async function GET(request: NextRequest) {
     // Perform the search
     const searchResults = await performProductSearch(validatedQuery, isAdmin);
 
+    // Get faceted search results if requested
+    let facets = undefined;
+    if (validatedQuery.facets) {
+      facets = await generateSearchFacets(validatedQuery, isAdmin);
+    }
+
     // Log search analytics (non-blocking)
     logSearchAnalytics(validatedQuery, searchResults.total, request).catch(
       () => {
@@ -180,6 +191,7 @@ export async function GET(request: NextRequest) {
         suggestions: searchResults.suggestions,
       }),
       ...(validatedQuery.highlight && { highlights: searchResults.highlights }),
+      ...(validatedQuery.facets && facets && { facets }),
     };
 
     // Set cache headers (shorter cache for search results)
@@ -495,6 +507,250 @@ function extractExcerpt(text: string, term: string, maxLength: number): string {
     text.slice(start, end) +
     (end < text.length ? "..." : "")
   );
+}
+
+/**
+ * Generate faceted search results with counts for filters
+ */
+async function generateSearchFacets(query: SearchQuery, isAdmin: boolean) {
+  try {
+    // Build base search conditions (same as main search)
+    const searchConditions = buildSearchConditions(query);
+
+    // Base filter for admin vs public access
+    const baseFilter = {
+      AND: [searchConditions, !isAdmin ? { isActive: true } : {}].filter(
+        (condition) => Object.keys(condition).length > 0
+      ),
+    };
+
+    // Get facet counts in parallel
+    const [
+      typesFacets,
+      priceRangesFacets,
+      availabilityFacets,
+      categoryFacets,
+      tagsFacets,
+    ] = await Promise.all([
+      // Product types facet
+      db.product.groupBy({
+        by: ["type"],
+        where: baseFilter,
+        _count: { type: true },
+      }),
+
+      // Price ranges facet (predefined ranges)
+      getPriceRangeFacets(baseFilter),
+
+      // Availability facets
+      getAvailabilityFacets(baseFilter),
+
+      // Categories facet
+      getCategoryFacets(baseFilter),
+
+      // Tags facet (top 10 most common)
+      getTagsFacets(baseFilter),
+    ]);
+
+    return {
+      types: typesFacets.map((facet) => ({
+        value: facet.type,
+        count: facet._count.type,
+        label: formatProductTypeLabel(facet.type),
+      })),
+      priceRanges: priceRangesFacets,
+      availability: availabilityFacets,
+      categories: categoryFacets,
+      tags: tagsFacets,
+    };
+  } catch (error) {
+    console.error("Failed to generate search facets:", error);
+    return null;
+  }
+}
+
+/**
+ * Get price range facets with predefined ranges
+ */
+async function getPriceRangeFacets(baseFilter: any) {
+  const priceRanges = [
+    { label: "Under $10", min: 0, max: 10 },
+    { label: "$10 - $50", min: 10, max: 50 },
+    { label: "$50 - $100", min: 50, max: 100 },
+    { label: "$100 - $500", min: 100, max: 500 },
+    { label: "Over $500", min: 500, max: null },
+  ];
+
+  const results = await Promise.all(
+    priceRanges.map(async (range) => {
+      const priceFilter = {
+        ...baseFilter,
+        AND: [
+          ...baseFilter.AND,
+          {
+            price: {
+              gte: range.min,
+              ...(range.max && { lt: range.max }),
+            },
+          },
+        ],
+      };
+
+      const count = await db.product.count({ where: priceFilter });
+
+      return {
+        label: range.label,
+        range: { min: range.min, max: range.max },
+        count,
+      };
+    })
+  );
+
+  return results.filter((result) => result.count > 0);
+}
+
+/**
+ * Get availability facets (in stock, digital, physical)
+ */
+async function getAvailabilityFacets(baseFilter: any) {
+  const [inStockCount, digitalCount, physicalCount] = await Promise.all([
+    // In stock (digital OR has stock)
+    db.product.count({
+      where: {
+        ...baseFilter,
+        AND: [
+          ...baseFilter.AND,
+          {
+            OR: [{ isDigital: true }, { stockQuantity: { gt: 0 } }],
+          },
+        ],
+      },
+    }),
+
+    // Digital products
+    db.product.count({
+      where: {
+        ...baseFilter,
+        AND: [...baseFilter.AND, { isDigital: true }],
+      },
+    }),
+
+    // Physical products
+    db.product.count({
+      where: {
+        ...baseFilter,
+        AND: [...baseFilter.AND, { isDigital: false }],
+      },
+    }),
+  ]);
+
+  return [
+    { label: "In Stock", value: "inStock", count: inStockCount },
+    { label: "Digital", value: "digital", count: digitalCount },
+    { label: "Physical", value: "physical", count: physicalCount },
+  ].filter((facet) => facet.count > 0);
+}
+
+/**
+ * Get category facets with counts
+ */
+async function getCategoryFacets(baseFilter: any) {
+  try {
+    // Get categories with their product counts
+    const categories = await db.category.findMany({
+      where: {
+        products: {
+          some: {
+            product: baseFilter,
+          },
+        },
+      },
+      include: {
+        _count: {
+          select: {
+            products: {
+              where: {
+                product: baseFilter,
+              },
+            },
+          },
+        },
+      },
+      orderBy: { name: "asc" },
+      take: 20, // Limit to top 20 categories
+    });
+
+    return categories
+      .map((category) => ({
+        id: category.id,
+        name: category.name,
+        slug: category.slug,
+        count: category._count.products,
+      }))
+      .filter((category) => category.count > 0);
+  } catch {
+    return [];
+  }
+}
+
+/**
+ * Get tags facets with counts
+ */
+async function getTagsFacets(baseFilter: any) {
+  try {
+    // Get tags with their product counts
+    const tags = await db.tag.findMany({
+      where: {
+        products: {
+          some: {
+            product: baseFilter,
+          },
+        },
+      },
+      include: {
+        _count: {
+          select: {
+            products: {
+              where: {
+                product: baseFilter,
+              },
+            },
+          },
+        },
+      },
+      orderBy: { name: "asc" },
+      take: 15, // Limit to top 15 tags
+    });
+
+    return tags
+      .map((tag) => ({
+        id: tag.id,
+        name: tag.name,
+        slug: tag.slug,
+        color: tag.color,
+        count: tag._count.products,
+      }))
+      .filter((tag) => tag.count > 0)
+      .sort((a, b) => b.count - a.count); // Sort by count descending
+  } catch {
+    return [];
+  }
+}
+
+/**
+ * Format product type labels for display
+ */
+function formatProductTypeLabel(type: string): string {
+  switch (type) {
+    case "ONE_TIME":
+      return "One-time Purchase";
+    case "SUBSCRIPTION":
+      return "Subscription";
+    case "USAGE_BASED":
+      return "Usage-based";
+    default:
+      return type;
+  }
 }
 
 /**

@@ -126,6 +126,13 @@ const getProductsQuerySchema = z.object({
 
   // Search
   search: z.string().optional(),
+
+  // Response options
+  facets: z
+    .string()
+    .optional()
+    .transform((val) => val === "true")
+    .default(false),
 });
 
 type GetProductsQuery = z.infer<typeof getProductsQuerySchema>;
@@ -148,6 +155,7 @@ type GetProductsQuery = z.infer<typeof getProductsQuerySchema>;
  * - sort: Sort field (name, price, createdAt, etc.)
  * - sortDirection: Sort direction (asc, desc)
  * - search: Full-text search query
+ * - facets: Include faceted filter counts
  */
 export async function GET(request: NextRequest) {
   try {
@@ -212,6 +220,9 @@ export async function GET(request: NextRequest) {
       allowedUserRoles: validatedQuery.allowedUserRoles,
       isLimited: validatedQuery.isLimited,
       hasAvailableCapacity: validatedQuery.hasAvailableCapacity,
+
+      // Add search filter if provided
+      search: validatedQuery.search,
     });
 
     // Fetch products with pagination and filtering
@@ -222,6 +233,12 @@ export async function GET(request: NextRequest) {
       validatedQuery.page,
       validatedQuery.limit
     );
+
+    // Get faceted results if requested
+    let facets = undefined;
+    if (validatedQuery.facets) {
+      facets = await generateProductFacets(filters);
+    }
 
     // Transform products for public API (remove sensitive fields)
     const publicProducts = result.products.map((product) => ({
@@ -237,13 +254,13 @@ export async function GET(request: NextRequest) {
       metaDescription: product.metaDescription,
       // Transform categories and tags
       categories:
-        product.categories?.map((pc) => ({
+        (product as any).categories?.map((pc: any) => ({
           id: pc.category.id,
           name: pc.category.name,
           slug: pc.category.slug,
         })) || [],
       tags:
-        product.tags?.map((pt) => ({
+        (product as any).tags?.map((pt: any) => ({
           id: pt.tag.id,
           name: pt.tag.name,
           slug: pt.tag.slug,
@@ -293,6 +310,7 @@ export async function GET(request: NextRequest) {
         hasPrevPage: result.page > 1,
       },
       filters: validatedQuery,
+      ...(validatedQuery.facets && facets && { facets }),
     };
 
     // Set cache headers for public product listings
@@ -307,6 +325,294 @@ export async function GET(request: NextRequest) {
     });
   } catch (_error) {
     return createApiErrorResponse(500, "Failed to fetch products");
+  }
+}
+
+/**
+ * Generate faceted search results for product filters
+ */
+async function generateProductFacets(filters: Record<string, any>) {
+  try {
+    // Convert productFilter to database query conditions
+    const whereConditions = await buildProductWhereConditions(filters);
+
+    // Get facet counts in parallel
+    const [
+      typesFacets,
+      priceRangesFacets,
+      availabilityFacets,
+      categoryFacets,
+      tagsFacets,
+    ] = await Promise.all([
+      // Product types facet
+      db.product.groupBy({
+        by: ["type"],
+        where: whereConditions,
+        _count: { type: true },
+      }),
+
+      // Price ranges facet
+      getProductPriceRangeFacets(whereConditions),
+
+      // Availability facets
+      getProductAvailabilityFacets(whereConditions),
+
+      // Categories facet
+      getProductCategoryFacets(whereConditions),
+
+      // Tags facet
+      getProductTagsFacets(whereConditions),
+    ]);
+
+    return {
+      types: typesFacets.map((facet) => ({
+        value: facet.type,
+        count: facet._count.type,
+        label: formatProductTypeLabel(facet.type),
+      })),
+      priceRanges: priceRangesFacets,
+      availability: availabilityFacets,
+      categories: categoryFacets,
+      tags: tagsFacets,
+    };
+  } catch (error) {
+    console.error("Failed to generate product facets:", error);
+    return null;
+  }
+}
+
+/**
+ * Build database where conditions from product filters
+ */
+async function buildProductWhereConditions(filters: Record<string, any>) {
+  const conditions: Record<string, any> = {};
+
+  // Basic filters
+  if (filters.name) {
+    conditions.name = { contains: filters.name, mode: "insensitive" };
+  }
+  if (filters.type) {
+    conditions.type = filters.type;
+  }
+  if (filters.isActive !== undefined) {
+    conditions.isActive = filters.isActive;
+  }
+  if (filters.isDigital !== undefined) {
+    conditions.isDigital = filters.isDigital;
+  }
+  if (filters.status) {
+    conditions.status = filters.status;
+  }
+  if (filters.isPublished !== undefined) {
+    conditions.isPublished = filters.isPublished;
+  }
+
+  // Price range
+  if (filters.priceMin !== undefined || filters.priceMax !== undefined) {
+    conditions.price = {};
+    if (filters.priceMin !== undefined) {
+      conditions.price.gte = filters.priceMin;
+    }
+    if (filters.priceMax !== undefined) {
+      conditions.price.lte = filters.priceMax;
+    }
+  }
+
+  // Stock filtering
+  if (filters.inStock !== undefined) {
+    if (filters.inStock) {
+      conditions.OR = [
+        { isDigital: true },
+        { stockQuantity: { gt: 0 } }
+      ];
+    } else {
+      conditions.AND = [
+        { isDigital: false },
+        { stockQuantity: { lte: 0 } }
+      ];
+    }
+  }
+
+  // Categories
+  if (filters.categoryIds && filters.categoryIds.length > 0) {
+    conditions.categories = {
+      some: {
+        categoryId: { in: filters.categoryIds }
+      }
+    };
+  }
+
+  // Tags
+  if (filters.tagIds && filters.tagIds.length > 0) {
+    conditions.tags = {
+      some: {
+        tagId: { in: filters.tagIds }
+      }
+    };
+  }
+
+  // Date filters
+  if (filters.createdAfter) {
+    conditions.createdAt = { ...conditions.createdAt, gte: filters.createdAfter };
+  }
+  if (filters.createdBefore) {
+    conditions.createdAt = { ...conditions.createdAt, lte: filters.createdBefore };
+  }
+
+  // Search functionality
+  if (filters.search) {
+    const searchTerm = filters.search.toLowerCase();
+    conditions.OR = [
+      { name: { contains: searchTerm, mode: "insensitive" } },
+      { description: { contains: searchTerm, mode: "insensitive" } },
+      { shortDescription: { contains: searchTerm, mode: "insensitive" } },
+    ];
+  }
+
+  return conditions;
+}
+
+/**
+ * Helper functions for facet generation
+ */
+async function getProductPriceRangeFacets(whereConditions: Record<string, any>) {
+  const priceRanges = [
+    { label: "Under $10", min: 0, max: 10 },
+    { label: "$10 - $50", min: 10, max: 50 },
+    { label: "$50 - $100", min: 50, max: 100 },
+    { label: "$100 - $500", min: 100, max: 500 },
+    { label: "Over $500", min: 500, max: null },
+  ];
+
+  const results = await Promise.all(
+    priceRanges.map(async (range) => {
+      const priceFilter = {
+        ...whereConditions,
+        price: {
+          gte: range.min,
+          ...(range.max && { lt: range.max }),
+        },
+      };
+
+      const count = await db.product.count({ where: priceFilter });
+      return {
+        label: range.label,
+        range: { min: range.min, max: range.max },
+        count,
+      };
+    })
+  );
+
+  return results.filter((result) => result.count > 0);
+}
+
+async function getProductAvailabilityFacets(whereConditions: Record<string, any>) {
+  const [inStockCount, digitalCount, physicalCount] = await Promise.all([
+    db.product.count({
+      where: {
+        ...whereConditions,
+        OR: [{ isDigital: true }, { stockQuantity: { gt: 0 } }],
+      },
+    }),
+    db.product.count({
+      where: { ...whereConditions, isDigital: true },
+    }),
+    db.product.count({
+      where: { ...whereConditions, isDigital: false },
+    }),
+  ]);
+
+  return [
+    { label: "In Stock", value: "inStock", count: inStockCount },
+    { label: "Digital", value: "digital", count: digitalCount },
+    { label: "Physical", value: "physical", count: physicalCount },
+  ].filter((facet) => facet.count > 0);
+}
+
+async function getProductCategoryFacets(whereConditions: Record<string, any>) {
+  try {
+    const categories = await db.category.findMany({
+      where: {
+        products: {
+          some: {
+            product: whereConditions,
+          },
+        },
+      },
+      include: {
+        _count: {
+          select: {
+            products: {
+              where: { product: whereConditions },
+            },
+          },
+        },
+      },
+      orderBy: { name: "asc" },
+      take: 20,
+    });
+
+    return categories
+      .map((category) => ({
+        id: category.id,
+        name: category.name,
+        slug: category.slug,
+        count: category._count.products,
+      }))
+      .filter((category) => category.count > 0);
+  } catch {
+    return [];
+  }
+}
+
+async function getProductTagsFacets(whereConditions: Record<string, any>) {
+  try {
+    const tags = await db.tag.findMany({
+      where: {
+        products: {
+          some: {
+            product: whereConditions,
+          },
+        },
+      },
+      include: {
+        _count: {
+          select: {
+            products: {
+              where: { product: whereConditions },
+            },
+          },
+        },
+      },
+      orderBy: { name: "asc" },
+      take: 15,
+    });
+
+    return tags
+      .map((tag) => ({
+        id: tag.id,
+        name: tag.name,
+        slug: tag.slug,
+        color: tag.color,
+        count: tag._count.products,
+      }))
+      .filter((tag) => tag.count > 0)
+      .sort((a, b) => b.count - a.count);
+  } catch {
+    return [];
+  }
+}
+
+function formatProductTypeLabel(type: string): string {
+  switch (type) {
+    case "ONE_TIME":
+      return "One-time Purchase";
+    case "SUBSCRIPTION":
+      return "Subscription";
+    case "USAGE_BASED":
+      return "Usage-based";
+    default:
+      return type;
   }
 }
 

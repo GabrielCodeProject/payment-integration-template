@@ -362,6 +362,9 @@ export const productFilterSchema = z.object({
   allowedUserRoles: z.array(userRoleSchema).optional(),
   isLimited: z.boolean().optional(),
   hasAvailableCapacity: z.boolean().optional(),
+  
+  // Search functionality
+  search: z.string().optional(),
 });
 
 /**

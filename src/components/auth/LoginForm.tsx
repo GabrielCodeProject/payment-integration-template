@@ -60,7 +60,7 @@ export function LoginForm({ onSuccess }: LoginFormProps) {
 
       if (response.error) {
         // Handle specific errors
-        switch (response._error.message) {
+        switch (response.error.message) {
           case "Invalid email or password":
           case "Invalid credentials":
             toast.error(
