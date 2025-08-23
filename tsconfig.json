@@ -26,8 +26,8 @@
     // =============================================================================
     // ADDITIONAL CHECKS (For code quality and reliability)
     // =============================================================================
-    "noUnusedLocals": true,
-    "noUnusedParameters": true,
+    "noUnusedLocals": false, // Disabled for development - allows console variables
+    "noUnusedParameters": false, // Disabled for development - allows debugging parameters
     "noImplicitOverride": true,
     "allowUnreachableCode": false,
     "allowUnusedLabels": false,

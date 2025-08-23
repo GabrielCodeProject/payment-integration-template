@@ -61,9 +61,9 @@ export const authActionClient = actionClient.use(async ({ next, ctx }) => {
     // Log error details for debugging (only in development)
     if (process.env.NODE_ENV === "development") {
       // console.error("Authentication error:", {
-        message: error instanceof Error ? _error.message : 'Unknown error',
-        headers: Array.from(headersList.keys()),
-      });
+      //   message: error instanceof Error ? _error.message : 'Unknown error',
+      //   headers: Array.from(headersList.keys()),
+      // });
     }
     
     // Return a generic authentication error

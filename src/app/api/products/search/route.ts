@@ -111,7 +111,9 @@ export async function GET(request: NextRequest) {
     const searchResults = await performProductSearch(validatedQuery, isAdmin);
 
     // Log search analytics (non-blocking)
-    logSearchAnalytics(validatedQuery, searchResults.total, request).catch(// console.error);
+    logSearchAnalytics(validatedQuery, searchResults.total, request).catch(() => {
+      // Silently ignore analytics errors
+    });
 
     // Build response
     const response = {

@@ -259,11 +259,11 @@ export class UserManagementService {
       // Log high-risk transitions
       if (transition.securityRisk === "HIGH") {
         // console.warn("[SECURITY] High-risk role transition:", {
-          userId,
-          from: currentUser.role,
-          to: updateData.role,
-          adminUserId: auditContext.adminUserId,
-        });
+        //   userId,
+        //   from: currentUser.role,
+        //   to: updateData.role,
+        //   adminUserId: auditContext.adminUserId,
+        // });
       }
     }
 
@@ -361,10 +361,10 @@ export class UserManagementService {
       });
 
       // console.log("[USER_MANAGEMENT] User updated:", {
-        userId,
-        changedFields,
-        adminUserId: auditContext.adminUserId,
-      });
+      //   userId,
+      //   changedFields,
+      //   adminUserId: auditContext.adminUserId,
+      // });
 
       return updatedUser;
     } catch (_error) {
@@ -443,9 +443,9 @@ export class UserManagementService {
       });
 
       // console.log("[USER_MANAGEMENT] User deactivated:", {
-        userId,
-        adminUserId: auditContext.adminUserId,
-      });
+      //   userId,
+      //   adminUserId: auditContext.adminUserId,
+      // });
 
       return updatedUser;
     } catch (_error) {
@@ -514,9 +514,9 @@ export class UserManagementService {
       });
 
       // console.log("[USER_MANAGEMENT] User activated:", {
-        userId,
-        adminUserId: auditContext.adminUserId,
-      });
+      //   userId,
+      //   adminUserId: auditContext.adminUserId,
+      // });
 
       return updatedUser;
     } catch (_error) {

@@ -99,6 +99,19 @@ model Product {
   stripeProductId   String?          @unique
   type              ProductType      @default(ONE_TIME)
   billingInterval   BillingInterval?
+  
+  // Visibility and Availability Controls
+  status            ProductStatus    @default(DRAFT)
+  isPublished       Boolean          @default(false)
+  publishedAt       DateTime?
+  availableFrom     DateTime?
+  availableTo       DateTime?
+  restrictedRegions String[]         @default([])
+  allowedUserRoles  UserRole[]       @default([])
+  maxUsers          Int?
+  currentUsers      Int              @default(0)
+  isLimited         Boolean          @default(false)
+  
   createdAt         DateTime         @default(now())
   updatedAt         DateTime         @updatedAt
   orderItems        OrderItem[]
@@ -114,6 +127,15 @@ model Product {
   @@index([isActive, type])
   @@index([isActive, createdAt])
   @@index([type, isActive, createdAt])
+  // Visibility and availability indexes
+  @@index([status])
+  @@index([isPublished])
+  @@index([publishedAt])
+  @@index([availableFrom])
+  @@index([availableTo])
+  @@index([isPublished, status])
+  @@index([status, availableFrom, availableTo])
+  @@index([isActive, isPublished, status])
   @@map("products")
 }
 
@@ -424,6 +446,13 @@ enum UserRole {
   CUSTOMER
   ADMIN
   SUPPORT
+}
+
+enum ProductStatus {
+  DRAFT
+  PUBLISHED  
+  ARCHIVED
+  SCHEDULED
 }
 
 enum ProductType {

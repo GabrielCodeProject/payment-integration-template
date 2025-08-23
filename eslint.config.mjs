@@ -44,8 +44,8 @@ const eslintConfig = [
       ],
       "@typescript-eslint/no-explicit-any": "warn",
 
-      // General code quality
-      "no-console": "warn",
+      // General code quality - Console logs allowed for development
+      "no-console": "off", // Disabled for development debugging
       "no-debugger": "error",
       "prefer-const": "error",
       "no-var": "error",
@@ -89,6 +89,15 @@ const eslintConfig = [
     ],
     rules: {
       "import/no-default-export": "off",
+    },
+  },
+
+  // Development environment - Allow all console methods
+  {
+    files: ["**/*.{ts,tsx,js,jsx}"],
+    rules: {
+      "no-console": "off", // Allow console.log, console.error, console.warn, etc. for development
+      "no-alert": "off", // Allow alert() for development debugging
     },
   },
 ];

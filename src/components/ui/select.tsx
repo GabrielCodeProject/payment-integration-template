@@ -108,10 +108,10 @@ function SelectItem({
   if (process.env.NODE_ENV === 'development' && value === '') {
     // eslint-disable-next-line no-console
     // console.error(
-      'SelectItem: value prop cannot be an empty string. This causes runtime errors with Radix UI Select. ' +
-      'Please provide a non-empty value or use a placeholder like "none" or "all".',
-      { value, children }
-    );
+    //   'SelectItem: value prop cannot be an empty string. This causes runtime errors with Radix UI Select. ' +
+    //   'Please provide a non-empty value or use a placeholder like "none" or "all".',
+    //   { value, children }
+    // );
   }
 
   return (

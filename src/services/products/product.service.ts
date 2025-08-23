@@ -6,11 +6,20 @@ import {
   ProductSort,
   UpdateStock,
   UpdatePrice,
+  UpdateProductVisibility,
+  UpdateProductAccessControl,
+  BulkProductStatusUpdate,
+  ProductVisibilityValidation,
+  UserRole,
   createProductSchema,
   updateProductSchema,
   productFilterSchema,
   updateStockSchema,
   updatePriceSchema,
+  updateProductVisibilitySchema,
+  updateProductAccessControlSchema,
+  bulkProductStatusUpdateSchema,
+  productVisibilityValidationSchema,
 } from '@/lib/validations/base/product';
 import { PricingTierService } from '../pricing-tier.service';
 
@@ -28,6 +37,9 @@ import { PricingTierService } from '../pricing-tier.service';
  * - Soft delete functionality
  * - Audit logging integration
  * - Search and filtering
+ * - Product visibility and availability controls
+ * - Geographic restrictions and role-based access
+ * - User capacity management and scheduling
  */
 
 export class ProductService {
@@ -373,6 +385,88 @@ export class ProductService {
       }
       if (validatedFilters.createdBefore) {
         where.createdAt.lte = validatedFilters.createdBefore;
+      }
+    }
+
+    // Visibility and availability filters
+    if (validatedFilters.status) {
+      where.status = validatedFilters.status;
+    }
+
+    if (validatedFilters.isPublished !== undefined) {
+      where.isPublished = validatedFilters.isPublished;
+    }
+
+    if (validatedFilters.publishedAfter || validatedFilters.publishedBefore) {
+      where.publishedAt = {};
+      if (validatedFilters.publishedAfter) {
+        where.publishedAt.gte = validatedFilters.publishedAfter;
+      }
+      if (validatedFilters.publishedBefore) {
+        where.publishedAt.lte = validatedFilters.publishedBefore;
+      }
+    }
+
+    if (validatedFilters.availableAfter || validatedFilters.availableBefore) {
+      where.AND = where.AND || [];
+      const availabilityConditions: Prisma.ProductWhereInput[] = [];
+      
+      if (validatedFilters.availableAfter) {
+        availabilityConditions.push({
+          OR: [
+            { availableFrom: { gte: validatedFilters.availableAfter } },
+            { availableFrom: null },
+          ],
+        });
+      }
+      
+      if (validatedFilters.availableBefore) {
+        availabilityConditions.push({
+          OR: [
+            { availableTo: { lte: validatedFilters.availableBefore } },
+            { availableTo: null },
+          ],
+        });
+      }
+      
+      where.AND.push(...availabilityConditions);
+    }
+
+    if (validatedFilters.restrictedRegions && validatedFilters.restrictedRegions.length > 0) {
+      where.restrictedRegions = {
+        hasSome: validatedFilters.restrictedRegions,
+      };
+    }
+
+    if (validatedFilters.allowedUserRoles && validatedFilters.allowedUserRoles.length > 0) {
+      where.allowedUserRoles = {
+        hasSome: validatedFilters.allowedUserRoles,
+      };
+    }
+
+    if (validatedFilters.isLimited !== undefined) {
+      where.isLimited = validatedFilters.isLimited;
+    }
+
+    if (validatedFilters.hasAvailableCapacity !== undefined) {
+      if (validatedFilters.hasAvailableCapacity) {
+        where.OR = [
+          { isLimited: false },
+          {
+            AND: [
+              { isLimited: true },
+              { maxUsers: { not: null } },
+              { currentUsers: { lt: Prisma.raw('max_users') } },
+            ],
+          },
+        ];
+      } else {
+        where.AND = where.AND || [];
+        where.AND.push({
+          isLimited: true,
+          maxUsers: { not: null },
+          currentUsers: { gte: Prisma.raw('max_users') },
+        });
       }
     }
 
@@ -846,5 +940,411 @@ export class ProductService {
     });
 
     return [defaultTier];
+  }
+
+  // ==========================================================================
+  // VISIBILITY AND AVAILABILITY CONTROLS
+  // ==========================================================================
+
+  /**
+   * Check if a product is visible and available to a user
+   */
+  async checkProductVisibility(data: ProductVisibilityValidation): Promise<{
+    isVisible: boolean;
+    isAvailable: boolean;
+    reason?: string;
+  }> {
+    const validatedData = productVisibilityValidationSchema.parse(data);
+    const { productId, userRole, userRegion, currentDateTime } = validatedData;
+
+    const product = await this.findById(productId);
+    if (!product) {
+      return { isVisible: false, isAvailable: false, reason: 'Product not found' };
+    }
+
+    // Check if product is active
+    if (!product.isActive) {
+      return { isVisible: false, isAvailable: false, reason: 'Product is not active' };
+    }
+
+    // Check publication status
+    if (!product.isPublished) {
+      return { isVisible: false, isAvailable: false, reason: 'Product is not published' };
+    }
+
+    // Check product status
+    if (product.status === 'DRAFT' || product.status === 'ARCHIVED') {
+      return { isVisible: false, isAvailable: false, reason: `Product is ${product.status.toLowerCase()}` };
+    }
+
+    // Check if scheduled and within availability window
+    if (product.status === 'SCHEDULED') {
+      if (product.availableFrom && currentDateTime < product.availableFrom) {
+        return { isVisible: false, isAvailable: false, reason: 'Product is not yet available' };
+      }
+    }
+
+    // Check availability window
+    if (product.availableFrom && currentDateTime < product.availableFrom) {
+      return { isVisible: true, isAvailable: false, reason: 'Product is not yet available' };
+    }
+
+    if (product.availableTo && currentDateTime > product.availableTo) {
+      return { isVisible: true, isAvailable: false, reason: 'Product is no longer available' };
+    }
+
+    // Check geographic restrictions
+    if (userRegion && product.restrictedRegions.includes(userRegion)) {
+      return { isVisible: false, isAvailable: false, reason: 'Product is not available in your region' };
+    }
+
+    // Check role-based access
+    if (product.allowedUserRoles.length > 0 && !product.allowedUserRoles.includes(userRole)) {
+      return { isVisible: false, isAvailable: false, reason: 'Product access restricted to specific user roles' };
+    }
+
+    // Check user capacity limits
+    if (product.isLimited && product.maxUsers) {
+      if (product.currentUsers >= product.maxUsers) {
+        return { isVisible: true, isAvailable: false, reason: 'Product has reached maximum user capacity' };
+      }
+    }
+
+    return { isVisible: true, isAvailable: true };
+  }
+
+  /**
+   * Get products visible to a user based on their context
+   */
+  async getVisibleProducts(
+    userRole: UserRole,
+    userRegion?: string,
+    filters: ProductFilter = {},
+    sort: ProductSort = 'createdAt',
+    sortDirection: 'asc' | 'desc' = 'desc',
+    page = 1,
+    limit = 20
+  ): Promise<{
+    products: Product[];
+    total: number;
+    page: number;
+    pages: number;
+    limit: number;
+  }> {
+    const currentDateTime = new Date();
+    
+    // Build visibility filters
+    const visibilityFilters: ProductFilter = {
+      ...filters,
+      isActive: true,
+      isPublished: true,
+      status: 'PUBLISHED',
+      createdAfter: filters.createdAfter,
+      createdBefore: filters.createdBefore,
+      publishedAfter: undefined,
+      publishedBefore: undefined,
+      availableAfter: undefined,
+      availableBefore: undefined,
+    };
+
+    // Add geographic restrictions
+    if (userRegion) {
+      visibilityFilters.restrictedRegions = [userRegion];
+    }
+
+    // Add role-based access - if product has role restrictions, user must be included
+    visibilityFilters.allowedUserRoles = [userRole];
+
+    // Add availability window
+    visibilityFilters.availableAfter = currentDateTime;
+    visibilityFilters.availableBefore = currentDateTime;
+
+    return this.findMany(visibilityFilters, sort, sortDirection, page, limit);
+  }
+
+  /**
+   * Update product visibility settings
+   */
+  async updateProductVisibility(data: UpdateProductVisibility): Promise<Product> {
+    const validatedData = updateProductVisibilitySchema.parse(data);
+    const { productId, ...updateData } = validatedData;
+
+    const product = await this.findById(productId);
+    if (!product) {
+      throw new Error(`Product with ID '${productId}' not found`);
+    }
+
+    // Set publishedAt if product is being published
+    const finalUpdateData: Partial<Prisma.ProductUpdateInput> = { ...updateData };
+    if (updateData.isPublished && !product.publishedAt) {
+      finalUpdateData.publishedAt = new Date();
+    }
+
+    return await this.prisma.product.update({
+      where: { id: productId },
+      data: finalUpdateData,
+    });
+  }
+
+  /**
+   * Update product access control settings
+   */
+  async updateProductAccessControl(data: UpdateProductAccessControl): Promise<Product> {
+    const validatedData = updateProductAccessControlSchema.parse(data);
+    const { productId, ...updateData } = validatedData;
+
+    const product = await this.findById(productId);
+    if (!product) {
+      throw new Error(`Product with ID '${productId}' not found`);
+    }
+
+    return await this.prisma.product.update({
+      where: { id: productId },
+      data: updateData as Prisma.ProductUpdateInput,
+    });
+  }
+
+  /**
+   * Bulk update product status
+   */
+  async bulkUpdateProductStatus(data: BulkProductStatusUpdate): Promise<{ count: number }> {
+    const validatedData = bulkProductStatusUpdateSchema.parse(data);
+    const { productIds, ...updateData } = validatedData;
+
+    if (productIds.length === 0) {
+      throw new Error('At least one product ID is required');
+    }
+
+    // Prepare update data
+    const finalUpdateData: any = { ...updateData };
+
+    // Set publishedAt if products are being published
+    if (updateData.isPublished && !updateData.publishedAt) {
+      finalUpdateData.publishedAt = new Date();
+    }
+
+    const result = await this.prisma.product.updateMany({
+      where: { id: { in: productIds } },
+      data: finalUpdateData,
+    });
+
+    return { count: result.count };
+  }
+
+  /**
+   * Schedule product publication
+   */
+  async scheduleProductPublication(
+    productId: string,
+    publishDate: Date,
+    availableUntil?: Date
+  ): Promise<Product> {
+    const product = await this.findById(productId);
+    if (!product) {
+      throw new Error(`Product with ID '${productId}' not found`);
+    }
+
+    const updateData: Partial<Prisma.ProductUpdateInput> = {
+      status: 'SCHEDULED',
+      availableFrom: publishDate,
+      availableTo: availableUntil || null,
+    };
+
+    return await this.prisma.product.update({
+      where: { id: productId },
+      data: updateData,
+    });
+  }
+
+  /**
+   * Publish product immediately
+   */
+  async publishProduct(productId: string): Promise<Product> {
+    const product = await this.findById(productId);
+    if (!product) {
+      throw new Error(`Product with ID '${productId}' not found`);
+    }
+
+    const updateData: Partial<Prisma.ProductUpdateInput> = {
+      status: 'PUBLISHED',
+      isPublished: true,
+      publishedAt: new Date(),
+    };
+
+    return await this.prisma.product.update({
+      where: { id: productId },
+      data: updateData,
+    });
+  }
+
+  /**
+   * Archive product
+   */
+  async archiveProduct(productId: string): Promise<Product> {
+    const product = await this.findById(productId);
+    if (!product) {
+      throw new Error(`Product with ID '${productId}' not found`);
+    }
+
+    const updateData: Partial<Prisma.ProductUpdateInput> = {
+      status: 'ARCHIVED',
+      isPublished: false,
+    };
+
+    return await this.prisma.product.update({
+      where: { id: productId },
+      data: updateData,
+    });
+  }
+
+  /**
+   * Increment current user count for limited products
+   */
+  async incrementUserCount(productId: string): Promise<Product> {
+    const product = await this.findById(productId);
+    if (!product) {
+      throw new Error(`Product with ID '${productId}' not found`);
+    }
+
+    if (!product.isLimited) {
+      throw new Error('Product is not limited, user count cannot be incremented');
+    }
+
+    if (product.maxUsers && product.currentUsers >= product.maxUsers) {
+      throw new Error('Product has reached maximum user capacity');
+    }
+
+    return await this.prisma.product.update({
+      where: { id: productId },
+      data: {
+        currentUsers: { increment: 1 },
+      },
+    });
+  }
+
+  /**
+   * Decrement current user count for limited products
+   */
+  async decrementUserCount(productId: string): Promise<Product> {
+    const product = await this.findById(productId);
+    if (!product) {
+      throw new Error(`Product with ID '${productId}' not found`);
+    }
+
+    if (!product.isLimited) {
+      throw new Error('Product is not limited, user count cannot be decremented');
+    }
+
+    if (product.currentUsers <= 0) {
+      throw new Error('User count cannot be negative');
+    }
+
+    return await this.prisma.product.update({
+      where: { id: productId },
+      data: {
+        currentUsers: { decrement: 1 },
+      },
+    });
+  }
+
+  /**
+   * Get products requiring status transitions (e.g., scheduled products that should be published)
+   */
+  async getProductsRequiringStatusTransition(): Promise<Product[]> {
+    const now = new Date();
+
+    return await this.prisma.product.findMany({
+      where: {
+        OR: [
+          // Scheduled products that should be published
+          {
+            status: 'SCHEDULED',
+            availableFrom: { lte: now },
+            availableTo: { gte: now },
+          },
+          // Published products that should be archived (past availability)
+          {
+            status: 'PUBLISHED',
+            availableTo: { lt: now },
+          },
+        ],
+      },
+      orderBy: { availableFrom: 'asc' },
+    });
+  }
+
+  /**
+   * Get products with visibility restrictions
+   */
+  async getRestrictedProducts(): Promise<Product[]> {
+    return await this.prisma.product.findMany({
+      where: {
+        OR: [
+          { restrictedRegions: { isEmpty: false } },
+          { allowedUserRoles: { isEmpty: false } },
+          { isLimited: true },
+        ],
+      },
+      orderBy: { createdAt: 'desc' },
+    });
+  }
+
+  /**
+   * Get visibility statistics
+   */
+  async getVisibilityStats(): Promise<{
+    total: number;
+    published: number;
+    draft: number;
+    scheduled: number;
+    archived: number;
+    withRestrictions: number;
+    limited: number;
+    nearCapacity: number;
+  }> {
+    const [
+      total,
+      published,
+      draft,
+      scheduled,
+      archived,
+      withRestrictions,
+      limited,
+      nearCapacity,
+    ] = await Promise.all([
+      this.prisma.product.count(),
+      this.prisma.product.count({ where: { status: 'PUBLISHED' } }),
+      this.prisma.product.count({ where: { status: 'DRAFT' } }),
+      this.prisma.product.count({ where: { status: 'SCHEDULED' } }),
+      this.prisma.product.count({ where: { status: 'ARCHIVED' } }),
+      this.prisma.product.count({
+        where: {
+          OR: [
+            { restrictedRegions: { isEmpty: false } },
+            { allowedUserRoles: { isEmpty: false } },
+          ],
+        },
+      }),
+      this.prisma.product.count({ where: { isLimited: true } }),
+      this.prisma.product.count({
+        where: {
+          isLimited: true,
+          maxUsers: { not: null },
+          // Note: This is a simplified version - in production you'd want a raw query
+          currentUsers: { gt: 0 },
+        },
+      }),
+    ]);
+
+    return {
+      total,
+      published,
+      draft,
+      scheduled,
+      archived,
+      withRestrictions,
+      limited,
+      nearCapacity,
+    };
   }
 }

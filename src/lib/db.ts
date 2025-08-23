@@ -80,32 +80,32 @@ export const db = globalThis.__prisma ?? createPrismaClient();
 // Security event logging for production
 if (process.env.NODE_ENV === "production") {
   // Log database errors for security monitoring
-  db.$on("error", (e) => {
+  db.$on("error", (_e) => {
     // console.error("[DB_ERROR]", {
-      timestamp: new Date().toISOString(),
-      target: e.target,
-      message: e.message,
-      // Don't log sensitive query details in production
-    });
+    //   timestamp: new Date().toISOString(),
+    //   target: e.target,
+    //   message: e.message,
+    //   // Don't log sensitive query details in production
+    // });
   });
 
   // Log slow queries for performance monitoring
-  db.$on("warn", (e) => {
+  db.$on("warn", (_e) => {
     // console.warn("[DB_WARN]", {
-      timestamp: new Date().toISOString(),
-      target: e.target,
-      message: e.message,
-    });
+    //   timestamp: new Date().toISOString(),
+    //   target: e.target,
+    //   message: e.message,
+    // });
   });
 } else {
   // Development logging with query details
-  db.$on("query", (e) => {
+  db.$on("query", (_e) => {
     // console.log("[DB_QUERY]", {
-      query: e.query,
-      params: e.params,
-      duration: `${e.duration}ms`,
-      target: e.target,
-    });
+    //   query: e.query,
+    //   params: e.params,
+    //   duration: `${e.duration}ms`,
+    //   target: e.target,
+    // });
   });
 }
 
@@ -154,10 +154,10 @@ export const secureTransaction = async <T>(
       // Log security-relevant transaction failures
       if (process.env.NODE_ENV === "production") {
         // console.error(`[DB_TRANSACTION_FAILED] Attempt ${attempt}/${maxRetries}:`, {
-          timestamp: new Date().toISOString(),
-          error: error instanceof Error ? _error.message : "Unknown error",
-          attempt,
-        });
+        //   timestamp: new Date().toISOString(),
+        //   error: error instanceof Error ? _error.message : "Unknown error",
+        //   attempt,
+        // });
       }
       
       // Don't retry certain types of errors

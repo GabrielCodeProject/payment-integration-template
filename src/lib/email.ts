@@ -340,12 +340,12 @@ export async function sendEmail({
     
     // eslint-disable-next-line no-console
     // console.error("❌ Failed to send email:", {
-      to,
-      subject,
-      from,
-      error: errorMessage,
-      timestamp: new Date().toISOString()
-    });
+    //   to,
+    //   subject,
+    //   from,
+    //   error: errorMessage,
+    //   timestamp: new Date().toISOString()
+    // });
 
     // Check for common Resend errors
     if (errorMessage.includes("401") || errorMessage.includes("Unauthorized")) {

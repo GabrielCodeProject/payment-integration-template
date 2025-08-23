@@ -328,15 +328,15 @@ export function withPermission(
 
     try {
       return await handler(request, session, auditData);
-    } catch (handlerError) {
+    } catch (_handlerError) {
       // Log API errors for security monitoring
       // console.error("API handler error:", {
-        error: handlerError,
-        permission,
-        userId: session.user.id,
-        userAgent: request.headers.get("user-agent"),
-        ipAddress: request.headers.get("x-forwarded-for"),
-      });
+      //   error: _handlerError,
+      //   permission,
+      //   userId: session.user.id,
+      //   userAgent: request.headers.get("user-agent"),
+      //   ipAddress: request.headers.get("x-forwarded-for"),
+      // });
       
       return createApiErrorResponse(500, "Internal server error");
     }
@@ -362,9 +362,9 @@ export function withAuth(
 
     try {
       return await handler(request, session);
-    } catch (handlerError) {
+    } catch (_handlerError) {
       // eslint-disable-next-line no-console
-      // console.error("API handler error:", handlerError);
+      // console.error("API handler error:", _handlerError);
       return createApiErrorResponse(500, "Internal server error");
     }
   };

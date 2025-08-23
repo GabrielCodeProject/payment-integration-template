@@ -608,12 +608,12 @@ export function logError(
     // In production, log minimal error information
     // eslint-disable-next-line no-console
     // console.error(`Error [${error.type}]:`, {
-      message: _error.message,
-      severity: error.severity,
-      statusCode: error.statusCode,
-      timestamp: error.timestamp,
-      // Don't log sensitive context in production
-    });
+    //   message: _error.message,
+    //   severity: error.severity,
+    //   statusCode: error.statusCode,
+    //   timestamp: error.timestamp,
+    //   // Don't log sensitive context in production
+    // });
   }
 }
 

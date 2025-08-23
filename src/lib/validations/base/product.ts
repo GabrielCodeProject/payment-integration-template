@@ -39,6 +39,16 @@ export const productTypeSchema = z.enum(['ONE_TIME', 'SUBSCRIPTION', 'USAGE_BASE
  */
 export const billingIntervalSchema = z.enum(['DAY', 'WEEK', 'MONTH', 'YEAR']);
 
+/**
+ * Product status validation
+ */
+export const productStatusSchema = z.enum(['DRAFT', 'PUBLISHED', 'ARCHIVED', 'SCHEDULED']);
+
+/**
+ * User role validation (for visibility controls)
+ */
+export const userRoleSchema = z.enum(['CUSTOMER', 'ADMIN', 'SUPPORT']);
+
 // =============================================================================
 // CORE PRODUCT SCHEMAS
 // =============================================================================
@@ -86,6 +96,18 @@ export const productSchema = z.object({
   type: productTypeSchema.default('ONE_TIME'),
   billingInterval: billingIntervalSchema.optional(),
   
+  // Visibility and Availability Controls
+  status: productStatusSchema.default('DRAFT'),
+  isPublished: z.boolean().default(false),
+  publishedAt: optionalDateSchema,
+  availableFrom: optionalDateSchema,
+  availableTo: optionalDateSchema,
+  restrictedRegions: z.array(z.string()).default([]),
+  allowedUserRoles: z.array(userRoleSchema).default([]),
+  maxUsers: positiveIntSchema.optional(),
+  currentUsers: nonNegativeIntSchema.default(0),
+  isLimited: z.boolean().default(false),
+  
   // Timestamps
   createdAt: dateSchema,
   updatedAt: dateSchema,
@@ -115,6 +137,18 @@ export const createProductSchema = z.object({
   thumbnail: urlSchema.optional(),
   type: productTypeSchema.default('ONE_TIME'),
   billingInterval: billingIntervalSchema.optional(),
+  
+  // Visibility and Availability Controls (optional for creation)
+  status: productStatusSchema.default('DRAFT'),
+  isPublished: z.boolean().default(false),
+  publishedAt: optionalDateSchema,
+  availableFrom: optionalDateSchema,
+  availableTo: optionalDateSchema,
+  restrictedRegions: z.array(z.string()).default([]),
+  allowedUserRoles: z.array(userRoleSchema).default([]),
+  maxUsers: positiveIntSchema.optional(),
+  currentUsers: nonNegativeIntSchema.default(0),
+  isLimited: z.boolean().default(false),
 }).superRefine((data, ctx) => {
   // Validate subscription-specific fields
   if (data.type === 'SUBSCRIPTION' && !data.billingInterval) {
@@ -151,6 +185,51 @@ export const createProductSchema = z.object({
       path: ['stockQuantity'],
     });
   }
+  
+  // Validate availability date range
+  if (data.availableFrom && data.availableTo && data.availableFrom >= data.availableTo) {
+    ctx.addIssue({
+      code: z.ZodIssueCode.custom,
+      message: 'Available from date must be before available to date',
+      path: ['availableTo'],
+    });
+  }
+  
+  // Validate scheduled status requires availability dates
+  if (data.status === 'SCHEDULED' && !data.availableFrom) {
+    ctx.addIssue({
+      code: z.ZodIssueCode.custom,
+      message: 'Scheduled products must have an available from date',
+      path: ['availableFrom'],
+    });
+  }
+  
+  // Validate published status and isPublished consistency
+  if (data.status === 'PUBLISHED' && !data.isPublished) {
+    ctx.addIssue({
+      code: z.ZodIssueCode.custom,
+      message: 'Published status requires isPublished to be true',
+      path: ['isPublished'],
+    });
+  }
+  
+  // Validate limited products have maxUsers
+  if (data.isLimited && !data.maxUsers) {
+    ctx.addIssue({
+      code: z.ZodIssueCode.custom,
+      message: 'Limited products must have a maximum user count',
+      path: ['maxUsers'],
+    });
+  }
+  
+  // Validate currentUsers doesn't exceed maxUsers
+  if (data.maxUsers && data.currentUsers > data.maxUsers) {
+    ctx.addIssue({
+      code: z.ZodIssueCode.custom,
+      message: 'Current users cannot exceed maximum users',
+      path: ['currentUsers'],
+    });
+  }
 });
 
 /**
@@ -179,6 +258,18 @@ export const updateProductSchema = z.object({
   thumbnail: urlSchema.optional(),
   type: productTypeSchema.optional(),
   billingInterval: billingIntervalSchema.optional(),
+  
+  // Visibility and Availability Controls
+  status: productStatusSchema.optional(),
+  isPublished: z.boolean().optional(),
+  publishedAt: optionalDateSchema,
+  availableFrom: optionalDateSchema,
+  availableTo: optionalDateSchema,
+  restrictedRegions: z.array(z.string()).optional(),
+  allowedUserRoles: z.array(userRoleSchema).optional(),
+  maxUsers: positiveIntSchema.optional(),
+  currentUsers: nonNegativeIntSchema.optional(),
+  isLimited: z.boolean().optional(),
 }).partial().required({ id: true }).superRefine((data, ctx) => {
   // Validate subscription-specific fields
   if (data.type === 'SUBSCRIPTION' && data.billingInterval === undefined) {
@@ -195,6 +286,51 @@ export const updateProductSchema = z.object({
       code: z.ZodIssueCode.custom,
       message: 'Compare at price must be higher than regular price',
       path: ['compareAtPrice'],
+    });
+  }
+  
+  // Validate availability date range
+  if (data.availableFrom && data.availableTo && data.availableFrom >= data.availableTo) {
+    ctx.addIssue({
+      code: z.ZodIssueCode.custom,
+      message: 'Available from date must be before available to date',
+      path: ['availableTo'],
+    });
+  }
+  
+  // Validate scheduled status requires availability dates
+  if (data.status === 'SCHEDULED' && !data.availableFrom) {
+    ctx.addIssue({
+      code: z.ZodIssueCode.custom,
+      message: 'Scheduled products must have an available from date',
+      path: ['availableFrom'],
+    });
+  }
+  
+  // Validate published status and isPublished consistency
+  if (data.status === 'PUBLISHED' && data.isPublished === false) {
+    ctx.addIssue({
+      code: z.ZodIssueCode.custom,
+      message: 'Published status requires isPublished to be true',
+      path: ['isPublished'],
+    });
+  }
+  
+  // Validate limited products have maxUsers
+  if (data.isLimited === true && !data.maxUsers) {
+    ctx.addIssue({
+      code: z.ZodIssueCode.custom,
+      message: 'Limited products must have a maximum user count',
+      path: ['maxUsers'],
+    });
+  }
+  
+  // Validate currentUsers doesn't exceed maxUsers
+  if (data.maxUsers && data.currentUsers && data.currentUsers > data.maxUsers) {
+    ctx.addIssue({
+      code: z.ZodIssueCode.custom,
+      message: 'Current users cannot exceed maximum users',
+      path: ['currentUsers'],
     });
   }
 });
@@ -214,6 +350,18 @@ export const productFilterSchema = z.object({
   tagIds: z.array(cuidSchema).optional(),
   createdAfter: optionalDateSchema,
   createdBefore: optionalDateSchema,
+  
+  // Visibility and Availability Filters
+  status: productStatusSchema.optional(),
+  isPublished: z.boolean().optional(),
+  publishedAfter: optionalDateSchema,
+  publishedBefore: optionalDateSchema,
+  availableAfter: optionalDateSchema,
+  availableBefore: optionalDateSchema,
+  restrictedRegions: z.array(z.string()).optional(),
+  allowedUserRoles: z.array(userRoleSchema).optional(),
+  isLimited: z.boolean().optional(),
+  hasAvailableCapacity: z.boolean().optional(),
 });
 
 /**
@@ -365,6 +513,91 @@ export const productImportSchema = z.object({
 });
 
 // =============================================================================
+// VISIBILITY MANAGEMENT SCHEMAS
+// =============================================================================
+
+/**
+ * Product visibility update schema
+ */
+export const updateProductVisibilitySchema = z.object({
+  productId: cuidSchema,
+  status: productStatusSchema,
+  isPublished: z.boolean(),
+  publishedAt: optionalDateSchema,
+  availableFrom: optionalDateSchema,
+  availableTo: optionalDateSchema,
+}).superRefine((data, ctx) => {
+  // Validate availability date range
+  if (data.availableFrom && data.availableTo && data.availableFrom >= data.availableTo) {
+    ctx.addIssue({
+      code: z.ZodIssueCode.custom,
+      message: 'Available from date must be before available to date',
+      path: ['availableTo'],
+    });
+  }
+  
+  // Validate scheduled status requires availability dates
+  if (data.status === 'SCHEDULED' && !data.availableFrom) {
+    ctx.addIssue({
+      code: z.ZodIssueCode.custom,
+      message: 'Scheduled products must have an available from date',
+      path: ['availableFrom'],
+    });
+  }
+  
+  // Validate published status and isPublished consistency
+  if (data.status === 'PUBLISHED' && !data.isPublished) {
+    ctx.addIssue({
+      code: z.ZodIssueCode.custom,
+      message: 'Published status requires isPublished to be true',
+      path: ['isPublished'],
+    });
+  }
+});
+
+/**
+ * Product access control update schema
+ */
+export const updateProductAccessControlSchema = z.object({
+  productId: cuidSchema,
+  restrictedRegions: z.array(z.string()),
+  allowedUserRoles: z.array(userRoleSchema),
+  maxUsers: positiveIntSchema.optional(),
+  isLimited: z.boolean(),
+}).superRefine((data, ctx) => {
+  // Validate limited products have maxUsers
+  if (data.isLimited && !data.maxUsers) {
+    ctx.addIssue({
+      code: z.ZodIssueCode.custom,
+      message: 'Limited products must have a maximum user count',
+      path: ['maxUsers'],
+    });
+  }
+});
+
+/**
+ * Bulk product status update schema
+ */
+export const bulkProductStatusUpdateSchema = z.object({
+  productIds: z.array(cuidSchema).min(1, 'At least one product is required'),
+  status: productStatusSchema,
+  isPublished: z.boolean().optional(),
+  publishedAt: optionalDateSchema,
+  availableFrom: optionalDateSchema,
+  availableTo: optionalDateSchema,
+});
+
+/**
+ * Product visibility validation schema
+ */
+export const productVisibilityValidationSchema = z.object({
+  productId: cuidSchema,
+  userRole: userRoleSchema,
+  userRegion: z.string().optional(),
+  currentDateTime: dateSchema,
+});
+
+// =============================================================================
 // PUBLIC SCHEMAS (FOR API RESPONSES)
 // =============================================================================
 
@@ -420,6 +653,8 @@ export type Product = z.infer<typeof productSchema>;
 export type CreateProduct = z.infer<typeof createProductSchema>;
 export type UpdateProduct = z.infer<typeof updateProductSchema>;
 export type ProductType = z.infer<typeof productTypeSchema>;
+export type ProductStatus = z.infer<typeof productStatusSchema>;
+export type UserRole = z.infer<typeof userRoleSchema>;
 export type BillingInterval = z.infer<typeof billingIntervalSchema>;
 export type ProductFilter = z.infer<typeof productFilterSchema>;
 export type ProductSort = z.infer<typeof productSortSchema>;
@@ -429,3 +664,9 @@ export type UpdatePrice = z.infer<typeof updatePriceSchema>;
 export type PublicProduct = z.infer<typeof publicProductSchema>;
 export type ProductListItem = z.infer<typeof productListItemSchema>;
 export type ProductDetails = z.infer<typeof productDetailsSchema>;
+
+// Visibility management types
+export type UpdateProductVisibility = z.infer<typeof updateProductVisibilitySchema>;
+export type UpdateProductAccessControl = z.infer<typeof updateProductAccessControlSchema>;
+export type BulkProductStatusUpdate = z.infer<typeof bulkProductStatusUpdateSchema>;
+export type ProductVisibilityValidation = z.infer<typeof productVisibilityValidationSchema>;

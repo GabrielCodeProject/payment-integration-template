@@ -162,13 +162,13 @@ export function validateCSRFProtection(
   if (isDevelopment) {
     // eslint-disable-next-line no-console
     // console.log('🔒 CSRF Validation Debug:', {
-      pathname,
-      method: request.method,
-      cookieToken: cookieToken ? `${cookieToken.substring(0, 8)}...` : 'missing',
-      headerToken: headerToken ? `${headerToken.substring(0, 8)}...` : 'missing',
-      cookieName: CSRF_TOKEN_NAME,
-      headerName: CSRF_HEADER_NAME,
-    });
+    //   pathname,
+    //   method: request.method,
+    //   cookieToken: cookieToken ? `${cookieToken.substring(0, 8)}...` : 'missing',
+    //   headerToken: headerToken ? `${headerToken.substring(0, 8)}...` : 'missing',
+    //   cookieName: CSRF_TOKEN_NAME,
+    //   headerName: CSRF_HEADER_NAME,
+    // });
   }
   
   // Check if we have a valid cookie token

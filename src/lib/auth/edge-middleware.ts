@@ -314,8 +314,8 @@ export function getClientIP(request: NextRequest): string {
  * Log auth events (Edge Runtime compatible)
  */
 export function logAuthEvent(
-  event: "success" | "failure" | "blocked",
-  details: {
+  _event: "success" | "failure" | "blocked",
+  _details: {
     pathname: string;
     ip: string;
     userAgent?: string;
@@ -326,9 +326,9 @@ export function logAuthEvent(
   if (process.env.NODE_ENV === "development") {
     // eslint-disable-next-line no-console
     // console.log(`[AUTH-${event.toUpperCase()}]`, {
-      timestamp: new Date().toISOString(),
-      ...details,
-    });
+    //   timestamp: new Date().toISOString(),
+    //   ...details,
+    // });
   }
 }
 

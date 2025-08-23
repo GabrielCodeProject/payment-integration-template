@@ -45,6 +45,18 @@ const getProductsQuerySchema = z.object({
   createdAfter: z.string().optional().transform(val => val ? new Date(val) : undefined),
   createdBefore: z.string().optional().transform(val => val ? new Date(val) : undefined),
   
+  // Visibility and Availability Filters
+  status: z.enum(['DRAFT', 'PUBLISHED', 'ARCHIVED', 'SCHEDULED']).optional(),
+  isPublished: z.string().optional().transform(val => val === undefined ? undefined : val === 'true'),
+  publishedAfter: z.string().optional().transform(val => val ? new Date(val) : undefined),
+  publishedBefore: z.string().optional().transform(val => val ? new Date(val) : undefined),
+  availableAfter: z.string().optional().transform(val => val ? new Date(val) : undefined),
+  availableBefore: z.string().optional().transform(val => val ? new Date(val) : undefined),
+  restrictedRegions: z.string().optional().transform(val => val ? val.split(',').filter(Boolean) : undefined),
+  allowedUserRoles: z.string().optional().transform(val => val ? val.split(',').filter(Boolean).map(role => role as 'CUSTOMER' | 'ADMIN' | 'SUPPORT') : undefined),
+  isLimited: z.string().optional().transform(val => val === undefined ? undefined : val === 'true'),
+  hasAvailableCapacity: z.string().optional().transform(val => val === undefined ? undefined : val === 'true'),
+  
   // Sorting
   sort: productSortSchema.optional(),
   sortDirection: z.enum(['asc', 'desc']).default('desc'),
@@ -118,6 +130,18 @@ export async function GET(request: NextRequest) {
       tagIds: validatedQuery.tagIds,
       createdAfter: validatedQuery.createdAfter,
       createdBefore: validatedQuery.createdBefore,
+      
+      // Visibility and availability filters
+      status: validatedQuery.status,
+      isPublished: validatedQuery.isPublished,
+      publishedAfter: validatedQuery.publishedAfter,
+      publishedBefore: validatedQuery.publishedBefore,
+      availableAfter: validatedQuery.availableAfter,
+      availableBefore: validatedQuery.availableBefore,
+      restrictedRegions: validatedQuery.restrictedRegions,
+      allowedUserRoles: validatedQuery.allowedUserRoles,
+      isLimited: validatedQuery.isLimited,
+      hasAvailableCapacity: validatedQuery.hasAvailableCapacity,
     });
 
     // Fetch products with pagination and filtering
@@ -160,12 +184,24 @@ export async function GET(request: NextRequest) {
       isActive: product.isActive,
       isDigital: product.isDigital,
       requiresShipping: product.requiresShipping,
+      
+      // Visibility and availability (public fields only)
+      status: product.status,
+      isPublished: product.isPublished,
+      publishedAt: product.publishedAt,
+      availableFrom: product.availableFrom,
+      availableTo: product.availableTo,
+      isLimited: product.isLimited,
+      
       // Calculate derived fields
       inStock: product.isDigital || (product.stockQuantity || 0) > 0,
       isOnSale: !!product.compareAtPrice,
       discountPercentage: product.compareAtPrice 
         ? Math.round((1 - Number(product.price) / Number(product.compareAtPrice)) * 100)
         : undefined,
+      hasAvailableCapacity: product.isLimited && product.maxUsers
+        ? product.currentUsers < product.maxUsers
+        : true,
       createdAt: product.createdAt,
       updatedAt: product.updatedAt,
     }));
