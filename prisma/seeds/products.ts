@@ -9,10 +9,9 @@ import { generateSKU, generateSlug, generateStripeId, createAuditLog, randomBetw
 /**
  * Product templates with comprehensive variety
  */
-const PRODUCT_TEMPLATES: ProductSeedData[] = [
+const PRODUCT_TEMPLATES: Omit<ProductSeedData, 'id'>[] = [
   // Physical Products - Clothing
   {
-    id: 'product-tshirt-001',
     name: 'Premium Developer T-Shirt',
     description: 'High-quality cotton t-shirt with witty developer quotes. Perfect for coding sessions and tech meetups. Made from 100% organic cotton with excellent durability and comfort.',
     shortDescription: 'Comfortable cotton t-shirt for developers',
@@ -35,7 +34,6 @@ const PRODUCT_TEMPLATES: ProductSeedData[] = [
     stripeProductId: generateStripeId('prod', 'tshirt_001')
   },
   {
-    id: 'product-hoodie-001',
     name: 'Code in Comfort Hoodie',
     description: 'Warm and cozy hoodie perfect for those late-night coding sessions. Features a kangaroo pocket and adjustable hood. Available in multiple colors.',
     shortDescription: 'Warm hoodie for coding comfort',
@@ -57,7 +55,6 @@ const PRODUCT_TEMPLATES: ProductSeedData[] = [
     stripeProductId: generateStripeId('prod', 'hoodie_001')
   },
   {
-    id: 'product-mug-001',
     name: 'Caffeine-Driven Developer Mug',
     description: 'High-quality ceramic mug with funny programming quotes. Microwave and dishwasher safe. Perfect size for your morning coffee or tea.',
     shortDescription: 'Ceramic mug for caffeine-driven developers',
@@ -77,7 +74,6 @@ const PRODUCT_TEMPLATES: ProductSeedData[] = [
 
   // Digital Products - eBooks
   {
-    id: 'product-ebook-fullstack-001',
     name: 'Complete Guide to Full-Stack Development',
     description: 'A comprehensive 300-page guide covering modern full-stack development with React, Node.js, and PostgreSQL. Includes practical projects, real-world examples, and best practices from industry experts.',
     shortDescription: 'Complete full-stack development guide',
@@ -95,7 +91,6 @@ const PRODUCT_TEMPLATES: ProductSeedData[] = [
     stripeProductId: generateStripeId('prod', 'ebook_fullstack_001')
   },
   {
-    id: 'product-ebook-database-001',
     name: 'Database Design Mastery',
     description: 'Master database design with this comprehensive guide covering SQL, NoSQL, indexing strategies, and performance optimization. Perfect for developers and DBAs.',
     shortDescription: 'Comprehensive database design guide',
@@ -112,7 +107,6 @@ const PRODUCT_TEMPLATES: ProductSeedData[] = [
     stripeProductId: generateStripeId('prod', 'ebook_database_001')
   },
   {
-    id: 'product-course-api-001',
     name: 'RESTful API Development Course',
     description: 'Learn to build scalable RESTful APIs with Node.js, Express, and MongoDB. Includes video tutorials, code examples, and hands-on projects.',
     shortDescription: 'Complete API development course',
@@ -132,7 +126,6 @@ const PRODUCT_TEMPLATES: ProductSeedData[] = [
 
   // Subscription Products - SaaS Plans
   {
-    id: 'product-plan-basic-001',
     name: 'Basic Plan',
     description: 'Essential features for individual developers and small teams. Includes project management, basic analytics, email support, and up to 5 projects.',
     shortDescription: 'Basic tier with essential features',
@@ -150,7 +143,6 @@ const PRODUCT_TEMPLATES: ProductSeedData[] = [
     stripeProductId: generateStripeId('prod', 'plan_basic_001')
   },
   {
-    id: 'product-plan-pro-001',
     name: 'Pro Plan',
     description: 'Advanced features for professional developers and growing teams. Includes unlimited projects, detailed analytics, priority support, team collaboration tools, and advanced integrations.',
     shortDescription: 'Professional tier with advanced features',
@@ -169,7 +161,6 @@ const PRODUCT_TEMPLATES: ProductSeedData[] = [
     stripeProductId: generateStripeId('prod', 'plan_pro_001')
   },
   {
-    id: 'product-plan-enterprise-001',
     name: 'Enterprise Plan',
     description: 'Enterprise-grade features for large organizations. Includes custom integrations, dedicated support, SLA guarantees, advanced security features, and white-label options.',
     shortDescription: 'Enterprise tier with premium features',
@@ -187,7 +178,6 @@ const PRODUCT_TEMPLATES: ProductSeedData[] = [
     stripeProductId: generateStripeId('prod', 'plan_enterprise_001')
   },
   {
-    id: 'product-plan-pro-annual-001',
     name: 'Pro Plan (Annual)',
     description: 'Pro plan with annual billing - save 20%! All Pro features with 12 months of service at a discounted rate.',
     shortDescription: 'Pro plan with annual discount',
@@ -208,7 +198,6 @@ const PRODUCT_TEMPLATES: ProductSeedData[] = [
 
   // Hardware & Accessories
   {
-    id: 'product-keyboard-001',
     name: 'Mechanical Gaming Keyboard',
     description: 'Professional mechanical keyboard with RGB backlighting, customizable keys, and ergonomic design. Perfect for developers and gamers alike.',
     shortDescription: 'RGB mechanical keyboard for coding',
@@ -230,7 +219,6 @@ const PRODUCT_TEMPLATES: ProductSeedData[] = [
     stripeProductId: generateStripeId('prod', 'keyboard_001')
   },
   {
-    id: 'product-mouse-001',
     name: 'Precision Wireless Mouse',
     description: 'High-precision wireless mouse with ergonomic design and long battery life. Perfect for design work and development.',
     shortDescription: 'Wireless precision mouse',
@@ -250,7 +238,6 @@ const PRODUCT_TEMPLATES: ProductSeedData[] = [
 
   // Software & Tools
   {
-    id: 'product-license-ide-001',
     name: 'Premium IDE License',
     description: 'One-year license for our premium integrated development environment with advanced features, plugins, and priority support.',
     shortDescription: 'Premium IDE annual license',
@@ -269,7 +256,6 @@ const PRODUCT_TEMPLATES: ProductSeedData[] = [
 
   // Limited Edition & Seasonal
   {
-    id: 'product-limited-sticker-001',
     name: 'Limited Edition Sticker Pack',
     description: 'Exclusive collection of developer-themed stickers. Limited quantity available! Perfect for laptops, water bottles, and more.',
     shortDescription: 'Limited edition developer stickers',
@@ -352,29 +338,28 @@ export async function seedProducts(prisma: PrismaClient, config: SeedConfig): Pr
   for (const productData of baseProducts) {
     const product = await prisma.product.create({
       data: {
-        id: productData.id,
         name: productData.name,
-        description: productData.description,
-        shortDescription: productData.shortDescription,
+        description: productData.description || null,
+        shortDescription: productData.shortDescription || null,
         price: productData.price,
         currency: productData.currency,
-        compareAtPrice: productData.compareAtPrice,
-        sku: productData.sku,
+        compareAtPrice: productData.compareAtPrice || null,
+        sku: productData.sku || null,
         isActive: productData.isActive,
         isDigital: productData.isDigital,
         requiresShipping: productData.requiresShipping,
-        stockQuantity: productData.stockQuantity,
-        lowStockThreshold: productData.stockQuantity ? Math.max(5, Math.floor(productData.stockQuantity * 0.1)) : undefined,
+        stockQuantity: productData.stockQuantity || null,
+        lowStockThreshold: productData.stockQuantity ? Math.max(5, Math.floor(productData.stockQuantity * 0.1)) : null,
         slug: generateSlug(productData.name),
-        metaTitle: `${productData.name} - ${productData.shortDescription}`,
-        metaDescription: productData.description.substring(0, 160),
+        metaTitle: `${productData.name} - ${productData.shortDescription || ''}`,
+        metaDescription: productData.description ? productData.description.substring(0, 160) : null,
         tags: productData.tags,
         images: productData.images,
-        thumbnail: productData.images[0],
-        stripePriceId: productData.stripePriceId,
-        stripeProductId: productData.stripeProductId,
+        thumbnail: productData.images[0] || null,
+        stripePriceId: `price_test_${Date.now()}_${Math.random().toString(36).substring(2, 9)}` || null,
+        stripeProductId: `prod_test_${Date.now()}_${Math.random().toString(36).substring(2, 9)}` || null,
         type: productData.type,
-        billingInterval: productData.billingInterval
+        billingInterval: productData.billingInterval || null
       }
     });
     
@@ -406,36 +391,32 @@ export async function seedProducts(prisma: PrismaClient, config: SeedConfig): Pr
     
     for (let i = 0; i < additionalProducts.length; i++) {
       const productData = additionalProducts[i];
-      const index = baseProducts.length + i + 1;
-      const id = `product-additional-${String(index).padStart(3, '0')}`;
-      const stripePriceId = generateStripeId('price', `additional_${String(index).padStart(3, '0')}`);
-      const stripeProductId = generateStripeId('prod', `additional_${String(index).padStart(3, '0')}`);
+      if (!productData) continue;
       
       const product = await prisma.product.create({
         data: {
-          id,
           name: productData.name,
-          description: productData.description,
-          shortDescription: productData.shortDescription,
+          description: productData.description || null,
+          shortDescription: productData.shortDescription || null,
           price: productData.price,
           currency: productData.currency,
-          compareAtPrice: productData.compareAtPrice,
-          sku: productData.sku,
+          compareAtPrice: productData.compareAtPrice || null,
+          sku: productData.sku || null,
           isActive: productData.isActive,
           isDigital: productData.isDigital,
           requiresShipping: productData.requiresShipping,
-          stockQuantity: productData.stockQuantity,
-          lowStockThreshold: productData.stockQuantity ? Math.max(5, Math.floor(productData.stockQuantity * 0.1)) : undefined,
+          stockQuantity: productData.stockQuantity || null,
+          lowStockThreshold: productData.stockQuantity ? Math.max(5, Math.floor(productData.stockQuantity * 0.1)) : null,
           slug: generateSlug(productData.name),
-          metaTitle: `${productData.name} - ${productData.shortDescription}`,
-          metaDescription: productData.description.substring(0, 160),
+          metaTitle: `${productData.name} - ${productData.shortDescription || ''}`,
+          metaDescription: productData.description ? productData.description.substring(0, 160) : null,
           tags: productData.tags,
           images: productData.images,
-          thumbnail: productData.images[0],
-          stripePriceId,
-          stripeProductId,
+          thumbnail: productData.images[0] || null,
+          stripePriceId: `price_test_${Date.now()}_${Math.random().toString(36).substring(2, 9)}` || null,
+          stripeProductId: `prod_test_${Date.now()}_${Math.random().toString(36).substring(2, 9)}` || null,
           type: productData.type,
-          billingInterval: productData.billingInterval
+          billingInterval: productData.billingInterval || null
         }
       });
       

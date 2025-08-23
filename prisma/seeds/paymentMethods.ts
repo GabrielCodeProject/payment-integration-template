@@ -132,7 +132,6 @@ async function createPaymentMethodsForUser(
     const methodIndex = (userIndex * 10) + i + 1;
     
     const paymentMethodData: PaymentMethodSeedData = {
-      id: `pm-${userId.split('-').pop()}-${i + 1}`,
       userId,
       stripePaymentMethodId: generateStripeId('pm', `${userId.split('-').pop()}_${i + 1}`),
       type: card.type,
@@ -147,7 +146,6 @@ async function createPaymentMethodsForUser(
     
     const paymentMethod = await prisma.paymentMethod.create({
       data: {
-        id: paymentMethodData.id,
         userId: paymentMethodData.userId,
         stripePaymentMethodId: paymentMethodData.stripePaymentMethodId,
         type: paymentMethodData.type,
@@ -249,7 +247,6 @@ export async function seedTestPaymentMethods(prisma: PrismaClient, config: SeedC
   // Create expired card
   const expiredCard = await prisma.paymentMethod.create({
     data: {
-      id: 'pm-expired-test-001',
       userId: testCustomer.id,
       stripePaymentMethodId: generateStripeId('pm', 'expired_test_001'),
       type: 'CARD',
@@ -268,7 +265,6 @@ export async function seedTestPaymentMethods(prisma: PrismaClient, config: SeedC
   // Create declined card (for testing)
   const declinedCard = await prisma.paymentMethod.create({
     data: {
-      id: 'pm-declined-test-001',
       userId: testCustomer.id,
       stripePaymentMethodId: generateStripeId('pm', 'declined_test_001'),
       type: 'CARD',
@@ -287,7 +283,6 @@ export async function seedTestPaymentMethods(prisma: PrismaClient, config: SeedC
   // Create international card
   const internationalCard = await prisma.paymentMethod.create({
     data: {
-      id: 'pm-international-test-001',
       userId: testCustomer.id,
       stripePaymentMethodId: generateStripeId('pm', 'international_test_001'),
       type: 'CARD',

@@ -12,7 +12,6 @@ import { daysAgo, daysFromNow, createAuditLog } from './utils.js';
 const DISCOUNT_CODE_TEMPLATES: DiscountCodeSeedData[] = [
   // Welcome and onboarding discounts
   {
-    id: 'discount-welcome-001',
     code: 'WELCOME10',
     name: 'Welcome New Customer',
     description: '10% off for first-time customers',
@@ -27,7 +26,6 @@ const DISCOUNT_CODE_TEMPLATES: DiscountCodeSeedData[] = [
     isActive: true
   },
   {
-    id: 'discount-newbie-001',
     code: 'NEWBIE15',
     name: 'First Purchase Bonus',
     description: '15% off your first purchase over $50',
@@ -44,7 +42,6 @@ const DISCOUNT_CODE_TEMPLATES: DiscountCodeSeedData[] = [
 
   // Free shipping promotions
   {
-    id: 'discount-freeship-001',
     code: 'FREESHIP',
     name: 'Free Shipping',
     description: 'Free shipping on orders over $50',
@@ -59,7 +56,6 @@ const DISCOUNT_CODE_TEMPLATES: DiscountCodeSeedData[] = [
     isActive: true
   },
   {
-    id: 'discount-freeship-premium-001',
     code: 'PREMIUMSHIP',
     name: 'Premium Free Shipping',
     description: 'Free shipping on any order for premium customers',
@@ -76,7 +72,6 @@ const DISCOUNT_CODE_TEMPLATES: DiscountCodeSeedData[] = [
 
   // Fixed amount discounts
   {
-    id: 'discount-save5-001',
     code: 'SAVE5',
     name: 'Save Five Dollars',
     description: '$5 off any purchase over $25',
@@ -92,7 +87,6 @@ const DISCOUNT_CODE_TEMPLATES: DiscountCodeSeedData[] = [
     isActive: true
   },
   {
-    id: 'discount-save10-001',
     code: 'TENOFF',
     name: 'Ten Dollar Discount',
     description: '$10 off orders over $75',
@@ -108,7 +102,6 @@ const DISCOUNT_CODE_TEMPLATES: DiscountCodeSeedData[] = [
     isActive: true
   },
   {
-    id: 'discount-save25-001',
     code: 'BIG25',
     name: 'Big Savings',
     description: '$25 off orders over $150',
@@ -126,7 +119,6 @@ const DISCOUNT_CODE_TEMPLATES: DiscountCodeSeedData[] = [
 
   // Percentage discounts
   {
-    id: 'discount-flash20-001',
     code: 'FLASH20',
     name: 'Flash Sale 20%',
     description: '20% off everything - limited time!',
@@ -141,7 +133,6 @@ const DISCOUNT_CODE_TEMPLATES: DiscountCodeSeedData[] = [
     isActive: true
   },
   {
-    id: 'discount-holiday25-001',
     code: 'HOLIDAY25',
     name: 'Holiday Special',
     description: '25% off for the holiday season',
@@ -156,7 +147,6 @@ const DISCOUNT_CODE_TEMPLATES: DiscountCodeSeedData[] = [
     isActive: true
   },
   {
-    id: 'discount-student15-001',
     code: 'STUDENT15',
     name: 'Student Discount',
     description: '15% off for students and educators',
@@ -173,7 +163,6 @@ const DISCOUNT_CODE_TEMPLATES: DiscountCodeSeedData[] = [
 
   // VIP and loyalty discounts
   {
-    id: 'discount-vip30-001',
     code: 'VIP30',
     name: 'VIP Customer Exclusive',
     description: '30% off for VIP customers only',
@@ -188,7 +177,6 @@ const DISCOUNT_CODE_TEMPLATES: DiscountCodeSeedData[] = [
     isActive: true
   },
   {
-    id: 'discount-loyal12-001',
     code: 'LOYAL12',
     name: 'Loyalty Reward',
     description: '$12 off for loyal customers',
@@ -206,7 +194,6 @@ const DISCOUNT_CODE_TEMPLATES: DiscountCodeSeedData[] = [
 
   // Expired and inactive codes (for testing)
   {
-    id: 'discount-expired-001',
     code: 'EXPIRED20',
     name: 'Expired Summer Sale',
     description: '20% off summer collection - expired',
@@ -221,7 +208,6 @@ const DISCOUNT_CODE_TEMPLATES: DiscountCodeSeedData[] = [
     isActive: false
   },
   {
-    id: 'discount-maxed-001',
     code: 'MAXEDOUT',
     name: 'Maxed Out Code',
     description: '15% off - usage limit reached',
@@ -236,7 +222,6 @@ const DISCOUNT_CODE_TEMPLATES: DiscountCodeSeedData[] = [
     isActive: true // Still active but maxed out
   },
   {
-    id: 'discount-inactive-001',
     code: 'INACTIVE10',
     name: 'Inactive Test Code',
     description: '10% off - deactivated for testing',
@@ -253,7 +238,6 @@ const DISCOUNT_CODE_TEMPLATES: DiscountCodeSeedData[] = [
 
   // Future codes (not yet active)
   {
-    id: 'discount-future-001',
     code: 'FUTURE50',
     name: 'Future Mega Sale',
     description: '50% off everything - starts next week',
@@ -288,17 +272,16 @@ export async function seedDiscountCodes(prisma: PrismaClient, config: SeedConfig
     
     const discountCode = await prisma.discountCode.create({
       data: {
-        id: discountData.id,
         code: discountData.code,
-        name: discountData.name,
-        description: discountData.description,
+        name: discountData.name || null,
+        description: discountData.description || null,
         type: discountData.type,
         value: discountData.value,
-        currency: discountData.currency,
-        maxUses: discountData.maxUses,
-        maxUsesPerCustomer: discountData.maxUsesPerCustomer,
+        currency: discountData.currency || null,
+        maxUses: discountData.maxUses || null,
+        maxUsesPerCustomer: discountData.maxUsesPerCustomer || null,
         currentUses: discountData.currentUses,
-        minimumOrderAmount: discountData.minimumOrderAmount,
+        minimumOrderAmount: discountData.minimumOrderAmount || null,
         startsAt,
         expiresAt,
         isActive: discountData.isActive

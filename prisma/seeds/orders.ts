@@ -135,7 +135,6 @@ function generateOrderFromScenario(
   scenario: typeof ORDER_SCENARIO_TEMPLATES[0]
 ): Omit<OrderSeedData, 'items'> & { items: OrderSeedData['items'] } {
   const baseOrderData = {
-    id: `order-${String(orderIndex).padStart(3, '0')}`,
     orderNumber: generateOrderNumber(orderIndex),
     userId,
     customerEmail: userEmail,
@@ -330,7 +329,6 @@ export async function seedOrders(prisma: PrismaClient, config: SeedConfig): Prom
       // Create the order
       const order = await prisma.order.create({
         data: {
-          id: orderData.id,
           orderNumber: orderData.orderNumber,
           userId: orderData.userId,
           customerEmail: orderData.customerEmail,
@@ -370,7 +368,6 @@ export async function seedOrders(prisma: PrismaClient, config: SeedConfig): Prom
         if (product) {
           await prisma.orderItem.create({
             data: {
-              id: `order-item-${orderIndex}-${itemIndex + 1}`,
               orderId: order.id,
               productId: itemData.productId,
               productName: product.name,
@@ -472,7 +469,6 @@ export async function seedUserDiscountCodes(prisma: PrismaClient, config: SeedCo
   for (const usage of usageMap.values()) {
     await prisma.userDiscountCode.create({
       data: {
-        id: `user-discount-${String(index).padStart(3, '0')}`,
         userId: usage.userId,
         discountCodeId: usage.discountCodeId,
         usageCount: usage.count,
@@ -487,7 +483,8 @@ export async function seedUserDiscountCodes(prisma: PrismaClient, config: SeedCo
         prisma,
         'CREATE',
         'user_discount_codes',
-        `user-discount-${String(index).padStart(3, '0')}`,
+        // ID will be auto-generated, use a placeholder for audit
+        'auto-generated-id',
         usage.userId,
         {
           discountCodeId: usage.discountCodeId,

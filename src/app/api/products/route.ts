@@ -35,9 +35,9 @@ const getProductsQuerySchema = z.object({
   // Filtering
   name: z.string().optional(),
   type: z.enum(['ONE_TIME', 'SUBSCRIPTION', 'USAGE_BASED']).optional(),
-  isActive: z.string().optional().transform(val => val === 'true').optional(),
-  isDigital: z.string().optional().transform(val => val === 'true').optional(),
-  inStock: z.string().optional().transform(val => val === 'true').optional(),
+  isActive: z.string().optional().transform(val => val === undefined ? undefined : val === 'true'),
+  isDigital: z.string().optional().transform(val => val === undefined ? undefined : val === 'true'),
+  inStock: z.string().optional().transform(val => val === undefined ? undefined : val === 'true'),
   priceMin: z.coerce.number().min(0).optional(),
   priceMax: z.coerce.number().min(0).optional(),
   tags: z.string().optional().transform(val => val ? val.split(',').filter(Boolean) : undefined),
@@ -107,7 +107,7 @@ export async function GET(request: NextRequest) {
     const filters = productFilterSchema.parse({
       name: validatedQuery.name,
       type: validatedQuery.type,
-      isActive: validatedQuery.isActive ?? true, // Default to active products for public API
+      isActive: validatedQuery.isActive, // No default - let consumers specify what they want
       isDigital: validatedQuery.isDigital,
       inStock: validatedQuery.inStock,
       priceMin: validatedQuery.priceMin,

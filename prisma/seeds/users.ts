@@ -13,7 +13,6 @@ import { daysAgo, generateStripeId, createAuditLog, randomBoolean } from './util
 const USER_TEMPLATES: UserSeedData[] = [
   // Admin users
   {
-    id: 'admin-user-001',
     email: 'admin@example.com',
     name: 'System Administrator',
     role: 'ADMIN',
@@ -26,7 +25,6 @@ const USER_TEMPLATES: UserSeedData[] = [
     isActive: true
   },
   {
-    id: 'admin-user-002',
     email: 'admin.backup@example.com',
     name: 'Backup Administrator',
     role: 'ADMIN',
@@ -41,7 +39,6 @@ const USER_TEMPLATES: UserSeedData[] = [
   
   // Support users
   {
-    id: 'support-user-001',
     email: 'support@example.com',
     name: 'Support Agent Primary',
     role: 'SUPPORT',
@@ -52,7 +49,6 @@ const USER_TEMPLATES: UserSeedData[] = [
     isActive: true
   },
   {
-    id: 'support-user-002',
     email: 'support.tier2@example.com',
     name: 'Sarah Johnson',
     role: 'SUPPORT',
@@ -65,7 +61,6 @@ const USER_TEMPLATES: UserSeedData[] = [
   
   // Customer users with diverse profiles
   {
-    id: 'customer-user-001',
     email: 'john.doe@example.com',
     name: 'John Doe',
     role: 'CUSTOMER',
@@ -79,7 +74,6 @@ const USER_TEMPLATES: UserSeedData[] = [
     isActive: true
   },
   {
-    id: 'customer-user-002',
     email: 'jane.smith@example.com',
     name: 'Jane Smith',
     role: 'CUSTOMER',
@@ -93,7 +87,6 @@ const USER_TEMPLATES: UserSeedData[] = [
     isActive: true
   },
   {
-    id: 'customer-user-003',
     email: 'mike.wilson@example.com',
     name: 'Mike Wilson',
     role: 'CUSTOMER',
@@ -105,7 +98,6 @@ const USER_TEMPLATES: UserSeedData[] = [
     isActive: true
   },
   {
-    id: 'customer-user-004',
     email: 'emma.davis@example.com',
     name: 'Emma Davis',
     role: 'CUSTOMER',
@@ -119,7 +111,6 @@ const USER_TEMPLATES: UserSeedData[] = [
     isActive: true
   },
   {
-    id: 'customer-user-005',
     email: 'alex.chen@example.com',
     name: 'Alex Chen',
     role: 'CUSTOMER',
@@ -133,7 +124,6 @@ const USER_TEMPLATES: UserSeedData[] = [
     isActive: true
   },
   {
-    id: 'customer-user-006',
     email: 'maria.garcia@example.com',
     name: 'Maria Garcia',
     role: 'CUSTOMER',
@@ -147,7 +137,6 @@ const USER_TEMPLATES: UserSeedData[] = [
     isActive: true
   },
   {
-    id: 'customer-user-007',
     email: 'inactive.user@example.com',
     name: 'Inactive User',
     role: 'CUSTOMER',
@@ -159,7 +148,6 @@ const USER_TEMPLATES: UserSeedData[] = [
     isActive: false // Inactive user scenario
   },
   {
-    id: 'customer-user-008',
     email: 'premium.user@example.com',
     name: 'Premium Customer',
     role: 'CUSTOMER',
@@ -262,7 +250,6 @@ export async function seedUsers(prisma: PrismaClient, config: SeedConfig): Promi
     // Create user without hashedPassword (using BetterAuth only)
     const user = await prisma.user.create({
       data: {
-        id: userData.id,
         email: userData.email,
         name: userData.name,
         role: userData.role,
@@ -315,7 +302,6 @@ export async function seedUsers(prisma: PrismaClient, config: SeedConfig): Promi
     
     for (let i = 0; i < additionalUsers.length; i++) {
       const userData = additionalUsers[i];
-      const id = `customer-user-${String(baseUsers.length + i + 1).padStart(3, '0')}`;
       const email = userData.name.toLowerCase().replace(/\s+/g, '.') + '@example.com';
       const stripeCustomerId = generateStripeId('cus', `customer_${String(baseUsers.length + i + 1).padStart(3, '0')}`);
       
@@ -324,7 +310,6 @@ export async function seedUsers(prisma: PrismaClient, config: SeedConfig): Promi
       // Create user without hashedPassword (using BetterAuth only)
       const user = await prisma.user.create({
         data: {
-          id,
           email,
           name: userData.name,
           role: userData.role,

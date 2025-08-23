@@ -24,7 +24,6 @@ export interface SeedStats {
 }
 
 export interface UserSeedData {
-  id: string;
   email: string;
   name: string;
   role: 'ADMIN' | 'SUPPORT' | 'CUSTOMER';
@@ -39,7 +38,6 @@ export interface UserSeedData {
 }
 
 export interface ProductSeedData {
-  id: string;
   name: string;
   description: string;
   shortDescription?: string;
@@ -60,7 +58,6 @@ export interface ProductSeedData {
 }
 
 export interface PaymentMethodSeedData {
-  id: string;
   userId: string;
   stripePaymentMethodId: string;
   type: 'CARD' | 'BANK_ACCOUNT' | 'PAYPAL' | 'APPLE_PAY' | 'GOOGLE_PAY' | 'OTHER';
@@ -74,7 +71,6 @@ export interface PaymentMethodSeedData {
 }
 
 export interface OrderSeedData {
-  id: string;
   orderNumber: string;
   userId: string;
   customerEmail: string;
@@ -107,7 +103,6 @@ export interface OrderSeedData {
 }
 
 export interface DiscountCodeSeedData {
-  id: string;
   code: string;
   name: string;
   description?: string;
@@ -124,7 +119,6 @@ export interface DiscountCodeSeedData {
 }
 
 export interface SubscriptionSeedData {
-  id: string;
   userId: string;
   productId: string;
   stripeSubscriptionId: string;

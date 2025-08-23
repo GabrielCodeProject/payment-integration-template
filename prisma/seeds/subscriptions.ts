@@ -116,7 +116,6 @@ function generateSubscriptionFromScenario(
   scenario: typeof SUBSCRIPTION_SCENARIOS[0]
 ): SubscriptionSeedData {
   const baseSubscriptionData: SubscriptionSeedData = {
-    id: `subscription-${String(subscriptionIndex).padStart(3, '0')}`,
     userId,
     productId: subscriptionProductId,
     stripeSubscriptionId: generateStripeId('sub', `${subscriptionIndex.toString().padStart(3, '0')}`),
@@ -301,7 +300,6 @@ export async function seedSubscriptions(prisma: PrismaClient, config: SeedConfig
       // Create the subscription
       const subscription = await prisma.subscription.create({
         data: {
-          id: subscriptionData.id,
           userId: subscriptionData.userId,
           productId: subscriptionData.productId,
           stripeSubscriptionId: subscriptionData.stripeSubscriptionId,
@@ -417,7 +415,6 @@ export async function seedTestSubscriptionScenarios(prisma: PrismaClient, config
   // Create a subscription that's about to expire
   const expiringSubscription = await prisma.subscription.create({
     data: {
-      id: 'subscription-test-expiring',
       userId: testCustomer.id,
       productId: basicPlan.id,
       stripeSubscriptionId: generateStripeId('sub', 'expiring_test'),
@@ -443,7 +440,6 @@ export async function seedTestSubscriptionScenarios(prisma: PrismaClient, config
   // Create a subscription with payment issues
   const paymentIssueSubscription = await prisma.subscription.create({
     data: {
-      id: 'subscription-test-payment-issue',
       userId: testCustomer.id,
       productId: basicPlan.id,
       stripeSubscriptionId: generateStripeId('sub', 'payment_issue_test'),

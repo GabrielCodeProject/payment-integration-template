@@ -16,6 +16,7 @@ import { ProductFilters } from '@/components/admin/products/ProductFilters';
 import { ProductStats } from '@/components/admin/products/ProductStats';
 
 import type { Product, ProductFilter, ProductSort } from '@/lib/validations/base/product';
+import { createAPIHeaders } from '@/lib/utils';
 
 interface ProductsData {
   products: Product[];
@@ -102,6 +103,7 @@ export default function AdminProductsPage() {
       const data = await response.json();
       setProductsData(data);
     } catch (error) {
+      // eslint-disable-next-line no-console
       console.error('Error fetching products:', error);
       setError(error instanceof Error ? error.message : 'Failed to fetch products');
       toast.error('Failed to load products');
@@ -121,6 +123,7 @@ export default function AdminProductsPage() {
       const data = await response.json();
       setStats(data.stats);
     } catch (error) {
+      // eslint-disable-next-line no-console
       console.error('Error fetching product stats:', error);
     }
   };
@@ -169,23 +172,32 @@ export default function AdminProductsPage() {
     try {
       const response = await fetch(`/api/products/${productId}`, {
         method: 'DELETE',
+        headers: createAPIHeaders(),
       });
 
       if (!response.ok) {
-        throw new Error('Failed to delete product');
+        const error = await response.json().catch(() => ({}));
+        
+        // Handle CSRF-specific errors with helpful messages
+        if (response.status === 403 && error.message?.includes('CSRF')) {
+          throw new Error('Security validation failed. Please refresh the page and try again.');
+        }
+        
+        throw new Error(error.message || 'Failed to delete product');
       }
 
       toast.success('Product deleted successfully');
       fetchProducts();
       fetchStats();
     } catch (error) {
+      // eslint-disable-next-line no-console
       console.error('Error deleting product:', error);
-      toast.error('Failed to delete product');
+      toast.error(error instanceof Error ? error.message : 'Failed to delete product');
     }
   };
 
   // Handle bulk operations
-  const handleBulkOperation = async (operation: string, data?: any) => {
+  const handleBulkOperation = async (operation: string, data?: unknown) => {
     if (selectedProducts.length === 0) {
       toast.error('Please select at least one product');
       return;
@@ -195,45 +207,84 @@ export default function AdminProductsPage() {
       setBulkLoading(true);
       
       const endpoint = '/api/products/bulk';
-      let method = 'PATCH';
-      const body = { productIds: selectedProducts };
+      let method = 'POST';
+      const body: { 
+        productIds: string[]; 
+        operation?: string; 
+        activate?: boolean; 
+        adjustment?: unknown; 
+      } = { productIds: selectedProducts };
 
       switch (operation) {
         case 'activate':
-          body.updates = { isActive: true };
+          body.operation = 'activation';
+          body.activate = true;
           break;
         case 'deactivate':
-          body.updates = { isActive: false };
+          body.operation = 'activation';
+          body.activate = false;
           break;
         case 'delete':
           method = 'DELETE';
+          // For DELETE, we only need productIds
           break;
         case 'priceUpdate':
-          body.priceAdjustment = data;
+          body.operation = 'price_adjustment';
+          body.adjustment = data;
           break;
         default:
           throw new Error('Unknown bulk operation');
       }
 
+
       const response = await fetch(endpoint, {
         method,
-        headers: { 'Content-Type': 'application/json' },
+        headers: createAPIHeaders(),
         body: JSON.stringify(body),
       });
 
       if (!response.ok) {
-        throw new Error(`Failed to ${operation} products`);
+        const error = await response.json().catch(() => ({}));
+        
+        // Handle CSRF-specific errors with helpful messages
+        if (response.status === 403 && error.message?.includes('CSRF')) {
+          throw new Error('Security validation failed. Please refresh the page and try again.');
+        }
+        
+        throw new Error(error.message || `Failed to ${operation} products`);
       }
 
       const result = await response.json();
-      toast.success(`Successfully ${operation}d ${result.count || selectedProducts.length} products`);
+      const successCount = result.result?.affectedCount || selectedProducts.length;
+      
+      let operationPastTense: string;
+      switch (operation) {
+        case 'activate':
+          operationPastTense = 'activated';
+          break;
+        case 'deactivate':
+          operationPastTense = 'deactivated';
+          break;
+        case 'delete':
+          operationPastTense = 'deleted';
+          break;
+        case 'priceUpdate':
+          operationPastTense = 'price updated';
+          break;
+        default:
+          operationPastTense = operation;
+          break;
+      }
+      
+      toast.success(`Successfully ${operationPastTense} ${successCount} products`);
       
       setSelectedProducts([]);
       fetchProducts();
       fetchStats();
     } catch (error) {
+      // eslint-disable-next-line no-console
       console.error(`Error ${operation} products:`, error);
-      toast.error(`Failed to ${operation} products`);
+      toast.error(error instanceof Error ? error.message : `Failed to ${operation} products`);
     } finally {
       setBulkLoading(false);
     }
@@ -259,6 +310,7 @@ export default function AdminProductsPage() {
       
       toast.success('Products exported successfully');
     } catch (error) {
+      // eslint-disable-next-line no-console
       console.error('Error exporting products:', error);
       toast.error('Failed to export products');
     }
@@ -436,7 +488,7 @@ export default function AdminProductsPage() {
             onSort={handleSort}
             currentSort={{ field: sortField, direction: sortDirection }}
             onDeleteProduct={handleDeleteProduct}
-            pagination={productsData?.pagination}
+            pagination={productsData?.pagination || undefined}
             onPageChange={handlePageChange}
           />
         </CardContent>
