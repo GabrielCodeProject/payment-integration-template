@@ -1,9 +1,9 @@
 /**
  * Product Bulk Status Management API - Manage product status in bulk
- * 
+ *
  * Handles:
  * - PUT: Bulk update product status
- * 
+ *
  * Features:
  * - Role-based access control (admin only)
  * - Bulk operations on multiple products
@@ -11,13 +11,17 @@
  * - Audit logging for admin actions
  */
 
-import { NextRequest, NextResponse } from 'next/server';
-import { z } from 'zod';
-import { ProductService } from '@/services/products/product.service';
-import { db } from '@/lib/db';
-import { validateApiAccess, createApiErrorResponse, getAuditContext } from '@/lib/auth/server-session';
-import { bulkProductStatusUpdateSchema } from '@/lib/validations/base/product';
-import { rateLimit, auditAction } from '@/lib/api-helpers';
+import { auditAction, rateLimit } from "@/lib/api-helpers";
+import {
+  createApiErrorResponse,
+  getAuditContext,
+  validateApiAccess,
+} from "@/lib/auth/server-session";
+import { db } from "@/lib/db";
+import { bulkProductStatusUpdateSchema } from "@/lib/validations/base/product";
+import { ProductService } from "@/services/products/product.service";
+import { NextRequest, NextResponse } from "next/server";
+import { z } from "zod";
 
 const productService = new ProductService(db);
 
@@ -27,24 +31,30 @@ const productService = new ProductService(db);
 export async function PUT(request: NextRequest) {
   try {
     // Validate admin authentication
-    const { isValid, session, error } = await validateApiAccess(request, 'ADMIN');
-    
+    const { isValid, session, error } = await validateApiAccess(
+      request,
+      "ADMIN"
+    );
+
     if (!isValid || !session) {
       return createApiErrorResponse(
         error?.code || 401,
-        error?.message || 'Admin authentication required'
+        error?.message || "Admin authentication required"
       );
     }
 
     // Apply rate limiting for admin operations
     const rateLimitResult = await rateLimit(request, {
-      windowMs: 15 * 60 * 1000, // 15 minutes  
+      windowMs: 15 * 60 * 1000, // 15 minutes
       maxRequests: 20, // 20 bulk operations per window
       keyGenerator: () => `product_bulk_status_${session.user.id}`,
     });
 
     if (!rateLimitResult.success) {
-      return createApiErrorResponse(429, 'Too many admin requests. Please try again later.');
+      return createApiErrorResponse(
+        429,
+        "Too many admin requests. Please try again later."
+      );
     }
 
     // Parse and validate request body
@@ -52,7 +62,7 @@ export async function PUT(request: NextRequest) {
     try {
       requestData = await request.json();
     } catch {
-      return createApiErrorResponse(400, 'Invalid JSON in request body');
+      return createApiErrorResponse(400, "Invalid JSON in request body");
     }
 
     let validatedData;
@@ -60,19 +70,28 @@ export async function PUT(request: NextRequest) {
       validatedData = bulkProductStatusUpdateSchema.parse(requestData);
     } catch (_error) {
       if (_error instanceof z.ZodError) {
-        return createApiErrorResponse(400, 'Invalid bulk update data', _error.issues);
+        return createApiErrorResponse(
+          400,
+          "Invalid bulk update data",
+          _error.issues
+        );
       }
       throw _error;
     }
 
     // Validate that products exist before bulk update
     const products = await Promise.all(
-      validatedData.productIds.map(id => productService.findById(id))
+      validatedData.productIds.map((id) => productService.findById(id))
     );
 
-    const missingProducts = validatedData.productIds.filter((id, index) => !products[index]);
+    const missingProducts = validatedData.productIds.filter(
+      (id, index) => !products[index]
+    );
     if (missingProducts.length > 0) {
-      return createApiErrorResponse(404, `Products not found: ${missingProducts.join(', ')}`);
+      return createApiErrorResponse(
+        404,
+        `Products not found: ${missingProducts.join(", ")}`
+      );
     }
 
     // Perform bulk update
@@ -81,9 +100,9 @@ export async function PUT(request: NextRequest) {
     // Log the admin action for audit
     const auditContext = getAuditContext(request, session);
     await auditAction({
-      action: 'BULK_UPDATE_PRODUCT_STATUS',
-      resource: 'Product',
-      resourceId: validatedData.productIds.join(','),
+      action: "BULK_UPDATE_PRODUCT_STATUS",
+      resource: "Product",
+      resourceId: validatedData.productIds.join(","),
       adminUserId: auditContext.adminUserId,
       adminRole: auditContext.adminRole,
       ipAddress: auditContext.ipAddress,
@@ -96,38 +115,38 @@ export async function PUT(request: NextRequest) {
         availableFrom: validatedData.availableFrom,
         availableTo: validatedData.availableTo,
       },
-      severity: 'INFO',
+      severity: "INFO",
     });
 
-    return NextResponse.json({
-      result: {
-        updatedCount: result.count,
-        requestedCount: validatedData.productIds.length,
-        success: result.count === validatedData.productIds.length,
+    return NextResponse.json(
+      {
+        result: {
+          updatedCount: result.count,
+          requestedCount: validatedData.productIds.length,
+          success: result.count === validatedData.productIds.length,
+        },
+        operation: {
+          status: validatedData.status,
+          isPublished: validatedData.isPublished,
+          availableFrom: validatedData.availableFrom,
+          availableTo: validatedData.availableTo,
+        },
+        message: `Successfully updated ${result.count} of ${validatedData.productIds.length} products`,
       },
-      operation: {
-        status: validatedData.status,
-        isPublished: validatedData.isPublished,
-        availableFrom: validatedData.availableFrom,
-        availableTo: validatedData.availableTo,
-      },
-      message: `Successfully updated ${result.count} of ${validatedData.productIds.length} products`,
-    }, { status: 200 });
-
+      { status: 200 }
+    );
   } catch (_error) {
-    // console.error('Error bulk updating product status:', error);
-    
     // Handle specific business logic errors
     if (_error instanceof Error) {
-      if (_error.message.includes('At least one product')) {
+      if (_error.message.includes("At least one product")) {
         return createApiErrorResponse(400, _error.message);
       }
-      if (_error.message.includes('validation')) {
+      if (_error.message.includes("validation")) {
         return createApiErrorResponse(400, _error.message);
       }
     }
 
-    return createApiErrorResponse(500, 'Failed to bulk update product status');
+    return createApiErrorResponse(500, "Failed to bulk update product status");
   }
 }
 
@@ -138,10 +157,10 @@ export async function OPTIONS() {
   return new NextResponse(null, {
     status: 200,
     headers: {
-      'Access-Control-Allow-Origin': '*',
-      'Access-Control-Allow-Methods': 'PUT, OPTIONS',
-      'Access-Control-Allow-Headers': 'Content-Type, Authorization',
-      'Access-Control-Max-Age': '86400',
+      "Access-Control-Allow-Origin": "*",
+      "Access-Control-Allow-Methods": "PUT, OPTIONS",
+      "Access-Control-Allow-Headers": "Content-Type, Authorization",
+      "Access-Control-Max-Age": "86400",
     },
   });
 }

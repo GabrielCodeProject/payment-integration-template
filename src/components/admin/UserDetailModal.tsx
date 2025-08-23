@@ -1,6 +1,8 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
   Dialog,
   DialogContent,
@@ -8,28 +10,26 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
-import { RoleBadge } from "./RoleBadge";
-import { RoleAssignmentForm } from "./RoleAssignmentForm";
-import { PermissionGuard } from "./PermissionGuard";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { PERMISSIONS } from "@/lib/permissions";
-import {
-  User,
-  Shield,
-  Activity,
-  CreditCard,
-  Package,
-  Clock,
-  CheckCircle2,
-  AlertTriangle,
-  Edit,
-} from "lucide-react";
-import { formatDistanceToNow, format } from "date-fns";
 import type { UserRole } from "@prisma/client";
+import { format, formatDistanceToNow } from "date-fns";
+import {
+  Activity,
+  AlertTriangle,
+  CheckCircle2,
+  Clock,
+  CreditCard,
+  Edit,
+  Package,
+  Shield,
+  User,
+} from "lucide-react";
+import { useEffect, useState } from "react";
+import { PermissionGuard } from "./PermissionGuard";
+import { RoleAssignmentForm } from "./RoleAssignmentForm";
+import { RoleBadge } from "./RoleBadge";
 
 interface UserDetailModalProps {
   user: {
@@ -87,7 +87,7 @@ interface DetailedUser {
 
 /**
  * UserDetailModal Component
- * 
+ *
  * Displays comprehensive user information including personal details,
  * order history, payment information, and admin actions.
  */
@@ -114,21 +114,23 @@ export function UserDetailModal({
       setError(null);
 
       const response = await fetch(`/api/admin/users/${user.id}`);
-      
+
       if (!response.ok) {
         throw new Error(`Failed to fetch user details: ${response.status}`);
       }
 
       const data = await response.json();
-      
+
       if (data.success) {
         setDetailedUser(data.data);
       } else {
         throw new Error(data.error || "Failed to fetch user details");
       }
     } catch (err) {
-      // console.error("Error fetching user details:", err);
-      setError(err instanceof Error ? err.message : "Failed to load user details");
+      console.error("Error fetching user details:", err);
+      setError(
+        err instanceof Error ? err.message : "Failed to load user details"
+      );
     } finally {
       setIsLoading(false);
     }
@@ -171,15 +173,15 @@ export function UserDetailModal({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
+      <DialogContent className="max-h-[90vh] max-w-4xl overflow-y-auto">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-3">
-            <div className="size-10 bg-primary/10 rounded-full flex items-center justify-center">
-              <User className="size-5 text-primary" />
+            <div className="bg-primary/10 flex size-10 items-center justify-center rounded-full">
+              <User className="text-primary size-5" />
             </div>
             <div>
               <div>{user.name || "No name"}</div>
-              <div className="text-sm text-muted-foreground font-normal">
+              <div className="text-muted-foreground text-sm font-normal">
                 {user.email}
               </div>
             </div>
@@ -191,11 +193,11 @@ export function UserDetailModal({
         </DialogHeader>
 
         {error && (
-          <div className="bg-destructive/10 border border-destructive/20 rounded-lg p-4">
+          <div className="bg-destructive/10 border-destructive/20 rounded-lg border p-4">
             <p className="text-destructive text-sm">{error}</p>
-            <Button 
-              variant="outline" 
-              size="sm" 
+            <Button
+              variant="outline"
+              size="sm"
               onClick={fetchDetailedUser}
               className="mt-2"
             >
@@ -213,11 +215,11 @@ export function UserDetailModal({
           </TabsList>
 
           <TabsContent value="overview" className="space-y-4">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
               {/* Personal Information */}
               <Card>
                 <CardHeader>
-                  <CardTitle className="text-lg flex items-center gap-2">
+                  <CardTitle className="flex items-center gap-2 text-lg">
                     <User className="size-5" />
                     Personal Information
                   </CardTitle>
@@ -235,16 +237,22 @@ export function UserDetailModal({
                   ) : (
                     <>
                       <div className="flex justify-between">
-                        <span className="text-sm text-muted-foreground">Name:</span>
+                        <span className="text-muted-foreground text-sm">
+                          Name:
+                        </span>
                         <span className="text-sm font-medium">
                           {detailedUser?.name || "Not provided"}
                         </span>
                       </div>
-                      
+
                       <div className="flex justify-between">
-                        <span className="text-sm text-muted-foreground">Email:</span>
+                        <span className="text-muted-foreground text-sm">
+                          Email:
+                        </span>
                         <div className="flex items-center gap-2">
-                          <span className="text-sm font-medium">{detailedUser?.email}</span>
+                          <span className="text-sm font-medium">
+                            {detailedUser?.email}
+                          </span>
                           {detailedUser?.emailVerified ? (
                             <CheckCircle2 className="size-4 text-green-600" />
                           ) : (
@@ -252,31 +260,44 @@ export function UserDetailModal({
                           )}
                         </div>
                       </div>
-                      
+
                       <div className="flex justify-between">
-                        <span className="text-sm text-muted-foreground">Phone:</span>
+                        <span className="text-muted-foreground text-sm">
+                          Phone:
+                        </span>
                         <span className="text-sm font-medium">
                           {detailedUser?.phone || "Not provided"}
                         </span>
                       </div>
-                      
+
                       <div className="flex justify-between">
-                        <span className="text-sm text-muted-foreground">Timezone:</span>
+                        <span className="text-muted-foreground text-sm">
+                          Timezone:
+                        </span>
                         <span className="text-sm font-medium">
                           {detailedUser?.timezone || "UTC"}
                         </span>
                       </div>
-                      
+
                       <div className="flex justify-between">
-                        <span className="text-sm text-muted-foreground">Currency:</span>
+                        <span className="text-muted-foreground text-sm">
+                          Currency:
+                        </span>
                         <span className="text-sm font-medium">
-                          {detailedUser?.preferredCurrency?.toUpperCase() || "USD"}
+                          {detailedUser?.preferredCurrency?.toUpperCase() ||
+                            "USD"}
                         </span>
                       </div>
-                      
+
                       <div className="flex justify-between">
-                        <span className="text-sm text-muted-foreground">Status:</span>
-                        <Badge variant={detailedUser?.isActive ? "default" : "secondary"}>
+                        <span className="text-muted-foreground text-sm">
+                          Status:
+                        </span>
+                        <Badge
+                          variant={
+                            detailedUser?.isActive ? "default" : "secondary"
+                          }
+                        >
                           {detailedUser?.isActive ? "Active" : "Inactive"}
                         </Badge>
                       </div>
@@ -288,7 +309,7 @@ export function UserDetailModal({
               {/* Account Details */}
               <Card>
                 <CardHeader>
-                  <CardTitle className="text-lg flex items-center gap-2">
+                  <CardTitle className="flex items-center gap-2 text-lg">
                     <Shield className="size-5" />
                     Account Details
                   </CardTitle>
@@ -306,9 +327,14 @@ export function UserDetailModal({
                   ) : (
                     <>
                       <div className="flex justify-between">
-                        <span className="text-sm text-muted-foreground">Role:</span>
+                        <span className="text-muted-foreground text-sm">
+                          Role:
+                        </span>
                         <div className="flex items-center gap-2">
-                          <RoleBadge role={detailedUser?.role || user.role} size="sm" />
+                          <RoleBadge
+                            role={detailedUser?.role || user.role}
+                            size="sm"
+                          />
                           <PermissionGuard permission={PERMISSIONS.ROLE_ASSIGN}>
                             <Button
                               variant="ghost"
@@ -320,28 +346,41 @@ export function UserDetailModal({
                           </PermissionGuard>
                         </div>
                       </div>
-                      
+
                       <div className="flex justify-between">
-                        <span className="text-sm text-muted-foreground">Created:</span>
+                        <span className="text-muted-foreground text-sm">
+                          Created:
+                        </span>
                         <span className="text-sm font-medium">
-                          {format(new Date(detailedUser?.createdAt || user.createdAt), "PPp")}
+                          {format(
+                            new Date(detailedUser?.createdAt || user.createdAt),
+                            "PPp"
+                          )}
                         </span>
                       </div>
-                      
+
                       <div className="flex justify-between">
-                        <span className="text-sm text-muted-foreground">Last Login:</span>
+                        <span className="text-muted-foreground text-sm">
+                          Last Login:
+                        </span>
                         <span className="text-sm font-medium">
-                          {detailedUser?.lastLoginAt 
-                            ? formatDistanceToNow(new Date(detailedUser.lastLoginAt), { addSuffix: true })
-                            : "Never"
-                          }
+                          {detailedUser?.lastLoginAt
+                            ? formatDistanceToNow(
+                                new Date(detailedUser.lastLoginAt),
+                                { addSuffix: true }
+                              )
+                            : "Never"}
                         </span>
                       </div>
-                      
+
                       <div className="flex justify-between">
-                        <span className="text-sm text-muted-foreground">Account Age:</span>
+                        <span className="text-muted-foreground text-sm">
+                          Account Age:
+                        </span>
                         <span className="text-sm font-medium">
-                          {formatDistanceToNow(new Date(detailedUser?.createdAt || user.createdAt))}
+                          {formatDistanceToNow(
+                            new Date(detailedUser?.createdAt || user.createdAt)
+                          )}
                         </span>
                       </div>
                     </>
@@ -351,49 +390,73 @@ export function UserDetailModal({
             </div>
 
             {/* Quick Stats */}
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
               <Card>
                 <CardContent className="pt-6">
                   <div className="flex items-center justify-between">
                     <div>
                       <p className="text-2xl font-bold">
-                        {isLoading ? <Skeleton className="h-8 w-8" /> : detailedUser?.orders?.length || 0}
+                        {isLoading ? (
+                          <Skeleton className="h-8 w-8" />
+                        ) : (
+                          detailedUser?.orders?.length || 0
+                        )}
                       </p>
-                      <p className="text-sm text-muted-foreground">Total Orders</p>
+                      <p className="text-muted-foreground text-sm">
+                        Total Orders
+                      </p>
                     </div>
-                    <Package className="size-8 text-muted-foreground" />
+                    <Package className="text-muted-foreground size-8" />
                   </div>
                 </CardContent>
               </Card>
-              
+
               <Card>
                 <CardContent className="pt-6">
                   <div className="flex items-center justify-between">
                     <div>
                       <p className="text-2xl font-bold">
-                        {isLoading ? <Skeleton className="h-8 w-16" /> : 
-                          detailedUser?.payments?.reduce((sum, p) => sum + p.amount, 0) 
-                            ? formatCurrency(detailedUser.payments.reduce((sum, p) => sum + p.amount, 0))
-                            : "$0.00"
-                        }
+                        {isLoading ? (
+                          <Skeleton className="h-8 w-16" />
+                        ) : detailedUser?.payments?.reduce(
+                            (sum, p) => sum + p.amount,
+                            0
+                          ) ? (
+                          formatCurrency(
+                            detailedUser.payments.reduce(
+                              (sum, p) => sum + p.amount,
+                              0
+                            )
+                          )
+                        ) : (
+                          "$0.00"
+                        )}
                       </p>
-                      <p className="text-sm text-muted-foreground">Total Spent</p>
+                      <p className="text-muted-foreground text-sm">
+                        Total Spent
+                      </p>
                     </div>
-                    <CreditCard className="size-8 text-muted-foreground" />
+                    <CreditCard className="text-muted-foreground size-8" />
                   </div>
                 </CardContent>
               </Card>
-              
+
               <Card>
                 <CardContent className="pt-6">
                   <div className="flex items-center justify-between">
                     <div>
                       <p className="text-2xl font-bold">
-                        {isLoading ? <Skeleton className="h-8 w-8" /> : detailedUser?.subscriptions?.length || 0}
+                        {isLoading ? (
+                          <Skeleton className="h-8 w-8" />
+                        ) : (
+                          detailedUser?.subscriptions?.length || 0
+                        )}
                       </p>
-                      <p className="text-sm text-muted-foreground">Subscriptions</p>
+                      <p className="text-muted-foreground text-sm">
+                        Subscriptions
+                      </p>
                     </div>
-                    <Activity className="size-8 text-muted-foreground" />
+                    <Activity className="text-muted-foreground size-8" />
                   </div>
                 </CardContent>
               </Card>
@@ -409,7 +472,10 @@ export function UserDetailModal({
                 {isLoading ? (
                   <div className="space-y-3">
                     {Array.from({ length: 3 }).map((_, i) => (
-                      <div key={i} className="flex items-center justify-between p-3 border rounded">
+                      <div
+                        key={i}
+                        className="flex items-center justify-between rounded border p-3"
+                      >
                         <div className="space-y-1">
                           <Skeleton className="h-4 w-24" />
                           <Skeleton className="h-3 w-32" />
@@ -421,25 +487,32 @@ export function UserDetailModal({
                 ) : detailedUser?.orders?.length ? (
                   <div className="space-y-3">
                     {detailedUser.orders.map((order) => (
-                      <div key={order.id} className="flex items-center justify-between p-3 border rounded">
+                      <div
+                        key={order.id}
+                        className="flex items-center justify-between rounded border p-3"
+                      >
                         <div className="flex items-center gap-3">
                           {getStatusIcon(order.status)}
                           <div>
-                            <div className="font-medium">Order #{order.id.slice(-8)}</div>
-                            <div className="text-sm text-muted-foreground">
+                            <div className="font-medium">
+                              Order #{order.id.slice(-8)}
+                            </div>
+                            <div className="text-muted-foreground text-sm">
                               {format(new Date(order.createdAt), "PPp")}
                             </div>
                           </div>
                         </div>
                         <div className="text-right">
-                          <div className="font-medium">{formatCurrency(order.total)}</div>
+                          <div className="font-medium">
+                            {formatCurrency(order.total)}
+                          </div>
                           <Badge variant="outline">{order.status}</Badge>
                         </div>
                       </div>
                     ))}
                   </div>
                 ) : (
-                  <div className="text-center py-8 text-muted-foreground">
+                  <div className="text-muted-foreground py-8 text-center">
                     No orders found
                   </div>
                 )}
@@ -456,7 +529,10 @@ export function UserDetailModal({
                 {isLoading ? (
                   <div className="space-y-3">
                     {Array.from({ length: 3 }).map((_, i) => (
-                      <div key={i} className="flex items-center justify-between p-3 border rounded">
+                      <div
+                        key={i}
+                        className="flex items-center justify-between rounded border p-3"
+                      >
                         <Skeleton className="h-4 w-32" />
                         <Skeleton className="h-6 w-20" />
                       </div>
@@ -465,25 +541,32 @@ export function UserDetailModal({
                 ) : detailedUser?.payments?.length ? (
                   <div className="space-y-3">
                     {detailedUser.payments.map((payment) => (
-                      <div key={payment.id} className="flex items-center justify-between p-3 border rounded">
+                      <div
+                        key={payment.id}
+                        className="flex items-center justify-between rounded border p-3"
+                      >
                         <div className="flex items-center gap-3">
                           {getStatusIcon(payment.status)}
                           <div>
-                            <div className="font-medium">Payment #{payment.id.slice(-8)}</div>
-                            <div className="text-sm text-muted-foreground">
+                            <div className="font-medium">
+                              Payment #{payment.id.slice(-8)}
+                            </div>
+                            <div className="text-muted-foreground text-sm">
                               {format(new Date(payment.createdAt), "PPp")}
                             </div>
                           </div>
                         </div>
                         <div className="text-right">
-                          <div className="font-medium">{formatCurrency(payment.amount)}</div>
+                          <div className="font-medium">
+                            {formatCurrency(payment.amount)}
+                          </div>
                           <Badge variant="outline">{payment.status}</Badge>
                         </div>
                       </div>
                     ))}
                   </div>
                 ) : (
-                  <div className="text-center py-8 text-muted-foreground">
+                  <div className="text-muted-foreground py-8 text-center">
                     No payments found
                   </div>
                 )}
@@ -500,7 +583,10 @@ export function UserDetailModal({
                 {isLoading ? (
                   <div className="space-y-3">
                     {Array.from({ length: 5 }).map((_, i) => (
-                      <div key={i} className="flex items-center justify-between p-3 border rounded">
+                      <div
+                        key={i}
+                        className="flex items-center justify-between rounded border p-3"
+                      >
                         <Skeleton className="h-4 w-40" />
                         <Skeleton className="h-6 w-20" />
                       </div>
@@ -509,7 +595,10 @@ export function UserDetailModal({
                 ) : detailedUser?.loginHistory?.length ? (
                   <div className="space-y-3">
                     {detailedUser.loginHistory.map((login, index) => (
-                      <div key={index} className="flex items-center justify-between p-3 border rounded">
+                      <div
+                        key={index}
+                        className="flex items-center justify-between rounded border p-3"
+                      >
                         <div className="flex items-center gap-3">
                           {login.success ? (
                             <CheckCircle2 className="size-4 text-green-600" />
@@ -518,21 +607,26 @@ export function UserDetailModal({
                           )}
                           <div>
                             <div className="font-medium">
-                              {login.success ? "Successful login" : "Failed login attempt"}
+                              {login.success
+                                ? "Successful login"
+                                : "Failed login attempt"}
                             </div>
-                            <div className="text-sm text-muted-foreground">
-                              {format(new Date(login.timestamp), "PPp")} • {login.ipAddress}
+                            <div className="text-muted-foreground text-sm">
+                              {format(new Date(login.timestamp), "PPp")} •{" "}
+                              {login.ipAddress}
                             </div>
                           </div>
                         </div>
-                        <Badge variant={login.success ? "default" : "destructive"}>
+                        <Badge
+                          variant={login.success ? "default" : "destructive"}
+                        >
                           {login.success ? "Success" : "Failed"}
                         </Badge>
                       </div>
                     ))}
                   </div>
                 ) : (
-                  <div className="text-center py-8 text-muted-foreground">
+                  <div className="text-muted-foreground py-8 text-center">
                     No login history available
                   </div>
                 )}

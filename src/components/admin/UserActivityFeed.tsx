@@ -1,23 +1,23 @@
 "use client";
 
-import { useEffect, useState } from "react";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
-import { RoleBadge } from "./RoleBadge";
+import type { UserRole } from "@prisma/client";
+import { formatDistanceToNow } from "date-fns";
 import {
-  UserPlus,
-  UserMinus,
-  Shield,
-  LogIn,
-  LogOut,
-  Settings,
   AlertTriangle,
   CheckCircle2,
   Clock,
   Eye,
+  LogIn,
+  LogOut,
+  Settings,
+  Shield,
+  UserMinus,
+  UserPlus,
 } from "lucide-react";
-import { formatDistanceToNow } from "date-fns";
-import type { UserRole } from "@prisma/client";
+import { useEffect, useState } from "react";
+import { RoleBadge } from "./RoleBadge";
 
 interface AuditLogEntry {
   id: string;
@@ -45,7 +45,7 @@ interface UserActivityFeedProps {
 
 /**
  * UserActivityFeed Component
- * 
+ *
  * Displays recent system activity and audit logs.
  * Integrates with the audit system to show admin actions.
  */
@@ -61,7 +61,7 @@ export function UserActivityFeed({
 
   useEffect(() => {
     fetchActivities();
-    
+
     if (refreshInterval > 0) {
       const interval = setInterval(fetchActivities, refreshInterval);
       return () => clearInterval(interval);
@@ -71,7 +71,7 @@ export function UserActivityFeed({
   const fetchActivities = async () => {
     try {
       setError(null);
-      
+
       // For now, we'll simulate activity data since audit API might not be fully implemented
       // In a real implementation, this would fetch from /api/admin/audit
       const simulatedActivities: AuditLogEntry[] = [
@@ -146,7 +146,7 @@ export function UserActivityFeed({
       // Apply filters if provided
       let filteredActivities = simulatedActivities;
       if (actionFilter && actionFilter.length > 0) {
-        filteredActivities = simulatedActivities.filter(activity =>
+        filteredActivities = simulatedActivities.filter((activity) =>
           actionFilter.includes(activity.action)
         );
       }
@@ -156,8 +156,10 @@ export function UserActivityFeed({
 
       setActivities(filteredActivities);
     } catch (err) {
-      // console.error("Error fetching activities:", err);
-      setError(err instanceof Error ? err.message : "Failed to load activities");
+      console.error("Error fetching activities:", err);
+      setError(
+        err instanceof Error ? err.message : "Failed to load activities"
+      );
     } finally {
       setIsLoading(false);
     }
@@ -190,8 +192,9 @@ export function UserActivityFeed({
   };
 
   const getActivityDescription = (activity: AuditLogEntry) => {
-    const userName = activity.user?.name || activity.user?.email || "Unknown user";
-    
+    const userName =
+      activity.user?.name || activity.user?.email || "Unknown user";
+
     switch (activity.action) {
       case "USER_LOGIN":
         return `${userName} signed in`;
@@ -224,28 +227,44 @@ export function UserActivityFeed({
 
   const getActivityBadge = (action: string) => {
     if (action.includes("FAILED") || action.includes("ERROR")) {
-      return <Badge variant="destructive" className="text-xs">Failed</Badge>;
+      return (
+        <Badge variant="destructive" className="text-xs">
+          Failed
+        </Badge>
+      );
     }
     if (action.includes("LOGIN")) {
-      return <Badge variant="default" className="text-xs">Auth</Badge>;
+      return (
+        <Badge variant="default" className="text-xs">
+          Auth
+        </Badge>
+      );
     }
     if (action.includes("ROLE") || action.includes("PERMISSION")) {
-      return <Badge variant="secondary" className="text-xs">Role</Badge>;
+      return (
+        <Badge variant="secondary" className="text-xs">
+          Role
+        </Badge>
+      );
     }
     if (action.includes("SYSTEM") || action.includes("CONFIG")) {
-      return <Badge variant="outline" className="text-xs">System</Badge>;
+      return (
+        <Badge variant="outline" className="text-xs">
+          System
+        </Badge>
+      );
     }
     return null;
   };
 
   if (error) {
     return (
-      <div className="text-center py-4">
-        <AlertTriangle className="size-8 text-muted-foreground mx-auto mb-2" />
-        <p className="text-sm text-muted-foreground">{error}</p>
+      <div className="py-4 text-center">
+        <AlertTriangle className="text-muted-foreground mx-auto mb-2 size-8" />
+        <p className="text-muted-foreground text-sm">{error}</p>
         <button
           onClick={fetchActivities}
-          className="mt-2 text-xs text-primary hover:underline"
+          className="text-primary mt-2 text-xs hover:underline"
         >
           Try again
         </button>
@@ -258,7 +277,7 @@ export function UserActivityFeed({
       <div className="space-y-3">
         {Array.from({ length: 5 }).map((_, i) => (
           <div key={i} className="flex items-start gap-3">
-            <Skeleton className="size-8 rounded-full shrink-0" />
+            <Skeleton className="size-8 shrink-0 rounded-full" />
             <div className="flex-1 space-y-1">
               <Skeleton className="h-4 w-3/4" />
               <Skeleton className="h-3 w-1/2" />
@@ -271,9 +290,9 @@ export function UserActivityFeed({
 
   if (activities.length === 0) {
     return (
-      <div className="text-center py-8">
-        <Clock className="size-8 text-muted-foreground mx-auto mb-2" />
-        <p className="text-sm text-muted-foreground">No recent activity</p>
+      <div className="py-8 text-center">
+        <Clock className="text-muted-foreground mx-auto mb-2 size-8" />
+        <p className="text-muted-foreground text-sm">No recent activity</p>
       </div>
     );
   }
@@ -281,36 +300,41 @@ export function UserActivityFeed({
   return (
     <div className="space-y-3">
       {activities.map((activity) => (
-        <div key={activity.id} className="flex items-start gap-3 p-3 rounded-lg border bg-card">
-          <div className="shrink-0 mt-0.5">
+        <div
+          key={activity.id}
+          className="bg-card flex items-start gap-3 rounded-lg border p-3"
+        >
+          <div className="mt-0.5 shrink-0">
             {getActivityIcon(activity.action)}
           </div>
-          
-          <div className="flex-1 min-w-0">
+
+          <div className="min-w-0 flex-1">
             <div className="flex items-start justify-between gap-2">
-              <div className="flex-1 min-w-0">
-                <p className="text-sm text-foreground">
+              <div className="min-w-0 flex-1">
+                <p className="text-foreground text-sm">
                   {getActivityDescription(activity)}
                 </p>
-                
-                <div className="flex items-center gap-2 mt-1">
-                  <span className="text-xs text-muted-foreground">
-                    {formatDistanceToNow(new Date(activity.createdAt), { addSuffix: true })}
+
+                <div className="mt-1 flex items-center gap-2">
+                  <span className="text-muted-foreground text-xs">
+                    {formatDistanceToNow(new Date(activity.createdAt), {
+                      addSuffix: true,
+                    })}
                   </span>
-                  
+
                   {activity.user?.role && (
-                    <RoleBadge 
-                      role={activity.user.role} 
-                      size="sm" 
+                    <RoleBadge
+                      role={activity.user.role}
+                      size="sm"
                       showPermissionTooltip={false}
                     />
                   )}
-                  
+
                   {getActivityBadge(activity.action)}
                 </div>
-                
+
                 {showIpAddress && activity.ipAddress && (
-                  <p className="text-xs text-muted-foreground mt-1">
+                  <p className="text-muted-foreground mt-1 text-xs">
                     IP: {activity.ipAddress}
                   </p>
                 )}
@@ -319,12 +343,12 @@ export function UserActivityFeed({
           </div>
         </div>
       ))}
-      
+
       {activities.length >= limit && (
-        <div className="text-center pt-2">
+        <div className="pt-2 text-center">
           <a
             href="/admin/audit"
-            className="text-xs text-primary hover:underline"
+            className="text-primary text-xs hover:underline"
           >
             View all activity
           </a>

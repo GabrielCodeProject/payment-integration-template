@@ -1,16 +1,13 @@
 "use client";
 
-import { useState } from "react";
-import { useRouter } from "next/navigation";
-import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { ArrowLeft, Loader2, Mail, CheckCircle } from "lucide-react";
+import { ArrowLeft, CheckCircle, Loader2, Mail } from "lucide-react";
+import { useRouter } from "next/navigation";
+import { useState } from "react";
+import { useForm } from "react-hook-form";
 import { toast } from "sonner";
 
-import { passwordResetRequestSchema, type PasswordResetRequest } from "@/lib/validations/base/auth";
-import { forgetPassword } from "@/lib/auth/client";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import {
   Form,
   FormControl,
@@ -19,6 +16,12 @@ import {
   FormLabel,
   FormMessage,
 } from "@/components/ui/form";
+import { Input } from "@/components/ui/input";
+import { forgetPassword } from "@/lib/auth/client";
+import {
+  passwordResetRequestSchema,
+  type PasswordResetRequest,
+} from "@/lib/validations/base/auth";
 
 interface ForgotPasswordFormProps {
   onSuccess?: (email: string) => void;
@@ -57,18 +60,29 @@ export function ForgotPasswordForm({ onSuccess }: ForgotPasswordFormProps) {
             break;
           case "Too many requests":
           case "Rate limited":
-            toast.error("Too many password reset attempts. Please wait before trying again.");
+            toast.error(
+              "Too many password reset attempts. Please wait before trying again."
+            );
             return;
           case "Email not verified":
-            toast.error("Please verify your email address first before resetting your password.", {
-              action: {
-                label: "Verify Email",
-                onClick: () => router.push(`/verify-email?email=${encodeURIComponent(data.email)}`),
-              },
-            });
+            toast.error(
+              "Please verify your email address first before resetting your password.",
+              {
+                action: {
+                  label: "Verify Email",
+                  onClick: () =>
+                    router.push(
+                      `/verify-email?email=${encodeURIComponent(data.email)}`
+                    ),
+                },
+              }
+            );
             return;
           default:
-            toast.error(response._error.message || "Failed to send password reset email. Please try again.");
+            toast.error(
+              response._error.message ||
+                "Failed to send password reset email. Please try again."
+            );
             return;
         }
       }
@@ -76,17 +90,21 @@ export function ForgotPasswordForm({ onSuccess }: ForgotPasswordFormProps) {
       // Success - always show this message for security (don't reveal if email exists)
       setSentToEmail(data.email);
       setEmailSent(true);
-      
+
       if (onSuccess) {
         onSuccess(data.email);
       }
     } catch (_error) {
-      // eslint-disable-next-line no-console
-      // console.error("Forgot password error:", error);
+      console.error("Forgot password error:", _error);
       // Handle network errors specifically
       if (_error instanceof Error) {
-        if (_error.message.includes("fetch") || _error.message.includes("network")) {
-          toast.error("Network error. Please check your connection and try again.");
+        if (
+          _error.message.includes("fetch") ||
+          _error.message.includes("network")
+        ) {
+          toast.error(
+            "Network error. Please check your connection and try again."
+          );
         } else if (_error.message.includes("timeout")) {
           toast.error("Request timed out. Please try again.");
         } else {
@@ -107,24 +125,24 @@ export function ForgotPasswordForm({ onSuccess }: ForgotPasswordFormProps) {
           <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-green-100 dark:bg-green-900/20">
             <CheckCircle className="h-6 w-6 text-green-600 dark:text-green-400" />
           </div>
-          <h2 className="text-2xl font-bold text-slate-900 dark:text-slate-100 mb-2">
+          <h2 className="mb-2 text-2xl font-bold text-slate-900 dark:text-slate-100">
             Check your email
           </h2>
           <p className="text-slate-600 dark:text-slate-400">
-            If an account with the email <strong>{sentToEmail}</strong> exists, 
+            If an account with the email <strong>{sentToEmail}</strong> exists,
             we&apos;ve sent you a password reset link.
           </p>
         </div>
 
         <div className="space-y-4">
-          <div className="rounded-lg bg-blue-50 dark:bg-blue-900/20 p-4">
+          <div className="rounded-lg bg-blue-50 p-4 dark:bg-blue-900/20">
             <div className="flex items-start">
-              <Mail className="h-5 w-5 text-blue-600 dark:text-blue-400 mt-0.5 mr-3 flex-shrink-0" />
+              <Mail className="mt-0.5 mr-3 h-5 w-5 flex-shrink-0 text-blue-600 dark:text-blue-400" />
               <div className="text-sm">
-                <p className="text-blue-800 dark:text-blue-200 font-medium mb-1">
+                <p className="mb-1 font-medium text-blue-800 dark:text-blue-200">
                   What to do next:
                 </p>
-                <ul className="text-blue-700 dark:text-blue-300 space-y-1">
+                <ul className="space-y-1 text-blue-700 dark:text-blue-300">
                   <li>• Check your email inbox for a reset link</li>
                   <li>• Check your spam folder if you don&apos;t see it</li>
                   <li>• The link will expire in 1 hour for security</li>
@@ -164,8 +182,8 @@ export function ForgotPasswordForm({ onSuccess }: ForgotPasswordFormProps) {
 
   return (
     <Form {...form}>
-      <form 
-        onSubmit={form.handleSubmit(onSubmit)} 
+      <form
+        onSubmit={form.handleSubmit(onSubmit)}
         className="space-y-6"
         aria-label="Forgot password form"
         noValidate
@@ -175,7 +193,8 @@ export function ForgotPasswordForm({ onSuccess }: ForgotPasswordFormProps) {
             Forgot your password?
           </h2>
           <p className="text-slate-600 dark:text-slate-400">
-            Enter your email address and we&apos;ll send you a link to reset your password.
+            Enter your email address and we&apos;ll send you a link to reset
+            your password.
           </p>
         </div>
 
@@ -203,7 +222,7 @@ export function ForgotPasswordForm({ onSuccess }: ForgotPasswordFormProps) {
         <div className="space-y-4">
           <Button
             type="submit"
-            className="w-full h-12"
+            className="h-12 w-full"
             disabled={isLoading || !form.formState.isValid}
             size="lg"
           >
@@ -237,7 +256,7 @@ export function ForgotPasswordForm({ onSuccess }: ForgotPasswordFormProps) {
             Remember your password?{" "}
             <a
               href="/login"
-              className="text-blue-600 hover:text-blue-500 font-medium underline"
+              className="font-medium text-blue-600 underline hover:text-blue-500"
             >
               Sign in
             </a>

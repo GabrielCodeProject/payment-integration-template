@@ -1,22 +1,22 @@
 /**
  * Session Management API - Main Sessions Route
  * /api/auth/sessions
- * 
+ *
  * Provides comprehensive session management endpoints:
  * - GET: List user sessions
  * - POST: Create new session (limited use)
  * - DELETE: Bulk session operations
  */
 
-import { NextRequest, NextResponse } from 'next/server';
-import { auth } from '@/lib/auth/config';
-import { sessionManager, SessionRateLimiter } from '@/lib/session-manager';
-import { auditService, AuditHelpers } from '@/lib/audit';
+import { AuditHelpers, auditService } from "@/lib/audit";
+import { auth } from "@/lib/auth/config";
+import { sessionManager, SessionRateLimiter } from "@/lib/session-manager";
+import { NextRequest, NextResponse } from "next/server";
 
 // Rate limiting configuration
 const RATE_LIMITS = {
   GET: { windowMs: 60 * 1000, maxAttempts: 30 }, // 30 requests per minute
-  POST: { windowMs: 60 * 1000, maxAttempts: 5 },  // 5 requests per minute
+  POST: { windowMs: 60 * 1000, maxAttempts: 5 }, // 5 requests per minute
   DELETE: { windowMs: 60 * 1000, maxAttempts: 10 }, // 10 requests per minute
 };
 
@@ -33,50 +33,56 @@ export async function GET(request: NextRequest) {
 
     if (!session?.user) {
       return NextResponse.json(
-        { error: 'Unauthorized', code: 'UNAUTHORIZED' },
+        { error: "Unauthorized", code: "UNAUTHORIZED" },
         { status: 401 }
       );
     }
 
     // Extract client information for rate limiting
-    const forwarded = request.headers.get('x-forwarded-for');
-    const ipAddress = forwarded?.split(',')[0].trim() || 
-                     request.headers.get('x-real-ip') || 
-                     'unknown';
+    const forwarded = request.headers.get("x-forwarded-for");
+    const ipAddress =
+      forwarded?.split(",")[0].trim() ||
+      request.headers.get("x-real-ip") ||
+      "unknown";
     const rateLimitKey = `${session.user.id}:${ipAddress}`;
 
     // Check rate limit
-    const rateLimit = await SessionRateLimiter.checkRateLimit('getUserSessions', rateLimitKey);
+    const rateLimit = await SessionRateLimiter.checkRateLimit(
+      "getUserSessions",
+      rateLimitKey
+    );
     if (!rateLimit.allowed) {
       return NextResponse.json(
-        { 
-          error: 'Rate limit exceeded', 
-          code: 'RATE_LIMIT_EXCEEDED',
-          retryAfter: rateLimit.retryAfter 
+        {
+          error: "Rate limit exceeded",
+          code: "RATE_LIMIT_EXCEEDED",
+          retryAfter: rateLimit.retryAfter,
         },
-        { 
+        {
           status: 429,
           headers: {
-            'Retry-After': String(rateLimit.retryAfter || 60),
-            'X-RateLimit-Limit': String(RATE_LIMITS.GET.maxAttempts),
-            'X-RateLimit-Remaining': '0',
-            'X-RateLimit-Reset': String(Date.now() + (rateLimit.retryAfter || 60) * 1000),
-          }
+            "Retry-After": String(rateLimit.retryAfter || 60),
+            "X-RateLimit-Limit": String(RATE_LIMITS.GET.maxAttempts),
+            "X-RateLimit-Remaining": "0",
+            "X-RateLimit-Reset": String(
+              Date.now() + (rateLimit.retryAfter || 60) * 1000
+            ),
+          },
         }
       );
     }
 
     // Parse query parameters
     const url = new URL(request.url);
-    const includeExpired = url.searchParams.get('includeExpired') === 'true';
-    const includeSecurity = url.searchParams.get('includeSecurity') === 'true';
+    const includeExpired = url.searchParams.get("includeExpired") === "true";
+    const includeSecurity = url.searchParams.get("includeSecurity") === "true";
 
     // Create audit context
     const auditContext = AuditHelpers.createContextFromRequest(request, {
       id: session.user.id,
       email: session.user.email,
     });
-    
+
     await auditService.setAuditContext(auditContext);
 
     // Get user sessions
@@ -92,7 +98,7 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({
       success: true,
       data: {
-        sessions: sessions.map(s => ({
+        sessions: sessions.map((s) => ({
           id: s.id,
           // Don't expose the actual token
           hasToken: !!s.token,
@@ -116,15 +122,14 @@ export async function GET(request: NextRequest) {
         },
       },
     });
-
   } catch (_error) {
-    // console.error('Session listing error:', error);
-    
+    console.error("Session listing error:", _error);
+
     return NextResponse.json(
-      { 
-        error: 'Internal server error',
-        code: 'INTERNAL_ERROR',
-        message: 'Failed to retrieve sessions'
+      {
+        error: "Internal server error",
+        code: "INTERNAL_ERROR",
+        message: "Failed to retrieve sessions",
       },
       { status: 500 }
     );
@@ -146,53 +151,57 @@ export async function DELETE(request: NextRequest) {
 
     if (!session?.user) {
       return NextResponse.json(
-        { error: 'Unauthorized', code: 'UNAUTHORIZED' },
+        { error: "Unauthorized", code: "UNAUTHORIZED" },
         { status: 401 }
       );
     }
 
     // Extract client information for rate limiting
-    const forwarded = request.headers.get('x-forwarded-for');
-    const ipAddress = forwarded?.split(',')[0].trim() || 
-                     request.headers.get('x-real-ip') || 
-                     'unknown';
+    const forwarded = request.headers.get("x-forwarded-for");
+    const ipAddress =
+      forwarded?.split(",")[0].trim() ||
+      request.headers.get("x-real-ip") ||
+      "unknown";
     const rateLimitKey = `${session.user.id}:${ipAddress}`;
 
     // Check rate limit
-    const rateLimit = await SessionRateLimiter.checkRateLimit('terminateSession', rateLimitKey);
+    const rateLimit = await SessionRateLimiter.checkRateLimit(
+      "terminateSession",
+      rateLimitKey
+    );
     if (!rateLimit.allowed) {
       return NextResponse.json(
-        { 
-          error: 'Rate limit exceeded', 
-          code: 'RATE_LIMIT_EXCEEDED',
-          retryAfter: rateLimit.retryAfter 
+        {
+          error: "Rate limit exceeded",
+          code: "RATE_LIMIT_EXCEEDED",
+          retryAfter: rateLimit.retryAfter,
         },
-        { 
+        {
           status: 429,
           headers: {
-            'Retry-After': String(rateLimit.retryAfter || 60),
-          }
+            "Retry-After": String(rateLimit.retryAfter || 60),
+          },
         }
       );
     }
 
     // Parse request body
     const body = await request.json();
-    const { 
-      operation = 'terminateAll',
+    const {
+      operation = "terminateAll",
       excludeCurrent = true,
       sessionIds = [],
-      reason = 'user_requested'
+      reason = "user_requested",
     } = body;
 
     // Validate operation
-    const validOperations = ['terminateAll', 'terminateSelected'];
+    const validOperations = ["terminateAll", "terminateSelected"];
     if (!validOperations.includes(operation)) {
       return NextResponse.json(
-        { 
-          error: 'Invalid operation', 
-          code: 'INVALID_OPERATION',
-          validOperations 
+        {
+          error: "Invalid operation",
+          code: "INVALID_OPERATION",
+          validOperations,
         },
         { status: 400 }
       );
@@ -203,31 +212,36 @@ export async function DELETE(request: NextRequest) {
       id: session.user.id,
       email: session.user.email,
     });
-    
+
     await auditService.setAuditContext(auditContext);
 
     let terminatedCount = 0;
 
-    if (operation === 'terminateAll') {
+    if (operation === "terminateAll") {
       // Terminate all sessions except current (if requested)
-      terminatedCount = await sessionManager.terminateAllSessions(session.user.id, {
-        excludeCurrentSession: excludeCurrent ? session.session.id : undefined,
-        reason,
-        auditContext,
-      });
-    } else if (operation === 'terminateSelected' && sessionIds.length > 0) {
+      terminatedCount = await sessionManager.terminateAllSessions(
+        session.user.id,
+        {
+          excludeCurrentSession: excludeCurrent
+            ? session.session.id
+            : undefined,
+          reason,
+          auditContext,
+        }
+      );
+    } else if (operation === "terminateSelected" && sessionIds.length > 0) {
       // Terminate specific sessions
       for (const sessionId of sessionIds) {
         // Prevent terminating current session unless explicitly allowed
         if (sessionId === session.session.id && excludeCurrent) {
           continue;
         }
-        
+
         const terminated = await sessionManager.terminateSession(sessionId, {
           reason,
           auditContext,
         });
-        
+
         if (terminated) {
           terminatedCount++;
         }
@@ -235,7 +249,11 @@ export async function DELETE(request: NextRequest) {
     }
 
     // Enforce session limits after bulk operations
-    await sessionManager.enforceSessionLimits(session.user.id, {}, auditContext);
+    await sessionManager.enforceSessionLimits(
+      session.user.id,
+      {},
+      auditContext
+    );
 
     return NextResponse.json({
       success: true,
@@ -246,15 +264,14 @@ export async function DELETE(request: NextRequest) {
         reason,
       },
     });
-
   } catch (_error) {
-    // console.error('Session bulk operation error:', error);
-    
+    console.error("Session bulk operation error:", _error);
+
     return NextResponse.json(
-      { 
-        error: 'Internal server error',
-        code: 'INTERNAL_ERROR',
-        message: 'Failed to perform bulk session operation'
+      {
+        error: "Internal server error",
+        code: "INTERNAL_ERROR",
+        message: "Failed to perform bulk session operation",
       },
       { status: 500 }
     );
@@ -276,48 +293,52 @@ export async function POST(request: NextRequest) {
 
     if (!session?.user) {
       return NextResponse.json(
-        { error: 'Unauthorized', code: 'UNAUTHORIZED' },
+        { error: "Unauthorized", code: "UNAUTHORIZED" },
         { status: 401 }
       );
     }
 
     // Only admins can create sessions for other users
-    if (session.user.role !== 'ADMIN') {
+    if (session.user.role !== "ADMIN") {
       return NextResponse.json(
-        { error: 'Forbidden', code: 'FORBIDDEN' },
+        { error: "Forbidden", code: "FORBIDDEN" },
         { status: 403 }
       );
     }
 
     // Extract client information for rate limiting
-    const forwarded = request.headers.get('x-forwarded-for');
-    const ipAddress = forwarded?.split(',')[0].trim() || 
-                     request.headers.get('x-real-ip') || 
-                     'unknown';
-    const userAgent = request.headers.get('user-agent');
+    const forwarded = request.headers.get("x-forwarded-for");
+    const ipAddress =
+      forwarded?.split(",")[0].trim() ||
+      request.headers.get("x-real-ip") ||
+      "unknown";
+    const userAgent = request.headers.get("user-agent");
     const rateLimitKey = `${session.user.id}:${ipAddress}`;
 
     // Check rate limit
-    const rateLimit = await SessionRateLimiter.checkRateLimit('refreshSession', rateLimitKey);
+    const rateLimit = await SessionRateLimiter.checkRateLimit(
+      "refreshSession",
+      rateLimitKey
+    );
     if (!rateLimit.allowed) {
       return NextResponse.json(
-        { 
-          error: 'Rate limit exceeded', 
-          code: 'RATE_LIMIT_EXCEEDED',
-          retryAfter: rateLimit.retryAfter 
+        {
+          error: "Rate limit exceeded",
+          code: "RATE_LIMIT_EXCEEDED",
+          retryAfter: rateLimit.retryAfter,
         },
-        { 
+        {
           status: 429,
           headers: {
-            'Retry-After': String(rateLimit.retryAfter || 60),
-          }
+            "Retry-After": String(rateLimit.retryAfter || 60),
+          },
         }
       );
     }
 
     // Parse request body
     const body = await request.json();
-    const { 
+    const {
       userId,
       maxAge,
       ipAddress: targetIpAddress,
@@ -326,7 +347,7 @@ export async function POST(request: NextRequest) {
 
     if (!userId) {
       return NextResponse.json(
-        { error: 'User ID is required', code: 'MISSING_USER_ID' },
+        { error: "User ID is required", code: "MISSING_USER_ID" },
         { status: 400 }
       );
     }
@@ -336,7 +357,7 @@ export async function POST(request: NextRequest) {
       id: session.user.id,
       email: session.user.email,
     });
-    
+
     await auditService.setAuditContext(auditContext);
 
     // Create the session
@@ -357,15 +378,14 @@ export async function POST(request: NextRequest) {
         hasToken: true,
       },
     });
-
   } catch (_error) {
-    // console.error('Session creation error:', error);
-    
+    console.error("Session creation error:", _error);
+
     return NextResponse.json(
-      { 
-        error: 'Internal server error',
-        code: 'INTERNAL_ERROR',
-        message: 'Failed to create session'
+      {
+        error: "Internal server error",
+        code: "INTERNAL_ERROR",
+        message: "Failed to create session",
       },
       { status: 500 }
     );
@@ -377,14 +397,14 @@ export async function POST(request: NextRequest) {
 // Handle unsupported methods
 export async function PUT() {
   return NextResponse.json(
-    { error: 'Method not allowed', code: 'METHOD_NOT_ALLOWED' },
+    { error: "Method not allowed", code: "METHOD_NOT_ALLOWED" },
     { status: 405 }
   );
 }
 
 export async function PATCH() {
   return NextResponse.json(
-    { error: 'Method not allowed', code: 'METHOD_NOT_ALLOWED' },
+    { error: "Method not allowed", code: "METHOD_NOT_ALLOWED" },
     { status: 405 }
   );
 }

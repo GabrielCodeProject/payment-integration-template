@@ -1,12 +1,20 @@
 "use client";
 
-import { useState, useEffect } from "react";
-import { X, CalendarIcon } from "lucide-react";
 import { format } from "date-fns";
+import { CalendarIcon, X } from "lucide-react";
+import { useEffect, useState } from "react";
 
+import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { Calendar } from "@/components/ui/calendar";
+import { Checkbox } from "@/components/ui/checkbox";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
 import {
   Select,
   SelectContent,
@@ -14,15 +22,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Badge } from "@/components/ui/badge";
-import { Checkbox } from "@/components/ui/checkbox";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Calendar } from "@/components/ui/calendar";
-import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from "@/components/ui/popover";
 
 import type { ProductFilter } from "@/lib/validations/base/product";
 
@@ -40,8 +40,12 @@ export function ProductFilters({
     min: filters.priceMin?.toString() || "",
     max: filters.priceMax?.toString() || "",
   });
-  const [selectedCategoryIds, setSelectedCategoryIds] = useState<string[]>(filters.categoryIds || []);
-  const [selectedTagIds, setSelectedTagIds] = useState<string[]>(filters.tagIds || []);
+  const [selectedCategoryIds, setSelectedCategoryIds] = useState<string[]>(
+    filters.categoryIds || []
+  );
+  const [selectedTagIds, setSelectedTagIds] = useState<string[]>(
+    filters.tagIds || []
+  );
   const [availableCategories, setAvailableCategories] = useState<any[]>([]);
   const [availableTags, setAvailableTags] = useState<any[]>([]);
   const [loadingCategories, setLoadingCategories] = useState(true);
@@ -51,13 +55,13 @@ export function ProductFilters({
   useEffect(() => {
     const fetchCategories = async () => {
       try {
-        const response = await fetch('/api/categories?limit=100');
+        const response = await fetch("/api/categories?limit=100");
         if (response.ok) {
           const data = await response.json();
           setAvailableCategories(data.categories);
         }
       } catch (_error) {
-        // console.error('Error fetching categories:', error);
+        console.error("Error fetching categories:", _error);
       } finally {
         setLoadingCategories(false);
       }
@@ -70,13 +74,13 @@ export function ProductFilters({
   useEffect(() => {
     const fetchTags = async () => {
       try {
-        const response = await fetch('/api/tags?limit=100');
+        const response = await fetch("/api/tags?limit=100");
         if (response.ok) {
           const data = await response.json();
           setAvailableTags(data.tags);
         }
       } catch (_error) {
-        // console.error('Error fetching tags:', error);
+        console.error("Error fetching tags:", _error);
       } finally {
         setLoadingTags(false);
       }
@@ -351,32 +355,43 @@ export function ProductFilters({
             <Popover>
               <PopoverTrigger asChild>
                 <Button variant="outline" className="w-full justify-start">
-                  {selectedCategoryIds.length === 0 
-                    ? "Select categories..." 
-                    : `${selectedCategoryIds.length} selected`
-                  }
+                  {selectedCategoryIds.length === 0
+                    ? "Select categories..."
+                    : `${selectedCategoryIds.length} selected`}
                 </Button>
               </PopoverTrigger>
               <PopoverContent className="w-80 p-3">
                 <div className="space-y-2">
-                  <Label className="text-sm font-medium">Select Categories</Label>
-                  <div className="max-h-48 overflow-y-auto space-y-2">
+                  <Label className="text-sm font-medium">
+                    Select Categories
+                  </Label>
+                  <div className="max-h-48 space-y-2 overflow-y-auto">
                     {availableCategories.map((category) => (
-                      <div key={category.id} className="flex items-center space-x-2">
+                      <div
+                        key={category.id}
+                        className="flex items-center space-x-2"
+                      >
                         <Checkbox
                           id={`filter-category-${category.id}`}
                           checked={selectedCategoryIds.includes(category.id)}
                           onCheckedChange={(checked) => {
                             if (checked) {
-                              setSelectedCategoryIds([...selectedCategoryIds, category.id]);
+                              setSelectedCategoryIds([
+                                ...selectedCategoryIds,
+                                category.id,
+                              ]);
                             } else {
-                              setSelectedCategoryIds(selectedCategoryIds.filter(id => id !== category.id));
+                              setSelectedCategoryIds(
+                                selectedCategoryIds.filter(
+                                  (id) => id !== category.id
+                                )
+                              );
                             }
                           }}
                         />
-                        <Label 
+                        <Label
                           htmlFor={`filter-category-${category.id}`}
-                          className="text-sm cursor-pointer"
+                          className="cursor-pointer text-sm"
                         >
                           {category.name}
                         </Label>
@@ -398,16 +413,15 @@ export function ProductFilters({
             <Popover>
               <PopoverTrigger asChild>
                 <Button variant="outline" className="w-full justify-start">
-                  {selectedTagIds.length === 0 
-                    ? "Select tags..." 
-                    : `${selectedTagIds.length} selected`
-                  }
+                  {selectedTagIds.length === 0
+                    ? "Select tags..."
+                    : `${selectedTagIds.length} selected`}
                 </Button>
               </PopoverTrigger>
               <PopoverContent className="w-80 p-3">
                 <div className="space-y-2">
                   <Label className="text-sm font-medium">Select Tags</Label>
-                  <div className="max-h-48 overflow-y-auto space-y-2">
+                  <div className="max-h-48 space-y-2 overflow-y-auto">
                     {availableTags.map((tag) => (
                       <div key={tag.id} className="flex items-center space-x-2">
                         <Checkbox
@@ -417,17 +431,19 @@ export function ProductFilters({
                             if (checked) {
                               setSelectedTagIds([...selectedTagIds, tag.id]);
                             } else {
-                              setSelectedTagIds(selectedTagIds.filter(id => id !== tag.id));
+                              setSelectedTagIds(
+                                selectedTagIds.filter((id) => id !== tag.id)
+                              );
                             }
                           }}
                         />
                         <div
-                          className="w-3 h-3 rounded-full"
-                          style={{ backgroundColor: tag.color || '#6366f1' }}
+                          className="h-3 w-3 rounded-full"
+                          style={{ backgroundColor: tag.color || "#6366f1" }}
                         />
-                        <Label 
+                        <Label
                           htmlFor={`filter-tag-${tag.id}`}
-                          className="text-sm cursor-pointer"
+                          className="cursor-pointer text-sm"
                         >
                           {tag.name}
                         </Label>

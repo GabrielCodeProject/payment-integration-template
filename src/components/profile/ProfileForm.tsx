@@ -1,18 +1,15 @@
 /**
  * Profile Form Component
  * NextJS Stripe Payment Template
- * 
+ *
  * Form for editing user profile information with validation,
  * server actions integration, and optimistic updates.
  */
 
-'use client';
+"use client";
 
-import { useState, useEffect } from 'react';
-import { useForm } from 'react-hook-form';
-import { zodResolver } from '@hookform/resolvers/zod';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
+import { getProfile, updateProfile } from "@/app/actions/profile";
+import { Button } from "@/components/ui/button";
 import {
   Form,
   FormControl,
@@ -21,47 +18,54 @@ import {
   FormItem,
   FormLabel,
   FormMessage,
-} from '@/components/ui/form';
+} from "@/components/ui/form";
+import { Input } from "@/components/ui/input";
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from '@/components/ui/select';
-import { getProfile, updateProfile } from '@/app/actions/profile';
-import { updateProfileSchema, type UpdateProfile, type ProfileResponse } from '@/lib/validations/base/user';
-import { toast } from 'sonner';
-import { ProfileFormSkeleton } from './ProfileSkeleton';
+} from "@/components/ui/select";
+import {
+  updateProfileSchema,
+  type ProfileResponse,
+  type UpdateProfile,
+} from "@/lib/validations/base/user";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { useEffect, useState } from "react";
+import { useForm } from "react-hook-form";
+import { toast } from "sonner";
+import { ProfileFormSkeleton } from "./ProfileSkeleton";
 
 // Common currencies for the select dropdown
 const CURRENCIES = [
-  { value: 'USD', label: 'USD - US Dollar' },
-  { value: 'EUR', label: 'EUR - Euro' },
-  { value: 'GBP', label: 'GBP - British Pound' },
-  { value: 'CAD', label: 'CAD - Canadian Dollar' },
-  { value: 'AUD', label: 'AUD - Australian Dollar' },
-  { value: 'JPY', label: 'JPY - Japanese Yen' },
-  { value: 'CHF', label: 'CHF - Swiss Franc' },
-  { value: 'CNY', label: 'CNY - Chinese Yuan' },
-  { value: 'INR', label: 'INR - Indian Rupee' },
-  { value: 'BRL', label: 'BRL - Brazilian Real' },
+  { value: "USD", label: "USD - US Dollar" },
+  { value: "EUR", label: "EUR - Euro" },
+  { value: "GBP", label: "GBP - British Pound" },
+  { value: "CAD", label: "CAD - Canadian Dollar" },
+  { value: "AUD", label: "AUD - Australian Dollar" },
+  { value: "JPY", label: "JPY - Japanese Yen" },
+  { value: "CHF", label: "CHF - Swiss Franc" },
+  { value: "CNY", label: "CNY - Chinese Yuan" },
+  { value: "INR", label: "INR - Indian Rupee" },
+  { value: "BRL", label: "BRL - Brazilian Real" },
 ];
 
 // Common timezones for the select dropdown
 const TIMEZONES = [
-  { value: 'UTC', label: 'UTC - Coordinated Universal Time' },
-  { value: 'America/New_York', label: 'EST - Eastern Time (US & Canada)' },
-  { value: 'America/Chicago', label: 'CST - Central Time (US & Canada)' },
-  { value: 'America/Denver', label: 'MST - Mountain Time (US & Canada)' },
-  { value: 'America/Los_Angeles', label: 'PST - Pacific Time (US & Canada)' },
-  { value: 'Europe/London', label: 'GMT - Greenwich Mean Time' },
-  { value: 'Europe/Paris', label: 'CET - Central European Time' },
-  { value: 'Europe/Berlin', label: 'CET - Central European Time (Berlin)' },
-  { value: 'Asia/Tokyo', label: 'JST - Japan Standard Time' },
-  { value: 'Asia/Shanghai', label: 'CST - China Standard Time' },
-  { value: 'Asia/Kolkata', label: 'IST - India Standard Time' },
-  { value: 'Australia/Sydney', label: 'AEDT - Australian Eastern Time' },
+  { value: "UTC", label: "UTC - Coordinated Universal Time" },
+  { value: "America/New_York", label: "EST - Eastern Time (US & Canada)" },
+  { value: "America/Chicago", label: "CST - Central Time (US & Canada)" },
+  { value: "America/Denver", label: "MST - Mountain Time (US & Canada)" },
+  { value: "America/Los_Angeles", label: "PST - Pacific Time (US & Canada)" },
+  { value: "Europe/London", label: "GMT - Greenwich Mean Time" },
+  { value: "Europe/Paris", label: "CET - Central European Time" },
+  { value: "Europe/Berlin", label: "CET - Central European Time (Berlin)" },
+  { value: "Asia/Tokyo", label: "JST - Japan Standard Time" },
+  { value: "Asia/Shanghai", label: "CST - China Standard Time" },
+  { value: "Asia/Kolkata", label: "IST - India Standard Time" },
+  { value: "Australia/Sydney", label: "AEDT - Australian Eastern Time" },
 ];
 
 /**
@@ -76,14 +80,16 @@ export function ProfileForm() {
   const form = useForm<UpdateProfile>({
     resolver: zodResolver(updateProfileSchema),
     defaultValues: {
-      name: '',
-      phone: '',
-      timezone: 'UTC',
-      preferredCurrency: 'USD',
+      name: "",
+      phone: "",
+      timezone: "UTC",
+      preferredCurrency: "USD",
     },
   });
 
-  const { formState: { isDirty } } = form;
+  const {
+    formState: { isDirty },
+  } = form;
 
   // Watch for form changes
   useEffect(() => {
@@ -95,24 +101,24 @@ export function ProfileForm() {
     async function loadProfile() {
       try {
         const result = await getProfile({});
-        
+
         if (result?.data?.success && result.data.data) {
           const profileData = result.data.data;
           setProfile(profileData);
-          
+
           // Update form with profile data
           form.reset({
-            name: profileData.name || '',
-            phone: profileData.phone || '',
-            timezone: profileData.timezone || 'UTC',
-            preferredCurrency: profileData.preferredCurrency || 'USD',
+            name: profileData.name || "",
+            phone: profileData.phone || "",
+            timezone: profileData.timezone || "UTC",
+            preferredCurrency: profileData.preferredCurrency || "USD",
           });
         } else {
-          toast.error(result?.data?.error || 'Failed to load profile');
+          toast.error(result?.data?.error || "Failed to load profile");
         }
       } catch (_error) {
-        // console.error('Profile load error:', error);
-        toast.error('Failed to load profile information');
+        console.error("Profile load error:", _error);
+        toast.error("Failed to load profile information");
       } finally {
         setLoading(false);
       }
@@ -131,13 +137,15 @@ export function ProfileForm() {
       if (result?.data?.success && result.data.data) {
         setProfile(result.data.data);
         form.reset(data); // Reset form to mark as not dirty
-        toast.success(result.data.message || 'Profile updated successfully');
+        toast.success(result.data.message || "Profile updated successfully");
       } else {
-        throw new Error(result?.data?.error || 'Failed to update profile');
+        throw new Error(result?.data?.error || "Failed to update profile");
       }
     } catch (_error) {
-      // console.error('Profile update error:', error);
-      toast.error(error instanceof Error ? _error.message : 'Failed to update profile');
+      console.error("Profile update error:", _error);
+      toast.error(
+        _error instanceof Error ? _error.message : "Failed to update profile"
+      );
     } finally {
       setSaving(false);
     }
@@ -147,10 +155,10 @@ export function ProfileForm() {
   const handleReset = () => {
     if (profile) {
       form.reset({
-        name: profile.name || '',
-        phone: profile.phone || '',
-        timezone: profile.timezone || 'UTC',
-        preferredCurrency: profile.preferredCurrency || 'USD',
+        name: profile.name || "",
+        phone: profile.phone || "",
+        timezone: profile.timezone || "UTC",
+        preferredCurrency: profile.preferredCurrency || "USD",
       });
     }
   };
@@ -161,7 +169,7 @@ export function ProfileForm() {
 
   if (!profile) {
     return (
-      <div className="text-center py-8">
+      <div className="py-8 text-center">
         <p className="text-slate-500 dark:text-slate-400">
           Unable to load profile information
         </p>
@@ -202,12 +210,10 @@ export function ProfileForm() {
               <Input
                 value={profile.email}
                 disabled
-                className="bg-slate-50 dark:bg-slate-800 text-slate-500 dark:text-slate-400"
+                className="bg-slate-50 text-slate-500 dark:bg-slate-800 dark:text-slate-400"
               />
             </FormControl>
-            <FormDescription>
-              Email address cannot be changed
-            </FormDescription>
+            <FormDescription>Email address cannot be changed</FormDescription>
           </FormItem>
         </div>
 
@@ -223,7 +229,7 @@ export function ProfileForm() {
                   placeholder="+1234567890"
                   {...field}
                   disabled={saving}
-                  value={field.value || ''}
+                  value={field.value || ""}
                 />
               </FormControl>
               <FormDescription>
@@ -302,7 +308,7 @@ export function ProfileForm() {
         </div>
 
         {/* Action Buttons */}
-        <div className="flex items-center justify-between pt-4 border-t border-slate-200 dark:border-slate-700">
+        <div className="flex items-center justify-between border-t border-slate-200 pt-4 dark:border-slate-700">
           <Button
             type="button"
             variant="outline"
@@ -329,7 +335,7 @@ export function ProfileForm() {
                   Saving...
                 </div>
               ) : (
-                'Save Changes'
+                "Save Changes"
               )}
             </Button>
           </div>
@@ -337,7 +343,7 @@ export function ProfileForm() {
 
         {/* Form Status */}
         {hasChanges && (
-          <div className="rounded-md bg-amber-50 dark:bg-amber-900/20 p-3">
+          <div className="rounded-md bg-amber-50 p-3 dark:bg-amber-900/20">
             <div className="flex">
               <div className="flex-shrink-0">
                 <svg
@@ -354,7 +360,8 @@ export function ProfileForm() {
               </div>
               <div className="ml-3">
                 <p className="text-sm text-amber-800 dark:text-amber-200">
-                  You have unsaved changes. Make sure to save your changes before leaving the page.
+                  You have unsaved changes. Make sure to save your changes
+                  before leaving the page.
                 </p>
               </div>
             </div>

@@ -1,6 +1,6 @@
 /**
  * Edge Runtime Compatible Session Management
- * 
+ *
  * This module provides session validation for Next.js middleware
  * without requiring database connections or Node.js APIs.
  * It works by validating JWT tokens directly.
@@ -45,8 +45,10 @@ export async function getEdgeSession(
 ): Promise<EdgeSession | null> {
   try {
     // Get session token from cookies
-    const sessionToken = request.cookies.get("better-auth.session_token")?.value;
-    
+    const sessionToken = request.cookies.get(
+      "better-auth.session_token"
+    )?.value;
+
     if (!sessionToken) {
       return null;
     }
@@ -54,7 +56,7 @@ export async function getEdgeSession(
     // For Edge Runtime, we'll validate the token format and expiry
     // without database verification (which will be done in API routes)
     const payload = await validateTokenFormat(sessionToken);
-    
+
     if (!payload || payload.exp * 1000 < Date.now()) {
       return null;
     }
@@ -76,8 +78,7 @@ export async function getEdgeSession(
   } catch (_error) {
     // Don't log in production to avoid noise
     if (process.env.NODE_ENV === "development") {
-      // eslint-disable-next-line no-console
-      // console.error("Edge session validation error:", error);
+      console.error("Edge session validation error:", _error);
     }
     return null;
   }
@@ -87,7 +88,9 @@ export async function getEdgeSession(
  * Validate JWT token format without full verification
  * This is a basic validation for Edge Runtime - full verification happens in API routes
  */
-async function validateTokenFormat(token: string): Promise<TokenPayload | null> {
+async function validateTokenFormat(
+  token: string
+): Promise<TokenPayload | null> {
   try {
     // Basic JWT format check
     const parts = token.split(".");
@@ -100,7 +103,7 @@ async function validateTokenFormat(token: string): Promise<TokenPayload | null> 
     if (!payloadPart) {
       return null;
     }
-    
+
     const payload = JSON.parse(
       Buffer.from(payloadPart, "base64url").toString("utf-8")
     );
@@ -171,26 +174,28 @@ export async function validateEdgeRouteAccess(
 
   // Public routes are always allowed
   if (
-    config.publicRoutes.some(route => 
-      pathname === route || pathname.startsWith(route + "/")
+    config.publicRoutes.some(
+      (route) => pathname === route || pathname.startsWith(route + "/")
     ) ||
-    config.apiPublicRoutes.some(route => 
-      pathname === route || pathname.startsWith(route + "/")
+    config.apiPublicRoutes.some(
+      (route) => pathname === route || pathname.startsWith(route + "/")
     )
   ) {
     return { isAllowed: true, session, requiresFullValidation: false };
   }
 
   // Auth routes - redirect if already authenticated
-  if (config.authRoutes.some(route => 
-    pathname === route || pathname.startsWith(route + "/")
-  )) {
+  if (
+    config.authRoutes.some(
+      (route) => pathname === route || pathname.startsWith(route + "/")
+    )
+  ) {
     if (session?.user) {
-      return { 
-        isAllowed: false, 
-        session, 
+      return {
+        isAllowed: false,
+        session,
         requiresFullValidation: false,
-        reason: "Already authenticated"
+        reason: "Already authenticated",
       };
     }
     return { isAllowed: true, session, requiresFullValidation: false };
@@ -198,62 +203,62 @@ export async function validateEdgeRouteAccess(
 
   // Protected routes - require authentication
   if (
-    config.protectedRoutes.some(route => 
-      pathname === route || pathname.startsWith(route + "/")
+    config.protectedRoutes.some(
+      (route) => pathname === route || pathname.startsWith(route + "/")
     ) ||
-    config.apiProtectedRoutes.some(route => 
-      pathname === route || pathname.startsWith(route + "/")
+    config.apiProtectedRoutes.some(
+      (route) => pathname === route || pathname.startsWith(route + "/")
     )
   ) {
     if (!session?.user) {
-      return { 
-        isAllowed: false, 
-        session, 
+      return {
+        isAllowed: false,
+        session,
         requiresFullValidation: false,
-        reason: "Authentication required"
+        reason: "Authentication required",
       };
     }
 
     // For protected routes, we need full session validation in API routes
     // but we can allow access based on token format validation
-    return { 
-      isAllowed: true, 
-      session, 
-      requiresFullValidation: pathname.startsWith("/api/")
+    return {
+      isAllowed: true,
+      session,
+      requiresFullValidation: pathname.startsWith("/api/"),
     };
   }
 
   // Admin routes - require admin role
   if (
-    config.adminRoutes.some(route => 
-      pathname === route || pathname.startsWith(route + "/")
+    config.adminRoutes.some(
+      (route) => pathname === route || pathname.startsWith(route + "/")
     ) ||
-    config.apiAdminRoutes.some(route => 
-      pathname === route || pathname.startsWith(route + "/")
+    config.apiAdminRoutes.some(
+      (route) => pathname === route || pathname.startsWith(route + "/")
     )
   ) {
     if (!session?.user) {
-      return { 
-        isAllowed: false, 
-        session, 
+      return {
+        isAllowed: false,
+        session,
         requiresFullValidation: false,
-        reason: "Authentication required"
+        reason: "Authentication required",
       };
     }
 
     if (!hasRequiredRoleEdge(session, "ADMIN")) {
-      return { 
-        isAllowed: false, 
-        session, 
+      return {
+        isAllowed: false,
+        session,
         requiresFullValidation: false,
-        reason: "Admin access required"
+        reason: "Admin access required",
       };
     }
 
-    return { 
-      isAllowed: true, 
-      session, 
-      requiresFullValidation: pathname.startsWith("/api/")
+    return {
+      isAllowed: true,
+      session,
+      requiresFullValidation: pathname.startsWith("/api/"),
     };
   }
 

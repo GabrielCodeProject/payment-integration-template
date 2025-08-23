@@ -1,16 +1,20 @@
 "use client";
 
-import { useState, useEffect } from "react";
-import { useRouter, useSearchParams } from "next/navigation";
-import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { Eye, EyeOff, Loader2, CheckCircle, AlertTriangle, ArrowLeft } from "lucide-react";
+import {
+  AlertTriangle,
+  ArrowLeft,
+  CheckCircle,
+  Eye,
+  EyeOff,
+  Loader2,
+} from "lucide-react";
+import { useRouter, useSearchParams } from "next/navigation";
+import { useEffect, useState } from "react";
+import { useForm } from "react-hook-form";
 import { toast } from "sonner";
 
-import { passwordResetSchema, type PasswordReset } from "@/lib/validations/base/auth";
-import { resetPassword } from "@/lib/auth/client";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import {
   Form,
   FormControl,
@@ -19,6 +23,12 @@ import {
   FormLabel,
   FormMessage,
 } from "@/components/ui/form";
+import { Input } from "@/components/ui/input";
+import { resetPassword } from "@/lib/auth/client";
+import {
+  passwordResetSchema,
+  type PasswordReset,
+} from "@/lib/validations/base/auth";
 import { PasswordStrengthIndicator } from "./PasswordStrengthIndicator";
 
 interface ResetPasswordFormProps {
@@ -52,12 +62,16 @@ export function ResetPasswordForm({ onSuccess }: ResetPasswordFormProps) {
     if (token) {
       // Basic token format validation
       if (token.length < 10) {
-        setTokenError("Invalid reset link. Please check your email for the correct link.");
+        setTokenError(
+          "Invalid reset link. Please check your email for the correct link."
+        );
         return;
       }
       form.setValue("token", token);
     } else {
-      setTokenError("No reset token found. Please check your email for the reset link.");
+      setTokenError(
+        "No reset token found. Please check your email for the reset link."
+      );
     }
   }, [token, form]);
 
@@ -77,35 +91,50 @@ export function ResetPasswordForm({ onSuccess }: ResetPasswordFormProps) {
         switch (response._error.message) {
           case "Invalid token":
           case "Token not found":
-            setTokenError("This reset link is invalid. Please request a new password reset.");
+            setTokenError(
+              "This reset link is invalid. Please request a new password reset."
+            );
             break;
           case "Token expired":
           case "Expired token":
-            setTokenError("This reset link has expired. Please request a new password reset.");
+            setTokenError(
+              "This reset link has expired. Please request a new password reset."
+            );
             break;
           case "Token already used":
-            setTokenError("This reset link has already been used. Please request a new password reset if needed.");
+            setTokenError(
+              "This reset link has already been used. Please request a new password reset if needed."
+            );
             break;
           case "User not found":
             setTokenError("Account not found. The reset link may be invalid.");
             break;
           case "Weak password":
           case "Password too weak":
-            toast.error("Password does not meet security requirements. Please choose a stronger password.");
+            toast.error(
+              "Password does not meet security requirements. Please choose a stronger password."
+            );
             break;
           case "Same password":
-            toast.error("New password must be different from your current password.");
+            toast.error(
+              "New password must be different from your current password."
+            );
             break;
           default:
-            toast.error(response._error.message || "Failed to reset password. Please try again.");
+            toast.error(
+              response._error.message ||
+                "Failed to reset password. Please try again."
+            );
         }
         return;
       }
 
       // Success
       setResetSuccess(true);
-      toast.success("Password reset successfully! You can now sign in with your new password.");
-      
+      toast.success(
+        "Password reset successfully! You can now sign in with your new password."
+      );
+
       if (onSuccess) {
         onSuccess();
       } else {
@@ -115,12 +144,16 @@ export function ResetPasswordForm({ onSuccess }: ResetPasswordFormProps) {
         }, 3000);
       }
     } catch (_error) {
-      // eslint-disable-next-line no-console
-      // console.error("Reset password error:", error);
+      console.error("Reset password error:", _error);
       // Handle network errors specifically
       if (_error instanceof Error) {
-        if (_error.message.includes("fetch") || _error.message.includes("network")) {
-          toast.error("Network error. Please check your connection and try again.");
+        if (
+          _error.message.includes("fetch") ||
+          _error.message.includes("network")
+        ) {
+          toast.error(
+            "Network error. Please check your connection and try again."
+          );
         } else if (_error.message.includes("timeout")) {
           toast.error("Request timed out. Please try again.");
         } else {
@@ -141,10 +174,10 @@ export function ResetPasswordForm({ onSuccess }: ResetPasswordFormProps) {
           <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-red-100 dark:bg-red-900/20">
             <AlertTriangle className="h-6 w-6 text-red-600 dark:text-red-400" />
           </div>
-          <h2 className="text-2xl font-bold text-slate-900 dark:text-slate-100 mb-2">
+          <h2 className="mb-2 text-2xl font-bold text-slate-900 dark:text-slate-100">
             Invalid Reset Link
           </h2>
-          <p className="text-slate-600 dark:text-slate-400 mb-6">
+          <p className="mb-6 text-slate-600 dark:text-slate-400">
             {tokenError}
           </p>
         </div>
@@ -179,11 +212,12 @@ export function ResetPasswordForm({ onSuccess }: ResetPasswordFormProps) {
           <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-green-100 dark:bg-green-900/20">
             <CheckCircle className="h-6 w-6 text-green-600 dark:text-green-400" />
           </div>
-          <h2 className="text-2xl font-bold text-slate-900 dark:text-slate-100 mb-2">
+          <h2 className="mb-2 text-2xl font-bold text-slate-900 dark:text-slate-100">
             Password Reset Successfully
           </h2>
-          <p className="text-slate-600 dark:text-slate-400 mb-6">
-            Your password has been updated. You can now sign in with your new password.
+          <p className="mb-6 text-slate-600 dark:text-slate-400">
+            Your password has been updated. You can now sign in with your new
+            password.
           </p>
         </div>
 
@@ -201,8 +235,8 @@ export function ResetPasswordForm({ onSuccess }: ResetPasswordFormProps) {
 
   return (
     <Form {...form}>
-      <form 
-        onSubmit={form.handleSubmit(onSubmit)} 
+      <form
+        onSubmit={form.handleSubmit(onSubmit)}
         className="space-y-6"
         aria-label="Reset password form"
         noValidate
@@ -236,7 +270,7 @@ export function ResetPasswordForm({ onSuccess }: ResetPasswordFormProps) {
                     type="button"
                     variant="ghost"
                     size="sm"
-                    className="absolute right-0 top-0 h-full px-3 hover:bg-transparent"
+                    className="absolute top-0 right-0 h-full px-3 hover:bg-transparent"
                     onClick={() => setShowNewPassword(!showNewPassword)}
                     disabled={isLoading}
                   >
@@ -255,8 +289,8 @@ export function ResetPasswordForm({ onSuccess }: ResetPasswordFormProps) {
 
         {/* Password Strength Indicator */}
         {watchNewPassword && (
-          <PasswordStrengthIndicator 
-            password={watchNewPassword} 
+          <PasswordStrengthIndicator
+            password={watchNewPassword}
             className="mt-2"
           />
         )}
@@ -281,7 +315,7 @@ export function ResetPasswordForm({ onSuccess }: ResetPasswordFormProps) {
                     type="button"
                     variant="ghost"
                     size="sm"
-                    className="absolute right-0 top-0 h-full px-3 hover:bg-transparent"
+                    className="absolute top-0 right-0 h-full px-3 hover:bg-transparent"
                     onClick={() => setShowConfirmPassword(!showConfirmPassword)}
                     disabled={isLoading}
                   >
@@ -301,7 +335,7 @@ export function ResetPasswordForm({ onSuccess }: ResetPasswordFormProps) {
         <div className="space-y-4">
           <Button
             type="submit"
-            className="w-full h-12"
+            className="h-12 w-full"
             disabled={isLoading || !form.formState.isValid}
             size="lg"
           >

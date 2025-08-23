@@ -1,13 +1,13 @@
-'use client';
+"use client";
 
-import { useState, useRef, useCallback } from 'react';
-import { Upload, X, Image as ImageIcon, Star } from 'lucide-react';
-import { toast } from 'sonner';
+import { Image as ImageIcon, Star, Upload, X } from "lucide-react";
+import { useCallback, useRef, useState } from "react";
+import { toast } from "sonner";
 
-import { Button } from '@/components/ui/button';
-import { Card, CardContent } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
-import { Progress } from '@/components/ui/progress';
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent } from "@/components/ui/card";
+import { Progress } from "@/components/ui/progress";
 
 interface ProductImageUploadProps {
   images: string[];
@@ -26,7 +26,7 @@ export function ProductImageUpload({
   onImagesChange,
   maxImages = 10,
   maxFileSize = 5,
-  acceptedFormats = ['image/jpeg', 'image/png', 'image/webp'],
+  acceptedFormats = ["image/jpeg", "image/png", "image/webp"],
 }: ProductImageUploadProps) {
   const [dragActive, setDragActive] = useState(false);
   const [uploading, setUploading] = useState(false);
@@ -36,17 +36,17 @@ export function ProductImageUpload({
   // Handle file upload
   const uploadFile = async (file: File): Promise<string> => {
     const formData = new FormData();
-    formData.append('file', file);
-    formData.append('type', 'product');
+    formData.append("file", file);
+    formData.append("type", "product");
 
-    const response = await fetch('/api/upload', {
-      method: 'POST',
+    const response = await fetch("/api/upload", {
+      method: "POST",
       body: formData,
     });
 
     if (!response.ok) {
       const error = await response.json();
-      throw new Error(_error.message || 'Upload failed');
+      throw new Error(_error.message || "Upload failed");
     }
 
     const result = await response.json();
@@ -56,7 +56,7 @@ export function ProductImageUpload({
   // Validate file
   const validateFile = (file: File): string | null => {
     if (!acceptedFormats.includes(file.type)) {
-      return `Invalid file format. Please use: ${acceptedFormats.map(f => f.split('/')[1]).join(', ')}`;
+      return `Invalid file format. Please use: ${acceptedFormats.map((f) => f.split("/")[1]).join(", ")}`;
     }
 
     if (file.size > maxFileSize * 1024 * 1024) {
@@ -67,79 +67,81 @@ export function ProductImageUpload({
   };
 
   // Handle file selection
-  const handleFiles = useCallback(async (files: FileList) => {
-    const fileArray = Array.from(files);
-    
-    if (images.length + fileArray.length > maxImages) {
-      toast.error(`Maximum ${maxImages} images allowed`);
-      return;
-    }
+  const handleFiles = useCallback(
+    async (files: FileList) => {
+      const fileArray = Array.from(files);
 
-    setUploading(true);
-    const newImages: string[] = [];
-
-    try {
-      for (const file of fileArray) {
-        const validationError = validateFile(file);
-        if (validationError) {
-          toast.error(validationError);
-          continue;
-        }
-
-        try {
-          // Simulate upload progress
-          const progressKey = file.name;
-          setUploadProgress(prev => ({ ...prev, [progressKey]: 0 }));
-
-          // Simulate progress updates
-          const progressInterval = setInterval(() => {
-            setUploadProgress(prev => {
-              const current = prev[progressKey] || 0;
-              if (current < 90) {
-                return { ...prev, [progressKey]: current + 10 };
-              }
-              return prev;
-            });
-          }, 100);
-
-          const imageUrl = await uploadFile(file);
-          newImages.push(imageUrl);
-
-          // Complete progress
-          clearInterval(progressInterval);
-          setUploadProgress(prev => ({ ...prev, [progressKey]: 100 }));
-          
-          // Remove progress after a delay
-          setTimeout(() => {
-            setUploadProgress(prev => {
-              const updated = { ...prev };
-              delete updated[progressKey];
-              return updated;
-            });
-          }, 1000);
-
-        } catch (_error) {
-          // console.error('Error uploading file:', error);
-          toast.error(`Failed to upload ${file.name}`);
-        }
+      if (images.length + fileArray.length > maxImages) {
+        toast.error(`Maximum ${maxImages} images allowed`);
+        return;
       }
 
-      if (newImages.length > 0) {
-        onImagesChange([...images, ...newImages]);
-        toast.success(`${newImages.length} image(s) uploaded successfully`);
+      setUploading(true);
+      const newImages: string[] = [];
+
+      try {
+        for (const file of fileArray) {
+          const validationError = validateFile(file);
+          if (validationError) {
+            toast.error(validationError);
+            continue;
+          }
+
+          try {
+            // Simulate upload progress
+            const progressKey = file.name;
+            setUploadProgress((prev) => ({ ...prev, [progressKey]: 0 }));
+
+            // Simulate progress updates
+            const progressInterval = setInterval(() => {
+              setUploadProgress((prev) => {
+                const current = prev[progressKey] || 0;
+                if (current < 90) {
+                  return { ...prev, [progressKey]: current + 10 };
+                }
+                return prev;
+              });
+            }, 100);
+
+            const imageUrl = await uploadFile(file);
+            newImages.push(imageUrl);
+
+            // Complete progress
+            clearInterval(progressInterval);
+            setUploadProgress((prev) => ({ ...prev, [progressKey]: 100 }));
+
+            // Remove progress after a delay
+            setTimeout(() => {
+              setUploadProgress((prev) => {
+                const updated = { ...prev };
+                delete updated[progressKey];
+                return updated;
+              });
+            }, 1000);
+          } catch (_error) {
+            console.error("Error uploading file:", _error);
+            toast.error(`Failed to upload ${file.name}`);
+          }
+        }
+
+        if (newImages.length > 0) {
+          onImagesChange([...images, ...newImages]);
+          toast.success(`${newImages.length} image(s) uploaded successfully`);
+        }
+      } finally {
+        setUploading(false);
       }
-    } finally {
-      setUploading(false);
-    }
-  }, [images, maxImages, onImagesChange]);
+    },
+    [images, maxImages, onImagesChange]
+  );
 
   // Handle drag events
   const handleDrag = (e: React.DragEvent) => {
     e.preventDefault();
     e.stopPropagation();
-    if (e.type === 'dragenter' || e.type === 'dragover') {
+    if (e.type === "dragenter" || e.type === "dragover") {
       setDragActive(true);
-    } else if (e.type === 'dragleave') {
+    } else if (e.type === "dragleave") {
       setDragActive(false);
     }
   };
@@ -165,7 +167,7 @@ export function ProductImageUpload({
   const removeImage = (index: number) => {
     const newImages = images.filter((_, i) => i !== index);
     onImagesChange(newImages);
-    toast.success('Image removed');
+    toast.success("Image removed");
   };
 
   // Move image
@@ -180,7 +182,7 @@ export function ProductImageUpload({
   const setPrimaryImage = (index: number) => {
     if (index === 0) return;
     moveImage(index, 0);
-    toast.success('Primary image updated');
+    toast.success("Primary image updated");
   };
 
   return (
@@ -189,8 +191,8 @@ export function ProductImageUpload({
       <Card
         className={`border-2 border-dashed transition-colors ${
           dragActive
-            ? 'border-primary bg-primary/5'
-            : 'border-muted-foreground/25 hover:border-muted-foreground/50'
+            ? "border-primary bg-primary/5"
+            : "border-muted-foreground/25 hover:border-muted-foreground/50"
         }`}
       >
         <CardContent className="p-6">
@@ -201,15 +203,16 @@ export function ProductImageUpload({
             onDragOver={handleDrag}
             onDrop={handleDrop}
           >
-            <div className="mx-auto h-12 w-12 text-muted-foreground mb-4">
+            <div className="text-muted-foreground mx-auto mb-4 h-12 w-12">
               <Upload className="h-full w-full" />
             </div>
             <div className="space-y-2">
               <p className="text-sm font-medium">
                 Drop images here or click to upload
               </p>
-              <p className="text-xs text-muted-foreground">
-                PNG, JPG, WebP up to {maxFileSize}MB each (max {maxImages} images)
+              <p className="text-muted-foreground text-xs">
+                PNG, JPG, WebP up to {maxFileSize}MB each (max {maxImages}{" "}
+                images)
               </p>
             </div>
             <Button
@@ -225,7 +228,7 @@ export function ProductImageUpload({
               ref={fileInputRef}
               type="file"
               multiple
-              accept={acceptedFormats.join(',')}
+              accept={acceptedFormats.join(",")}
               onChange={handleInputChange}
               className="hidden"
             />
@@ -237,7 +240,7 @@ export function ProductImageUpload({
       {Object.keys(uploadProgress).length > 0 && (
         <Card>
           <CardContent className="p-4">
-            <h4 className="text-sm font-medium mb-2">Uploading...</h4>
+            <h4 className="mb-2 text-sm font-medium">Uploading...</h4>
             <div className="space-y-2">
               {Object.entries(uploadProgress).map(([filename, progress]) => (
                 <div key={filename} className="space-y-1">
@@ -261,15 +264,15 @@ export function ProductImageUpload({
               Product Images ({images.length}/{maxImages})
             </h4>
             {images.length > 0 && (
-              <p className="text-xs text-muted-foreground">
+              <p className="text-muted-foreground text-xs">
                 Drag to reorder • First image is the primary image
               </p>
             )}
           </div>
-          
-          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
+
+          <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-4">
             {images.map((image, index) => (
-              <Card key={index} className="relative group overflow-hidden">
+              <Card key={index} className="group relative overflow-hidden">
                 <CardContent className="p-0">
                   <div className="relative aspect-square">
                     <img
@@ -277,19 +280,17 @@ export function ProductImageUpload({
                       alt={`Product image ${index + 1}`}
                       className="h-full w-full object-cover"
                     />
-                    
+
                     {/* Primary Badge */}
                     {index === 0 && (
-                      <Badge 
-                        className="absolute top-2 left-2 bg-primary text-primary-foreground"
-                      >
-                        <Star className="h-3 w-3 mr-1" />
+                      <Badge className="bg-primary text-primary-foreground absolute top-2 left-2">
+                        <Star className="mr-1 h-3 w-3" />
                         Primary
                       </Badge>
                     )}
-                    
+
                     {/* Actions Overlay */}
-                    <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity">
+                    <div className="absolute inset-0 bg-black/50 opacity-0 transition-opacity group-hover:opacity-100">
                       <div className="absolute top-2 right-2 flex gap-1">
                         {index !== 0 && (
                           <Button
@@ -314,9 +315,9 @@ export function ProductImageUpload({
                           <X className="h-3 w-3" />
                         </Button>
                       </div>
-                      
+
                       {/* Move buttons */}
-                      <div className="absolute bottom-2 left-1/2 transform -translate-x-1/2 flex gap-1">
+                      <div className="absolute bottom-2 left-1/2 flex -translate-x-1/2 transform gap-1">
                         {index > 0 && (
                           <Button
                             type="button"
@@ -353,8 +354,8 @@ export function ProductImageUpload({
       {images.length === 0 && (
         <Card className="border-dashed">
           <CardContent className="p-6 text-center">
-            <ImageIcon className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
-            <p className="text-sm text-muted-foreground">
+            <ImageIcon className="text-muted-foreground mx-auto mb-4 h-12 w-12" />
+            <p className="text-muted-foreground text-sm">
               No images uploaded yet. Add some product images to get started.
             </p>
           </CardContent>

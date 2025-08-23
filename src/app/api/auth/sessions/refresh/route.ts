@@ -1,18 +1,18 @@
 /**
  * Session Refresh API
  * /api/auth/sessions/refresh
- * 
+ *
  * Provides secure session refresh and token rotation:
  * - POST: Refresh current session with optional token rotation
  * - Sliding session expiration
  * - Security monitoring and audit logging
  */
 
-import { NextRequest, NextResponse } from 'next/server';
-import { auth } from '@/lib/auth/config';
-import { sessionManager, SessionRateLimiter } from '@/lib/session-manager';
-import { auditService, AuditHelpers } from '@/lib/audit';
-import { db } from '@/lib/db';
+import { AuditHelpers, auditService } from "@/lib/audit";
+import { auth } from "@/lib/auth/config";
+import { db } from "@/lib/db";
+import { sessionManager, SessionRateLimiter } from "@/lib/session-manager";
+import { NextRequest, NextResponse } from "next/server";
 
 /**
  * POST /api/auth/sessions/refresh
@@ -27,48 +27,55 @@ export async function POST(request: NextRequest) {
 
     if (!session?.user) {
       return NextResponse.json(
-        { error: 'Unauthorized', code: 'UNAUTHORIZED' },
+        { error: "Unauthorized", code: "UNAUTHORIZED" },
         { status: 401 }
       );
     }
 
     // Extract client information for rate limiting and security
-    const userAgent = request.headers.get('user-agent');
-    const forwarded = request.headers.get('x-forwarded-for');
-    const ipAddress = forwarded?.split(',')[0].trim() || 
-                     request.headers.get('x-real-ip') || 
-                     'unknown';
+    const userAgent = request.headers.get("user-agent");
+    const forwarded = request.headers.get("x-forwarded-for");
+    const ipAddress =
+      forwarded?.split(",")[0].trim() ||
+      request.headers.get("x-real-ip") ||
+      "unknown";
     const rateLimitKey = `${session.user.id}:${ipAddress}`;
 
     // Check rate limit for refresh operations
-    const rateLimit = await SessionRateLimiter.checkRateLimit('refreshSession', rateLimitKey);
+    const rateLimit = await SessionRateLimiter.checkRateLimit(
+      "refreshSession",
+      rateLimitKey
+    );
     if (!rateLimit.allowed) {
       return NextResponse.json(
-        { 
-          error: 'Rate limit exceeded', 
-          code: 'RATE_LIMIT_EXCEEDED',
+        {
+          error: "Rate limit exceeded",
+          code: "RATE_LIMIT_EXCEEDED",
           retryAfter: rateLimit.retryAfter,
-          message: 'Too many refresh attempts. Please wait before trying again.'
+          message:
+            "Too many refresh attempts. Please wait before trying again.",
         },
-        { 
+        {
           status: 429,
           headers: {
-            'Retry-After': String(rateLimit.retryAfter || 60),
-            'X-RateLimit-Limit': '10',
-            'X-RateLimit-Remaining': '0',
-            'X-RateLimit-Reset': String(Date.now() + (rateLimit.retryAfter || 60) * 1000),
-          }
+            "Retry-After": String(rateLimit.retryAfter || 60),
+            "X-RateLimit-Limit": "10",
+            "X-RateLimit-Remaining": "0",
+            "X-RateLimit-Reset": String(
+              Date.now() + (rateLimit.retryAfter || 60) * 1000
+            ),
+          },
         }
       );
     }
 
     // Parse request body
     const body = await request.json().catch(() => ({}));
-    const { 
+    const {
       rotateToken = true,
       extendExpiry = true,
       validateSecurity = true,
-      reason = 'user_refresh'
+      reason = "user_refresh",
     } = body;
 
     // Create audit context
@@ -76,7 +83,7 @@ export async function POST(request: NextRequest) {
       id: session.user.id,
       email: session.user.email,
     });
-    
+
     await auditService.setAuditContext(auditContext);
 
     // Get current session details from database
@@ -86,7 +93,7 @@ export async function POST(request: NextRequest) {
 
     if (!currentSession) {
       return NextResponse.json(
-        { error: 'Session not found in database', code: 'SESSION_NOT_FOUND' },
+        { error: "Session not found in database", code: "SESSION_NOT_FOUND" },
         { status: 404 }
       );
     }
@@ -95,12 +102,12 @@ export async function POST(request: NextRequest) {
     if (currentSession.userId !== session.user.id) {
       // Session user mismatch - potential security issue
       await auditService.createAuditLog({
-        tableName: 'sessions',
+        tableName: "sessions",
         recordId: session.session.id,
-        action: 'ACCESS',
+        action: "ACCESS",
         metadata: {
-          operation: 'refreshSession',
-          securityIssue: 'session_user_mismatch',
+          operation: "refreshSession",
+          securityIssue: "session_user_mismatch",
           expectedUserId: session.user.id,
           actualUserId: currentSession.userId,
           ipAddress,
@@ -110,9 +117,9 @@ export async function POST(request: NextRequest) {
       });
 
       return NextResponse.json(
-        { 
-          error: 'Session integrity violation',
-          code: 'SESSION_INTEGRITY_ERROR'
+        {
+          error: "Session integrity violation",
+          code: "SESSION_INTEGRITY_ERROR",
         },
         { status: 400 }
       );
@@ -121,22 +128,22 @@ export async function POST(request: NextRequest) {
     // Security validation if requested
     if (validateSecurity) {
       // Check for IP address changes (if configured for high security)
-      const ipChanged = currentSession.ipAddress && 
-                       currentSession.ipAddress !== ipAddress;
+      const ipChanged =
+        currentSession.ipAddress && currentSession.ipAddress !== ipAddress;
 
       // Check for user agent changes
-      const userAgentChanged = currentSession.userAgent && 
-                              currentSession.userAgent !== userAgent;
+      const userAgentChanged =
+        currentSession.userAgent && currentSession.userAgent !== userAgent;
 
       if (ipChanged || userAgentChanged) {
         // Log potential security concern
         await auditService.createAuditLog({
-          tableName: 'sessions',
+          tableName: "sessions",
           recordId: session.session.id,
-          action: 'ACCESS',
+          action: "ACCESS",
           metadata: {
-            operation: 'refreshSession',
-            securityConcern: 'session_context_changed',
+            operation: "refreshSession",
+            securityConcern: "session_context_changed",
             ipChanged,
             userAgentChanged,
             originalIp: currentSession.ipAddress,
@@ -153,25 +160,31 @@ export async function POST(request: NextRequest) {
     }
 
     // Perform session refresh
-    const refreshResult = await sessionManager.refreshSession(session.session.id, {
-      rotateToken,
-      extendExpiry,
-      auditContext,
-    });
+    const refreshResult = await sessionManager.refreshSession(
+      session.session.id,
+      {
+        rotateToken,
+        extendExpiry,
+        auditContext,
+      }
+    );
 
     if (!refreshResult.success) {
       return NextResponse.json(
-        { 
-          error: 'Session refresh failed',
-          code: 'REFRESH_FAILED',
-          details: refreshResult.error
+        {
+          error: "Session refresh failed",
+          code: "REFRESH_FAILED",
+          details: refreshResult.error,
         },
         { status: 400 }
       );
     }
 
     // Update session metadata if needed
-    if (currentSession.ipAddress !== ipAddress || currentSession.userAgent !== userAgent) {
+    if (
+      currentSession.ipAddress !== ipAddress ||
+      currentSession.userAgent !== userAgent
+    ) {
       await db.session.update({
         where: { id: session.session.id },
         data: {
@@ -200,47 +213,47 @@ export async function POST(request: NextRequest) {
       // In production, you would set this as an HTTP-only cookie
       // For API response, we include it but recommend cookie-based approach
       response.data.newToken = refreshResult.newToken;
-      response.data.tokenNote = 'New token should be set as HTTP-only cookie';
+      response.data.tokenNote = "New token should be set as HTTP-only cookie";
     }
 
     // Set security headers
     const responseHeaders: Record<string, string> = {
-      'X-Session-Refreshed': 'true',
-      'X-Token-Rotated': String(refreshResult.rotated),
+      "X-Session-Refreshed": "true",
+      "X-Token-Rotated": String(refreshResult.rotated),
     };
 
     if (refreshResult.expiresAt) {
-      responseHeaders['X-Session-Expires'] = refreshResult.expiresAt.toISOString();
+      responseHeaders["X-Session-Expires"] =
+        refreshResult.expiresAt.toISOString();
     }
 
     return NextResponse.json(response, {
       headers: responseHeaders,
     });
-
   } catch (_error) {
-    // console.error('Session refresh error:', error);
-    
+    console.error("Session refresh error:", _error);
+
     // Log the error for monitoring
     try {
       await auditService.createAuditLog({
-        tableName: 'sessions',
-        recordId: 'unknown',
-        action: 'ACCESS',
+        tableName: "sessions",
+        recordId: "unknown",
+        action: "ACCESS",
         metadata: {
-          operation: 'refreshSession',
-          error: error instanceof Error ? _error.message : 'Unknown error',
-          errorType: 'refresh_error',
+          operation: "refreshSession",
+          error: _error instanceof Error ? _error.message : "Unknown error",
+          errorType: "refresh_error",
         },
       });
     } catch {
       // Ignore audit logging errors
     }
-    
+
     return NextResponse.json(
-      { 
-        error: 'Internal server error',
-        code: 'INTERNAL_ERROR',
-        message: 'Failed to refresh session'
+      {
+        error: "Internal server error",
+        code: "INTERNAL_ERROR",
+        message: "Failed to refresh session",
       },
       { status: 500 }
     );
@@ -262,7 +275,7 @@ export async function GET(request: NextRequest) {
 
     if (!session?.user) {
       return NextResponse.json(
-        { error: 'Unauthorized', code: 'UNAUTHORIZED' },
+        { error: "Unauthorized", code: "UNAUTHORIZED" },
         { status: 401 }
       );
     }
@@ -274,7 +287,7 @@ export async function GET(request: NextRequest) {
 
     if (!currentSession) {
       return NextResponse.json(
-        { error: 'Session not found', code: 'SESSION_NOT_FOUND' },
+        { error: "Session not found", code: "SESSION_NOT_FOUND" },
         { status: 404 }
       );
     }
@@ -282,11 +295,13 @@ export async function GET(request: NextRequest) {
     const now = new Date();
     const timeUntilExpiry = currentSession.expiresAt.getTime() - now.getTime();
     const hoursUntilExpiry = Math.floor(timeUntilExpiry / (1000 * 60 * 60));
-    const minutesUntilExpiry = Math.floor((timeUntilExpiry % (1000 * 60 * 60)) / (1000 * 60));
+    const minutesUntilExpiry = Math.floor(
+      (timeUntilExpiry % (1000 * 60 * 60)) / (1000 * 60)
+    );
 
     // Determine refresh recommendations
-    const shouldRefresh = timeUntilExpiry < (24 * 60 * 60 * 1000); // Less than 24 hours
-    const mustRefresh = timeUntilExpiry < (2 * 60 * 60 * 1000); // Less than 2 hours
+    const shouldRefresh = timeUntilExpiry < 24 * 60 * 60 * 1000; // Less than 24 hours
+    const mustRefresh = timeUntilExpiry < 2 * 60 * 60 * 1000; // Less than 2 hours
 
     return NextResponse.json({
       success: true,
@@ -312,15 +327,14 @@ export async function GET(request: NextRequest) {
         },
       },
     });
-
   } catch (_error) {
-    // console.error('Session refresh status error:', error);
-    
+    console.error("Session refresh status error:", _error);
+
     return NextResponse.json(
-      { 
-        error: 'Internal server error',
-        code: 'INTERNAL_ERROR',
-        message: 'Failed to get refresh status'
+      {
+        error: "Internal server error",
+        code: "INTERNAL_ERROR",
+        message: "Failed to get refresh status",
       },
       { status: 500 }
     );
@@ -330,21 +344,21 @@ export async function GET(request: NextRequest) {
 // Handle unsupported methods
 export async function PUT() {
   return NextResponse.json(
-    { error: 'Method not allowed', code: 'METHOD_NOT_ALLOWED' },
+    { error: "Method not allowed", code: "METHOD_NOT_ALLOWED" },
     { status: 405 }
   );
 }
 
 export async function DELETE() {
   return NextResponse.json(
-    { error: 'Method not allowed', code: 'METHOD_NOT_ALLOWED' },
+    { error: "Method not allowed", code: "METHOD_NOT_ALLOWED" },
     { status: 405 }
   );
 }
 
 export async function PATCH() {
   return NextResponse.json(
-    { error: 'Method not allowed', code: 'METHOD_NOT_ALLOWED' },
+    { error: "Method not allowed", code: "METHOD_NOT_ALLOWED" },
     { status: 405 }
   );
 }

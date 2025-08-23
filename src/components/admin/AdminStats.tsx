@@ -1,23 +1,23 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
-import { RoleBadge } from "./RoleBadge";
-import { PermissionGuard } from "./PermissionGuard";
 import { PERMISSIONS } from "@/lib/permissions";
-import {
-  Users,
-  UserPlus,
-  Activity,
-  TrendingUp,
-  Shield,
-  AlertTriangle,
-  Clock,
-  CheckCircle2,
-} from "lucide-react";
 import type { UserRole } from "@prisma/client";
+import {
+  Activity,
+  AlertTriangle,
+  CheckCircle2,
+  Clock,
+  Shield,
+  TrendingUp,
+  UserPlus,
+  Users,
+} from "lucide-react";
+import { useEffect, useState } from "react";
+import { PermissionGuard } from "./PermissionGuard";
+import { RoleBadge } from "./RoleBadge";
 
 interface UserStats {
   totalUsers: number;
@@ -34,7 +34,7 @@ interface UserStats {
 
 /**
  * AdminStats Component
- * 
+ *
  * Displays key administrative statistics and metrics.
  * Fetches data from the admin API endpoints.
  */
@@ -54,16 +54,16 @@ export function AdminStats() {
       setError(null);
 
       if (isRetry) {
-        setRetryCount(prev => prev + 1);
+        setRetryCount((prev) => prev + 1);
       }
 
       const response = await fetch("/api/admin/users?stats=true", {
         headers: {
-          'Content-Type': 'application/json',
+          "Content-Type": "application/json",
         },
-        credentials: 'include', // Include cookies for auth
+        credentials: "include", // Include cookies for auth
       });
-      
+
       if (!response.ok) {
         if (response.status === 403) {
           throw new Error("You don't have permission to view these statistics");
@@ -75,7 +75,7 @@ export function AdminStats() {
       }
 
       const data = await response.json();
-      
+
       if (data.success && data.data) {
         // Validate and sanitize the data before setting
         const sanitizedStats: UserStats = {
@@ -91,7 +91,8 @@ export function AdminStats() {
           recentActivity: {
             totalActions: Number(data.data.recentActivity?.totalActions) || 0,
             failedLogins: Number(data.data.recentActivity?.failedLogins) || 0,
-            successfulLogins: Number(data.data.recentActivity?.successfulLogins) || 0,
+            successfulLogins:
+              Number(data.data.recentActivity?.successfulLogins) || 0,
           },
         };
         setStats(sanitizedStats);
@@ -99,9 +100,11 @@ export function AdminStats() {
         throw new Error(data.error || "Invalid response format");
       }
     } catch (err) {
-      // console.error("Error fetching admin stats:", err);
-      setError(err instanceof Error ? err.message : "Failed to load statistics");
-      
+      console.error("Error fetching admin stats:", err);
+      setError(
+        err instanceof Error ? err.message : "Failed to load statistics"
+      );
+
       // Set fallback empty stats to prevent further errors
       setStats({
         totalUsers: 0,
@@ -128,17 +131,19 @@ export function AdminStats() {
     return (
       <Card className="border-destructive">
         <CardContent className="p-6">
-          <div className="flex items-center gap-2 text-destructive">
+          <div className="text-destructive flex items-center gap-2">
             <AlertTriangle className="size-5" />
             <span className="font-medium">Failed to load statistics</span>
           </div>
-          <p className="text-sm text-muted-foreground mt-2">{error}</p>
+          <p className="text-muted-foreground mt-2 text-sm">{error}</p>
           <button
             onClick={() => fetchStats(true)}
-            className="mt-3 text-sm text-primary hover:underline disabled:opacity-50"
+            className="text-primary mt-3 text-sm hover:underline disabled:opacity-50"
             disabled={isLoading}
           >
-            {isLoading ? "Retrying..." : `Try again${retryCount > 0 ? ` (${retryCount})` : ""}`}
+            {isLoading
+              ? "Retrying..."
+              : `Try again${retryCount > 0 ? ` (${retryCount})` : ""}`}
           </button>
         </CardContent>
       </Card>
@@ -148,7 +153,7 @@ export function AdminStats() {
   // Show loading state for all cards
   if (isLoading && !stats) {
     return (
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+      <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-4">
         {Array.from({ length: 4 }).map((_, index) => (
           <Card key={index}>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
@@ -156,7 +161,7 @@ export function AdminStats() {
               <Skeleton className="h-4 w-4" />
             </CardHeader>
             <CardContent>
-              <Skeleton className="h-8 w-16 mb-2" />
+              <Skeleton className="mb-2 h-8 w-16" />
               <Skeleton className="h-4 w-24" />
             </CardContent>
           </Card>
@@ -166,22 +171,22 @@ export function AdminStats() {
   }
 
   return (
-    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+    <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-4">
       {/* Total Users */}
       <Card>
         <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
           <CardTitle className="text-sm font-medium">Total Users</CardTitle>
-          <Users className="size-4 text-muted-foreground" />
+          <Users className="text-muted-foreground size-4" />
         </CardHeader>
         <CardContent>
           {isLoading ? (
             <Skeleton className="h-8 w-16" />
           ) : (
             <div className="text-2xl font-bold">
-              {stats?.totalUsers?.toLocaleString() ?? '0'}
+              {stats?.totalUsers?.toLocaleString() ?? "0"}
             </div>
           )}
-          <div className="flex items-center gap-2 mt-2">
+          <div className="mt-2 flex items-center gap-2">
             {isLoading ? (
               <Skeleton className="h-4 w-20" />
             ) : (
@@ -190,8 +195,9 @@ export function AdminStats() {
                   {stats?.activeUsers ?? 0} active
                 </Badge>
                 {stats && stats.activeUsers > 0 && stats.totalUsers > 0 && (
-                  <div className="text-xs text-muted-foreground">
-                    {Math.round((stats.activeUsers / stats.totalUsers) * 100)}% active
+                  <div className="text-muted-foreground text-xs">
+                    {Math.round((stats.activeUsers / stats.totalUsers) * 100)}%
+                    active
                   </div>
                 )}
               </>
@@ -204,21 +210,23 @@ export function AdminStats() {
       <Card>
         <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
           <CardTitle className="text-sm font-medium">New Today</CardTitle>
-          <UserPlus className="size-4 text-muted-foreground" />
+          <UserPlus className="text-muted-foreground size-4" />
         </CardHeader>
         <CardContent>
           {isLoading ? (
             <Skeleton className="h-8 w-12" />
           ) : (
-            <div className="text-2xl font-bold">{stats?.newUsersToday ?? 0}</div>
+            <div className="text-2xl font-bold">
+              {stats?.newUsersToday ?? 0}
+            </div>
           )}
-          <div className="flex items-center gap-2 mt-2">
+          <div className="mt-2 flex items-center gap-2">
             {isLoading ? (
               <Skeleton className="h-4 w-24" />
             ) : (
               <>
                 <TrendingUp className="size-3 text-green-500" />
-                <span className="text-xs text-muted-foreground">
+                <span className="text-muted-foreground text-xs">
                   {stats?.newUsersThisWeek ?? 0} this week
                 </span>
               </>
@@ -230,8 +238,10 @@ export function AdminStats() {
       {/* Role Distribution */}
       <Card>
         <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-          <CardTitle className="text-sm font-medium">Role Distribution</CardTitle>
-          <Shield className="size-4 text-muted-foreground" />
+          <CardTitle className="text-sm font-medium">
+            Role Distribution
+          </CardTitle>
+          <Shield className="text-muted-foreground size-4" />
         </CardHeader>
         <CardContent>
           {isLoading ? (
@@ -245,16 +255,18 @@ export function AdminStats() {
               {stats?.roleDistribution ? (
                 Object.entries(stats.roleDistribution).map(([role, count]) => (
                   <div key={role} className="flex items-center justify-between">
-                    <RoleBadge 
-                      role={role as UserRole} 
-                      size="sm" 
+                    <RoleBadge
+                      role={role as UserRole}
+                      size="sm"
                       showPermissionTooltip={false}
                     />
                     <span className="text-sm font-medium">{count ?? 0}</span>
                   </div>
                 ))
               ) : (
-                <div className="text-sm text-muted-foreground">No role data available</div>
+                <div className="text-muted-foreground text-sm">
+                  No role data available
+                </div>
               )}
             </div>
           )}
@@ -265,8 +277,10 @@ export function AdminStats() {
       <PermissionGuard permission={PERMISSIONS.AUDIT_READ}>
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Recent Activity</CardTitle>
-            <Activity className="size-4 text-muted-foreground" />
+            <CardTitle className="text-sm font-medium">
+              Recent Activity
+            </CardTitle>
+            <Activity className="text-muted-foreground size-4" />
           </CardHeader>
           <CardContent>
             {isLoading ? (
@@ -280,23 +294,27 @@ export function AdminStats() {
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-2 text-xs">
                     <CheckCircle2 className="size-3 text-green-500" />
-                    <span className="text-muted-foreground">Successful logins</span>
+                    <span className="text-muted-foreground">
+                      Successful logins
+                    </span>
                   </div>
                   <span className="text-sm font-medium">
                     {stats?.recentActivity?.successfulLogins ?? 0}
                   </span>
                 </div>
-                
+
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-2 text-xs">
                     <AlertTriangle className="size-3 text-red-500" />
-                    <span className="text-muted-foreground">Failed attempts</span>
+                    <span className="text-muted-foreground">
+                      Failed attempts
+                    </span>
                   </div>
                   <span className="text-sm font-medium">
                     {stats?.recentActivity?.failedLogins ?? 0}
                   </span>
                 </div>
-                
+
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-2 text-xs">
                     <Clock className="size-3 text-blue-500" />
@@ -317,7 +335,7 @@ export function AdminStats() {
 
 /**
  * StatCard Component
- * 
+ *
  * Reusable stat card for displaying key metrics
  */
 export function StatCard({
@@ -343,32 +361,40 @@ export function StatCard({
     <Card>
       <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
         <CardTitle className="text-sm font-medium">{title}</CardTitle>
-        <Icon className="size-4 text-muted-foreground" />
+        <Icon className="text-muted-foreground size-4" />
       </CardHeader>
       <CardContent>
         {isLoading ? (
           <>
-            <Skeleton className="h-8 w-16 mb-2" />
+            <Skeleton className="mb-2 h-8 w-16" />
             <Skeleton className="h-4 w-24" />
           </>
         ) : (
           <>
             <div className="text-2xl font-bold">{value}</div>
             {(description || trend) && (
-              <div className="flex items-center gap-2 mt-2">
+              <div className="mt-2 flex items-center gap-2">
                 {trend && (
-                  <div className={`flex items-center gap-1 text-xs ${
-                    trend.positive ? 'text-green-600' : 'text-red-600'
-                  }`}>
-                    <TrendingUp className={`size-3 ${trend.positive ? '' : 'rotate-180'}`} />
+                  <div
+                    className={`flex items-center gap-1 text-xs ${
+                      trend.positive ? "text-green-600" : "text-red-600"
+                    }`}
+                  >
+                    <TrendingUp
+                      className={`size-3 ${trend.positive ? "" : "rotate-180"}`}
+                    />
                     <span>{trend.value}%</span>
                   </div>
                 )}
                 {description && (
-                  <span className="text-xs text-muted-foreground">{description}</span>
+                  <span className="text-muted-foreground text-xs">
+                    {description}
+                  </span>
                 )}
                 {trend?.label && (
-                  <span className="text-xs text-muted-foreground">{trend.label}</span>
+                  <span className="text-muted-foreground text-xs">
+                    {trend.label}
+                  </span>
                 )}
               </div>
             )}

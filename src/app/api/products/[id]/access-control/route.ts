@@ -1,10 +1,10 @@
 /**
  * Product Access Control API - Manage product access restrictions
- * 
+ *
  * Handles:
  * - GET: Get product access control settings
  * - PUT: Update product access control settings
- * 
+ *
  * Features:
  * - Role-based access control (admin only)
  * - Geographic restrictions management
@@ -13,33 +13,43 @@
  * - Audit logging for admin actions
  */
 
-import { NextRequest, NextResponse } from 'next/server';
-import { z } from 'zod';
-import { ProductService } from '@/services/products/product.service';
-import { db } from '@/lib/db';
-import { validateApiAccess, createApiErrorResponse, getAuditContext } from '@/lib/auth/server-session';
-import { updateProductAccessControlSchema } from '@/lib/validations/base/product';
-import { rateLimit, auditAction } from '@/lib/api-helpers';
+import { auditAction, rateLimit } from "@/lib/api-helpers";
+import {
+  createApiErrorResponse,
+  getAuditContext,
+  validateApiAccess,
+} from "@/lib/auth/server-session";
+import { db } from "@/lib/db";
+import { updateProductAccessControlSchema } from "@/lib/validations/base/product";
+import { ProductService } from "@/services/products/product.service";
+import { NextRequest, NextResponse } from "next/server";
+import { z } from "zod";
 
 const productService = new ProductService(db);
 
 // Parameters validation schema
 const paramsSchema = z.object({
-  id: z.string().cuid('Invalid product ID'),
+  id: z.string().cuid("Invalid product ID"),
 });
 
 /**
  * GET /api/products/[id]/access-control - Get product access control settings (admin only)
  */
-export async function GET(request: NextRequest, { params }: { params: { id: string } }) {
+export async function GET(
+  request: NextRequest,
+  { params }: { params: { id: string } }
+) {
   try {
     // Validate admin authentication
-    const { isValid, session, error } = await validateApiAccess(request, 'ADMIN');
-    
+    const { isValid, session, error } = await validateApiAccess(
+      request,
+      "ADMIN"
+    );
+
     if (!isValid || !session) {
       return createApiErrorResponse(
         error?.code || 401,
-        error?.message || 'Admin authentication required'
+        error?.message || "Admin authentication required"
       );
     }
 
@@ -49,7 +59,7 @@ export async function GET(request: NextRequest, { params }: { params: { id: stri
       validatedParams = paramsSchema.parse(params);
     } catch (_error) {
       if (_error instanceof z.ZodError) {
-        return createApiErrorResponse(400, 'Invalid product ID', _error.issues);
+        return createApiErrorResponse(400, "Invalid product ID", _error.issues);
       }
       throw _error;
     }
@@ -57,7 +67,7 @@ export async function GET(request: NextRequest, { params }: { params: { id: stri
     // Get product with access control settings
     const product = await productService.findById(validatedParams.id);
     if (!product) {
-      return createApiErrorResponse(404, 'Product not found');
+      return createApiErrorResponse(404, "Product not found");
     }
 
     // Return access control settings
@@ -68,49 +78,64 @@ export async function GET(request: NextRequest, { params }: { params: { id: stri
       maxUsers: product.maxUsers,
       currentUsers: product.currentUsers,
       isLimited: product.isLimited,
-      availableCapacity: product.isLimited && product.maxUsers 
-        ? Math.max(0, product.maxUsers - product.currentUsers)
-        : null,
-      capacityPercentage: product.isLimited && product.maxUsers
-        ? Math.round((product.currentUsers / product.maxUsers) * 100)
-        : null,
+      availableCapacity:
+        product.isLimited && product.maxUsers
+          ? Math.max(0, product.maxUsers - product.currentUsers)
+          : null,
+      capacityPercentage:
+        product.isLimited && product.maxUsers
+          ? Math.round((product.currentUsers / product.maxUsers) * 100)
+          : null,
     };
 
-    return NextResponse.json({
-      accessControl: accessControlSettings,
-      message: 'Product access control settings retrieved successfully',
-    }, { status: 200 });
-
+    return NextResponse.json(
+      {
+        accessControl: accessControlSettings,
+        message: "Product access control settings retrieved successfully",
+      },
+      { status: 200 }
+    );
   } catch (_error) {
-    // console.error('Error fetching product access control settings:', error);
-    return createApiErrorResponse(500, 'Failed to fetch product access control settings');
+    return createApiErrorResponse(
+      500,
+      "Failed to fetch product access control settings"
+    );
   }
 }
 
 /**
  * PUT /api/products/[id]/access-control - Update product access control settings (admin only)
  */
-export async function PUT(request: NextRequest, { params }: { params: { id: string } }) {
+export async function PUT(
+  request: NextRequest,
+  { params }: { params: { id: string } }
+) {
   try {
     // Validate admin authentication
-    const { isValid, session, error } = await validateApiAccess(request, 'ADMIN');
-    
+    const { isValid, session, error } = await validateApiAccess(
+      request,
+      "ADMIN"
+    );
+
     if (!isValid || !session) {
       return createApiErrorResponse(
         error?.code || 401,
-        error?.message || 'Admin authentication required'
+        error?.message || "Admin authentication required"
       );
     }
 
     // Apply rate limiting for admin operations
     const rateLimitResult = await rateLimit(request, {
-      windowMs: 15 * 60 * 1000, // 15 minutes  
+      windowMs: 15 * 60 * 1000, // 15 minutes
       maxRequests: 100, // 100 admin operations per window
       keyGenerator: () => `product_access_control_update_${session.user.id}`,
     });
 
     if (!rateLimitResult.success) {
-      return createApiErrorResponse(429, 'Too many admin requests. Please try again later.');
+      return createApiErrorResponse(
+        429,
+        "Too many admin requests. Please try again later."
+      );
     }
 
     // Validate parameters
@@ -119,7 +144,7 @@ export async function PUT(request: NextRequest, { params }: { params: { id: stri
       validatedParams = paramsSchema.parse(params);
     } catch (_error) {
       if (_error instanceof z.ZodError) {
-        return createApiErrorResponse(400, 'Invalid product ID', _error.issues);
+        return createApiErrorResponse(400, "Invalid product ID", _error.issues);
       }
       throw _error;
     }
@@ -129,7 +154,7 @@ export async function PUT(request: NextRequest, { params }: { params: { id: stri
     try {
       requestData = await request.json();
     } catch {
-      return createApiErrorResponse(400, 'Invalid JSON in request body');
+      return createApiErrorResponse(400, "Invalid JSON in request body");
     }
 
     let validatedData;
@@ -140,19 +165,24 @@ export async function PUT(request: NextRequest, { params }: { params: { id: stri
       });
     } catch (_error) {
       if (_error instanceof z.ZodError) {
-        return createApiErrorResponse(400, 'Invalid access control data', _error.issues);
+        return createApiErrorResponse(
+          400,
+          "Invalid access control data",
+          _error.issues
+        );
       }
       throw _error;
     }
 
     // Update product access control
-    const updatedProduct = await productService.updateProductAccessControl(validatedData);
+    const updatedProduct =
+      await productService.updateProductAccessControl(validatedData);
 
     // Log the admin action for audit
     const auditContext = getAuditContext(request, session);
     await auditAction({
-      action: 'UPDATE_PRODUCT_ACCESS_CONTROL',
-      resource: 'Product',
+      action: "UPDATE_PRODUCT_ACCESS_CONTROL",
+      resource: "Product",
       resourceId: updatedProduct.id,
       adminUserId: auditContext.adminUserId,
       adminRole: auditContext.adminRole,
@@ -166,35 +196,38 @@ export async function PUT(request: NextRequest, { params }: { params: { id: stri
         maxUsers: updatedProduct.maxUsers,
         currentUsers: updatedProduct.currentUsers,
       },
-      severity: 'INFO',
+      severity: "INFO",
     });
 
-    return NextResponse.json({
-      product: {
-        id: updatedProduct.id,
-        restrictedRegions: updatedProduct.restrictedRegions,
-        allowedUserRoles: updatedProduct.allowedUserRoles,
-        maxUsers: updatedProduct.maxUsers,
-        currentUsers: updatedProduct.currentUsers,
-        isLimited: updatedProduct.isLimited,
+    return NextResponse.json(
+      {
+        product: {
+          id: updatedProduct.id,
+          restrictedRegions: updatedProduct.restrictedRegions,
+          allowedUserRoles: updatedProduct.allowedUserRoles,
+          maxUsers: updatedProduct.maxUsers,
+          currentUsers: updatedProduct.currentUsers,
+          isLimited: updatedProduct.isLimited,
+        },
+        message: "Product access control updated successfully",
       },
-      message: 'Product access control updated successfully',
-    }, { status: 200 });
-
+      { status: 200 }
+    );
   } catch (_error) {
-    // console.error('Error updating product access control:', error);
-    
     // Handle specific business logic errors
     if (_error instanceof Error) {
-      if (_error.message.includes('not found')) {
+      if (_error.message.includes("not found")) {
         return createApiErrorResponse(404, _error.message);
       }
-      if (_error.message.includes('validation')) {
+      if (_error.message.includes("validation")) {
         return createApiErrorResponse(400, _error.message);
       }
     }
 
-    return createApiErrorResponse(500, 'Failed to update product access control');
+    return createApiErrorResponse(
+      500,
+      "Failed to update product access control"
+    );
   }
 }
 
@@ -205,10 +238,10 @@ export async function OPTIONS() {
   return new NextResponse(null, {
     status: 200,
     headers: {
-      'Access-Control-Allow-Origin': '*',
-      'Access-Control-Allow-Methods': 'GET, PUT, OPTIONS',
-      'Access-Control-Allow-Headers': 'Content-Type, Authorization',
-      'Access-Control-Max-Age': '86400',
+      "Access-Control-Allow-Origin": "*",
+      "Access-Control-Allow-Methods": "GET, PUT, OPTIONS",
+      "Access-Control-Allow-Headers": "Content-Type, Authorization",
+      "Access-Control-Max-Age": "86400",
     },
   });
 }

@@ -1,6 +1,6 @@
 /**
  * Enhanced Rate Limiting with Redis Support
- * 
+ *
  * This module provides persistent rate limiting that survives server restarts
  * with Redis as primary storage and in-memory as fallback.
  */
@@ -50,7 +50,10 @@ async function getRedisClient() {
     return client;
   } catch (_error) {
     if (process.env.NODE_ENV === "development") {
-      // console.warn("Redis not available, using in-memory rate limiting:", error);
+      console.warn(
+        "Redis not available, using in-memory rate limiting:",
+        _error
+      );
     }
     return null;
   }
@@ -90,7 +93,7 @@ async function redisRateLimit(
 
       // Get current count or initialize
       pipeline.get(redisKey);
-      
+
       const results = await pipeline.exec();
       const currentCount = results ? parseInt(results[0] || "0") : 0;
 
@@ -106,8 +109,8 @@ async function redisRateLimit(
       } else if (currentCount >= config.max) {
         // Rate limit exceeded
         const ttl = await redis.ttl(redisKey);
-        const actualResetTime = now + (ttl * 1000);
-        
+        const actualResetTime = now + ttl * 1000;
+
         return {
           allowed: false,
           remaining: 0,
@@ -126,7 +129,10 @@ async function redisRateLimit(
       }
     } catch (_error) {
       if (process.env.NODE_ENV === "development") {
-        // console.warn("Redis rate limiting failed, falling back to memory:", error);
+        console.warn(
+          "Redis rate limiting failed, falling back to memory:",
+          _error
+        );
       }
       // Fall through to memory-based rate limiting
     }
@@ -134,9 +140,9 @@ async function redisRateLimit(
 
   // In-memory fallback
   cleanupMemoryStore();
-  
+
   const current = memoryStore.get(key);
-  
+
   if (!current || current.resetTime < now) {
     memoryStore.set(key, { count: 1, resetTime });
     return {
@@ -178,7 +184,7 @@ export function getClientIP(request: NextRequest): string {
   const forwarded = request.headers.get("x-forwarded-for");
   if (forwarded) {
     // Take the first IP in the chain (client IP)
-    const ips = forwarded.split(",").map(ip => ip.trim());
+    const ips = forwarded.split(",").map((ip) => ip.trim());
     return ips[0] || "unknown";
   }
 
@@ -199,9 +205,9 @@ export async function checkRateLimit(
   strategy: "ip" | "user" | "combined" = "ip"
 ): Promise<RateLimitResult> {
   const clientIP = getClientIP(request);
-  
+
   let identifier: string;
-  
+
   switch (strategy) {
     case "ip":
       identifier = `ip:${clientIP}`;
@@ -228,10 +234,14 @@ export async function checkRateLimit(
 export async function checkAuthRateLimit(
   request: NextRequest
 ): Promise<RateLimitResult> {
-  return checkRateLimit(request, {
-    max: 10,
-    windowMs: 60 * 1000, // 1 minute
-  }, "ip");
+  return checkRateLimit(
+    request,
+    {
+      max: 10,
+      windowMs: 60 * 1000, // 1 minute
+    },
+    "ip"
+  );
 }
 
 /**
@@ -240,10 +250,14 @@ export async function checkAuthRateLimit(
 export async function checkPaymentRateLimit(
   request: NextRequest
 ): Promise<RateLimitResult> {
-  return checkRateLimit(request, {
-    max: 30,
-    windowMs: 60 * 1000, // 1 minute
-  }, "combined");
+  return checkRateLimit(
+    request,
+    {
+      max: 30,
+      windowMs: 60 * 1000, // 1 minute
+    },
+    "combined"
+  );
 }
 
 /**
@@ -252,10 +266,14 @@ export async function checkPaymentRateLimit(
 export async function checkApiRateLimit(
   request: NextRequest
 ): Promise<RateLimitResult> {
-  return checkRateLimit(request, {
-    max: 100,
-    windowMs: 60 * 1000, // 1 minute
-  }, "ip");
+  return checkRateLimit(
+    request,
+    {
+      max: 100,
+      windowMs: 60 * 1000, // 1 minute
+    },
+    "ip"
+  );
 }
 
 /**
@@ -276,7 +294,9 @@ export async function checkUserRateLimit(
 /**
  * Rate limiting headers for responses
  */
-export function getRateLimitHeaders(result: RateLimitResult): Record<string, string> {
+export function getRateLimitHeaders(
+  result: RateLimitResult
+): Record<string, string> {
   return {
     "X-RateLimit-Limit": result.totalHits.toString(),
     "X-RateLimit-Remaining": result.remaining.toString(),
@@ -290,7 +310,7 @@ export function getRateLimitHeaders(result: RateLimitResult): Record<string, str
  */
 export function createRateLimitResponse(result: RateLimitResult): Response {
   const retryAfter = Math.ceil((result.resetTime - Date.now()) / 1000);
-  
+
   return new Response(
     JSON.stringify({
       error: "Rate limit exceeded",
@@ -318,7 +338,7 @@ export async function cleanupRateLimit(): Promise<void> {
       await redisClient.quit();
       redisClient = null;
     } catch (_error) {
-      // console.warn("Error closing Redis connection:", error);
+      console.warn("Error closing Redis connection:", _error);
     }
   }
   memoryStore.clear();

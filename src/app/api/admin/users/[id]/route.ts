@@ -1,22 +1,30 @@
 /**
  * Individual User Management API
- * 
+ *
  * Provides secure endpoints for individual user operations including
  * viewing, updating, and deactivating user accounts.
  * Requires ADMIN role authentication with comprehensive audit logging.
  */
 
-import { NextRequest } from "next/server";
-import { withPermission, createApiErrorResponse, getAuditContext } from "@/lib/auth/server-session";
-import { UserManagementService } from "@/lib/services/user-management.service";
+import {
+  createApiErrorResponse,
+  getAuditContext,
+  withPermission,
+} from "@/lib/auth/server-session";
 import { PERMISSIONS } from "@/lib/permissions";
+import { UserManagementService } from "@/lib/services/user-management.service";
+import { NextRequest } from "next/server";
 import { z } from "zod";
 
 /**
  * User update validation schema
  */
 const UpdateUserSchema = z.object({
-  name: z.string().min(1, "Name is required").max(100, "Name too long").optional(),
+  name: z
+    .string()
+    .min(1, "Name is required")
+    .max(100, "Name too long")
+    .optional(),
   email: z.string().email({ message: "Invalid email address" }).optional(),
   role: z.enum(["ADMIN", "SUPPORT", "CUSTOMER"]).optional(),
   isActive: z.boolean().optional(),
@@ -36,19 +44,16 @@ interface RouteContext {
 
 /**
  * GET /api/admin/users/[id]
- * 
+ *
  * Retrieve detailed information for a specific user.
  * Requires ADMIN role and USER_READ permission.
  */
-export async function GET(
-  request: NextRequest,
-  context: RouteContext
-) {
+export async function GET(request: NextRequest, context: RouteContext) {
   return withPermission(
     async (_req: NextRequest, session) => {
       try {
         const userId = context.params.id;
-        
+
         // Validate user ID format
         if (!userId || typeof userId !== "string" || userId.length < 10) {
           return createApiErrorResponse(400, "Invalid user ID");
@@ -70,10 +75,7 @@ export async function GET(
         }
 
         // Remove sensitive information from response
-        const {
-          stripeCustomerId: _stripeCustomerId,
-          ...safeUserData
-        } = user;
+        const { stripeCustomerId: _stripeCustomerId, ...safeUserData } = user;
 
         return Response.json({
           success: true,
@@ -83,10 +85,7 @@ export async function GET(
             timestamp: new Date().toISOString(),
           },
         });
-
       } catch (_error) {
-        // console.error("[API] Get user details error:", error);
-        
         if (_error instanceof Error) {
           if (_error.message.includes("permission")) {
             return createApiErrorResponse(403, _error.message);
@@ -95,7 +94,7 @@ export async function GET(
             return createApiErrorResponse(404, _error.message);
           }
         }
-        
+
         return createApiErrorResponse(500, "Failed to retrieve user details");
       }
     },
@@ -106,19 +105,16 @@ export async function GET(
 
 /**
  * PUT /api/admin/users/[id]
- * 
+ *
  * Update user information including role assignments.
  * Requires ADMIN role and USER_WRITE permission.
  */
-export async function PUT(
-  request: NextRequest,
-  context: RouteContext
-) {
+export async function PUT(request: NextRequest, context: RouteContext) {
   return withPermission(
     async (_req: NextRequest, session, auditData) => {
       try {
         const userId = context.params.id;
-        
+
         // Validate user ID format
         if (!userId || typeof userId !== "string" || userId.length < 10) {
           return createApiErrorResponse(400, "Invalid user ID");
@@ -126,24 +122,23 @@ export async function PUT(
 
         // Parse and validate request body
         const body = await request.json();
-        
+
         const validationResult = UpdateUserSchema.safeParse(body);
         if (!validationResult.success) {
           return createApiErrorResponse(
             400,
             "Invalid update data",
-            process.env.NODE_ENV === "development" ? validationResult._error.issues : undefined
+            process.env.NODE_ENV === "development"
+              ? validationResult._error.issues
+              : undefined
           );
         }
 
         const updateData = validationResult.data;
-        
+
         // Prevent self-role modification for security
         if (updateData.role && userId === session.user.id) {
-          return createApiErrorResponse(
-            403,
-            "Cannot modify your own role"
-          );
+          return createApiErrorResponse(403, "Cannot modify your own role");
         }
 
         // Prevent self-deactivation
@@ -161,13 +156,20 @@ export async function PUT(
 
         // Clean update data to match interface expectations
         const cleanUpdateData: Record<string, unknown> = {};
-        if (updateData.name !== undefined) cleanUpdateData.name = updateData.name;
-        if (updateData.email !== undefined) cleanUpdateData.email = updateData.email;
-        if (updateData.role !== undefined) cleanUpdateData.role = updateData.role;
-        if (updateData.isActive !== undefined) cleanUpdateData.isActive = updateData.isActive;
-        if (updateData.phone !== undefined && updateData.phone !== null) cleanUpdateData.phone = updateData.phone;
-        if (updateData.timezone !== undefined) cleanUpdateData.timezone = updateData.timezone;
-        if (updateData.preferredCurrency !== undefined) cleanUpdateData.preferredCurrency = updateData.preferredCurrency;
+        if (updateData.name !== undefined)
+          cleanUpdateData.name = updateData.name;
+        if (updateData.email !== undefined)
+          cleanUpdateData.email = updateData.email;
+        if (updateData.role !== undefined)
+          cleanUpdateData.role = updateData.role;
+        if (updateData.isActive !== undefined)
+          cleanUpdateData.isActive = updateData.isActive;
+        if (updateData.phone !== undefined && updateData.phone !== null)
+          cleanUpdateData.phone = updateData.phone;
+        if (updateData.timezone !== undefined)
+          cleanUpdateData.timezone = updateData.timezone;
+        if (updateData.preferredCurrency !== undefined)
+          cleanUpdateData.preferredCurrency = updateData.preferredCurrency;
 
         // Update user
         const updatedUser = await UserManagementService.updateUser(
@@ -177,10 +179,8 @@ export async function PUT(
         );
 
         // Remove sensitive information from response
-        const {
-          stripeCustomerId: _stripeCustomerId,
-          ...safeUserData
-        } = updatedUser;
+        const { stripeCustomerId: _stripeCustomerId, ...safeUserData } =
+          updatedUser;
 
         return Response.json({
           success: true,
@@ -191,10 +191,7 @@ export async function PUT(
             auditId: auditData?.auditId,
           },
         });
-
       } catch (_error) {
-        // console.error("[API] Update user error:", error);
-        
         if (_error instanceof Error) {
           if (_error.message.includes("permission")) {
             return createApiErrorResponse(403, _error.message);
@@ -209,7 +206,7 @@ export async function PUT(
             return createApiErrorResponse(403, _error.message);
           }
         }
-        
+
         return createApiErrorResponse(500, "Failed to update user");
       }
     },
@@ -220,19 +217,16 @@ export async function PUT(
 
 /**
  * DELETE /api/admin/users/[id]
- * 
+ *
  * Deactivate user account (soft delete for data integrity).
  * Requires ADMIN role and USER_DEACTIVATE permission.
  */
-export async function DELETE(
-  request: NextRequest,
-  context: RouteContext
-) {
+export async function DELETE(request: NextRequest, context: RouteContext) {
   return withPermission(
     async (_req: NextRequest, session, auditData) => {
       try {
         const userId = context.params.id;
-        
+
         // Validate user ID format
         if (!userId || typeof userId !== "string" || userId.length < 10) {
           return createApiErrorResponse(400, "Invalid user ID");
@@ -240,10 +234,7 @@ export async function DELETE(
 
         // Prevent self-deletion
         if (userId === session.user.id) {
-          return createApiErrorResponse(
-            403,
-            "Cannot delete your own account"
-          );
+          return createApiErrorResponse(403, "Cannot delete your own account");
         }
 
         const auditContext = {
@@ -258,10 +249,8 @@ export async function DELETE(
         );
 
         // Remove sensitive information from response
-        const {
-          stripeCustomerId: _stripeCustomerId,
-          ...safeUserData
-        } = deactivatedUser;
+        const { stripeCustomerId: _stripeCustomerId, ...safeUserData } =
+          deactivatedUser;
 
         return Response.json({
           success: true,
@@ -273,10 +262,7 @@ export async function DELETE(
             auditId: auditData?.auditId,
           },
         });
-
       } catch (_error) {
-        // console.error("[API] Deactivate user error:", error);
-        
         if (_error instanceof Error) {
           if (_error.message.includes("permission")) {
             return createApiErrorResponse(403, _error.message);
@@ -291,7 +277,7 @@ export async function DELETE(
             return createApiErrorResponse(403, _error.message);
           }
         }
-        
+
         return createApiErrorResponse(500, "Failed to deactivate user");
       }
     },
@@ -302,19 +288,16 @@ export async function DELETE(
 
 /**
  * PATCH /api/admin/users/[id]/activate
- * 
+ *
  * Reactivate a deactivated user account.
  * Requires ADMIN role and USER_ACTIVATE permission.
  */
-export async function PATCH(
-  request: NextRequest,
-  context: RouteContext
-) {
+export async function PATCH(request: NextRequest, context: RouteContext) {
   return withPermission(
     async (_req: NextRequest, session, auditData) => {
       try {
         const userId = context.params.id;
-        
+
         // Validate user ID format
         if (!userId || typeof userId !== "string" || userId.length < 10) {
           return createApiErrorResponse(400, "Invalid user ID");
@@ -323,9 +306,12 @@ export async function PATCH(
         // Check if this is an activation request
         const url = new URL(request.url);
         const action = url.searchParams.get("action");
-        
+
         if (action !== "activate") {
-          return createApiErrorResponse(400, "Invalid action. Use ?action=activate");
+          return createApiErrorResponse(
+            400,
+            "Invalid action. Use ?action=activate"
+          );
         }
 
         const auditContext = {
@@ -340,10 +326,8 @@ export async function PATCH(
         );
 
         // Remove sensitive information from response
-        const {
-          stripeCustomerId: _stripeCustomerId,
-          ...safeUserData
-        } = activatedUser;
+        const { stripeCustomerId: _stripeCustomerId, ...safeUserData } =
+          activatedUser;
 
         return Response.json({
           success: true,
@@ -355,10 +339,7 @@ export async function PATCH(
             auditId: auditData?.auditId,
           },
         });
-
       } catch (_error) {
-        // console.error("[API] Activate user error:", error);
-        
         if (_error instanceof Error) {
           if (_error.message.includes("permission")) {
             return createApiErrorResponse(403, _error.message);
@@ -370,7 +351,7 @@ export async function PATCH(
             return createApiErrorResponse(409, _error.message);
           }
         }
-        
+
         return createApiErrorResponse(500, "Failed to activate user");
       }
     },

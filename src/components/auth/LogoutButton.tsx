@@ -1,12 +1,10 @@
 "use client";
 
-import React, { useState } from "react";
+import { Loader2, LogOut } from "lucide-react";
 import { useRouter } from "next/navigation";
-import { LogOut, Loader2 } from "lucide-react";
+import React, { useState } from "react";
 import { toast } from "sonner";
 
-import { signOut, useSession } from "@/lib/auth/client";
-import { Button } from "@/components/ui/button";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -18,9 +16,17 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
+import { Button } from "@/components/ui/button";
+import { signOut, useSession } from "@/lib/auth/client";
 
 interface LogoutButtonProps {
-  variant?: "default" | "destructive" | "outline" | "secondary" | "ghost" | "link";
+  variant?:
+    | "default"
+    | "destructive"
+    | "outline"
+    | "secondary"
+    | "ghost"
+    | "link";
   size?: "default" | "sm" | "lg" | "icon";
   showIcon?: boolean;
   showConfirmDialog?: boolean;
@@ -55,7 +61,7 @@ export function LogoutButton({
 
       // Success
       toast.success("You have been signed out successfully.");
-      
+
       if (onLogout) {
         onLogout();
       }
@@ -63,8 +69,7 @@ export function LogoutButton({
       // Redirect to login page
       router.push("/login");
     } catch (_error) {
-      // eslint-disable-next-line no-console
-      // console.error("Logout error:", error);
+      console.error("Logout error:", _error);
       toast.error("An unexpected error occurred during sign out.");
     } finally {
       setIsLoading(false);
@@ -105,7 +110,8 @@ export function LogoutButton({
           <AlertDialogHeader>
             <AlertDialogTitle>Sign out of your account?</AlertDialogTitle>
             <AlertDialogDescription>
-              You will be redirected to the login page and will need to sign in again to access your account.
+              You will be redirected to the login page and will need to sign in
+              again to access your account.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
@@ -153,8 +159,7 @@ export function useLogout() {
       router.push("/login");
       return true;
     } catch (_error) {
-      // eslint-disable-next-line no-console
-      // console.error("Logout error:", error);
+      console.error("Logout error:", _error);
       toast.error("An unexpected error occurred during sign out.");
       return false;
     } finally {

@@ -1,18 +1,20 @@
-'use client';
+"use client";
 
-import { useEffect, useState } from 'react';
-import { useSearchParams } from 'next/navigation';
+import { useSearchParams } from "next/navigation";
+import { useEffect, useState } from "react";
 
-import { ProductForm } from '@/components/admin/products/ProductForm';
-import type { CreateProduct } from '@/lib/validations/base/product';
+import { ProductForm } from "@/components/admin/products/ProductForm";
+import type { CreateProduct } from "@/lib/validations/base/product";
 
 export default function CreateProductPage() {
   const searchParams = useSearchParams();
-  const [initialData, setInitialData] = useState<Partial<CreateProduct> | null>(null);
+  const [initialData, setInitialData] = useState<Partial<CreateProduct> | null>(
+    null
+  );
 
   // Check for duplicate data in search params
   useEffect(() => {
-    const duplicateData = searchParams.get('duplicate');
+    const duplicateData = searchParams.get("duplicate");
     if (duplicateData) {
       try {
         const parsedData = JSON.parse(duplicateData);
@@ -25,19 +27,13 @@ export default function CreateProductPage() {
           stripePriceId: _stripePriceId,
           ...cleanData
         } = parsedData;
-        
+
         setInitialData(cleanData);
       } catch (_error) {
-        // eslint-disable-next-line no-console
-        // console.error('Error parsing duplicate data:', error);
+        console.error("Error parsing duplicate data:", _error);
       }
     }
   }, [searchParams]);
 
-  return (
-    <ProductForm 
-      mode="create"
-      product={initialData as CreateProduct}
-    />
-  );
+  return <ProductForm mode="create" product={initialData as CreateProduct} />;
 }

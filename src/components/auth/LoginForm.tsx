@@ -1,16 +1,13 @@
 "use client";
 
-import { useState } from "react";
-import { useRouter, useSearchParams } from "next/navigation";
-import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Eye, EyeOff, Loader2 } from "lucide-react";
+import { useRouter, useSearchParams } from "next/navigation";
+import { useState } from "react";
+import { useForm } from "react-hook-form";
 import { toast } from "sonner";
 
-import { loginCredentialsSchema, type LoginCredentials } from "@/lib/validations/base/auth";
-import { signIn } from "@/lib/auth/client";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import { Checkbox } from "@/components/ui/checkbox";
 import {
   Form,
@@ -20,6 +17,12 @@ import {
   FormLabel,
   FormMessage,
 } from "@/components/ui/form";
+import { Input } from "@/components/ui/input";
+import { signIn } from "@/lib/auth/client";
+import {
+  loginCredentialsSchema,
+  type LoginCredentials,
+} from "@/lib/validations/base/auth";
 
 interface LoginFormProps {
   onSuccess?: (email: string) => void;
@@ -60,48 +63,59 @@ export function LoginForm({ onSuccess }: LoginFormProps) {
         switch (response._error.message) {
           case "Invalid email or password":
           case "Invalid credentials":
-            toast.error("Invalid email or password. Please check your credentials and try again.");
+            toast.error(
+              "Invalid email or password. Please check your credentials and try again."
+            );
             break;
           case "Email not verified":
             toast.error("Please verify your email address before signing in.", {
               action: {
                 label: "Resend",
-                onClick: () => router.push(`/verify-email?email=${encodeURIComponent(data.email)}`),
+                onClick: () =>
+                  router.push(
+                    `/verify-email?email=${encodeURIComponent(data.email)}`
+                  ),
               },
             });
             break;
           case "Account disabled":
           case "Account suspended":
-            toast.error("Your account has been disabled. Please contact support for assistance.");
+            toast.error(
+              "Your account has been disabled. Please contact support for assistance."
+            );
             break;
           case "Too many attempts":
           case "Rate limited":
-            toast.error("Too many login attempts. Please wait a few minutes before trying again.");
+            toast.error(
+              "Too many login attempts. Please wait a few minutes before trying again."
+            );
             break;
           case "Two factor required":
             toast.error("Two-factor authentication required.");
             // TODO: Redirect to 2FA page when implemented
             break;
           default:
-            toast.error(response._error.message || "Sign in failed. Please try again.");
+            toast.error(
+              response._error.message || "Sign in failed. Please try again."
+            );
         }
         return;
       }
 
       // Success
       toast.success("Welcome back! You have been signed in successfully.");
-      
+
       if (onSuccess) {
         onSuccess(data.email);
       } else {
         // Validate redirect URL for security
-        const isValidRedirect = returnTo.startsWith("/") && !returnTo.startsWith("//");
+        const isValidRedirect =
+          returnTo.startsWith("/") && !returnTo.startsWith("//");
         const redirectUrl = isValidRedirect ? returnTo : "/dashboard";
         router.push(redirectUrl);
       }
     } catch (_error) {
-      // eslint-disable-next-line no-console
-      // console.error("Sign in error:", error);
+      console.error("Sign in error:", _error);
       toast.error("An unexpected error occurred. Please try again.");
     } finally {
       setIsLoading(false);
@@ -159,7 +173,7 @@ export function LoginForm({ onSuccess }: LoginFormProps) {
                     type="button"
                     variant="ghost"
                     size="sm"
-                    className="absolute right-0 top-0 h-full px-3 hover:bg-transparent"
+                    className="absolute top-0 right-0 h-full px-3 hover:bg-transparent"
                     onClick={() => setShowPassword(!showPassword)}
                     disabled={isLoading}
                   >
@@ -181,7 +195,7 @@ export function LoginForm({ onSuccess }: LoginFormProps) {
             control={form.control}
             name="rememberMe"
             render={({ field }) => (
-              <FormItem className="flex flex-row items-start space-x-3 space-y-0">
+              <FormItem className="flex flex-row items-start space-y-0 space-x-3">
                 <FormControl>
                   <Checkbox
                     checked={field.value}
@@ -230,7 +244,7 @@ export function LoginForm({ onSuccess }: LoginFormProps) {
             Don&apos;t have an account?{" "}
             <a
               href="/register"
-              className="text-blue-600 hover:text-blue-500 font-medium underline"
+              className="font-medium text-blue-600 underline hover:text-blue-500"
             >
               Create account
             </a>

@@ -1,21 +1,21 @@
-'use client';
+"use client";
 
-import { useEffect, useState } from 'react';
-import { useParams } from 'next/navigation';
-import { toast } from 'sonner';
+import { useParams } from "next/navigation";
+import { useEffect, useState } from "react";
+import { toast } from "sonner";
 
-import { ProductForm } from '@/components/admin/products/ProductForm';
-import { Card, CardContent } from '@/components/ui/card';
-import { Skeleton } from '@/components/ui/skeleton';
-import { Alert, AlertDescription } from '@/components/ui/alert';
-import { Button } from '@/components/ui/button';
+import { ProductForm } from "@/components/admin/products/ProductForm";
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent } from "@/components/ui/card";
+import { Skeleton } from "@/components/ui/skeleton";
 
-import type { Product } from '@/lib/validations/base/product';
+import type { Product } from "@/lib/validations/base/product";
 
 export default function EditProductPage() {
   const params = useParams();
   const productId = params.id as string;
-  
+
   const [product, setProduct] = useState<Product | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -27,19 +27,19 @@ export default function EditProductPage() {
       setError(null);
 
       const response = await fetch(`/api/products/${productId}`);
-      
+
       if (!response.ok) {
         if (response.status === 404) {
-          throw new Error('Product not found');
+          throw new Error("Product not found");
         }
-        throw new Error('Failed to fetch product');
+        throw new Error("Failed to fetch product");
       }
 
       const data = await response.json();
       setProduct(data.product);
     } catch (_error) {
-      // console.error('Error fetching product:', error);
-      const errorMessage = error instanceof Error ? _error.message : 'Failed to fetch product';
+      const errorMessage =
+        _error instanceof Error ? _error.message : "Failed to fetch product";
       setError(errorMessage);
       toast.error(errorMessage);
     } finally {
@@ -64,7 +64,7 @@ export default function EditProductPage() {
             <Skeleton className="h-4 w-64" />
           </div>
         </div>
-        
+
         <div className="space-y-4">
           {Array.from({ length: 3 }).map((_, i) => (
             <Card key={i}>
@@ -102,15 +102,11 @@ export default function EditProductPage() {
         </div>
 
         <Alert variant="destructive">
-          <AlertDescription>
-            {error}
-          </AlertDescription>
+          <AlertDescription>{error}</AlertDescription>
         </Alert>
 
         <div className="flex gap-2">
-          <Button onClick={fetchProduct}>
-            Try Again
-          </Button>
+          <Button onClick={fetchProduct}>Try Again</Button>
           <Button variant="outline" onClick={() => window.history.back()}>
             Go Back
           </Button>
@@ -128,7 +124,9 @@ export default function EditProductPage() {
             ← Back
           </Button>
           <div>
-            <h1 className="text-3xl font-bold tracking-tight">Product Not Found</h1>
+            <h1 className="text-3xl font-bold tracking-tight">
+              Product Not Found
+            </h1>
             <p className="text-muted-foreground">
               The requested product could not be found
             </p>
@@ -137,7 +135,8 @@ export default function EditProductPage() {
 
         <Alert>
           <AlertDescription>
-            The product you&apos;re looking for doesn&apos;t exist or may have been deleted.
+            The product you&apos;re looking for doesn&apos;t exist or may have
+            been deleted.
           </AlertDescription>
         </Alert>
 
@@ -148,10 +147,5 @@ export default function EditProductPage() {
     );
   }
 
-  return (
-    <ProductForm 
-      mode="edit"
-      product={product}
-    />
-  );
+  return <ProductForm mode="edit" product={product} />;
 }

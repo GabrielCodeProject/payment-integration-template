@@ -1,12 +1,12 @@
 "use client";
 
-import { useState, useEffect, useMemo } from "react";
+import { Download, Filter, MoreHorizontal, Plus, Search } from "lucide-react";
 import { useRouter, useSearchParams } from "next/navigation";
-import { Plus, Search, Filter, Download, MoreHorizontal } from "lucide-react";
+import { useEffect, useMemo, useState } from "react";
 import { toast } from "sonner";
 
+import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import {
   Card,
   CardContent,
@@ -14,33 +14,33 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import { Input } from "@/components/ui/input";
 
-import { ProductTable } from "@/components/admin/products/ProductTable";
 import { ProductFilters } from "@/components/admin/products/ProductFilters";
 import { ProductStats } from "@/components/admin/products/ProductStats";
+import { ProductTable } from "@/components/admin/products/ProductTable";
 
+import {
+  enhancedFetch,
+  ErrorSeverity,
+  ErrorType,
+  logError,
+  parseError,
+  retryOperation,
+  type EnhancedError,
+} from "@/lib/error-handling";
+import { createAPIHeaders } from "@/lib/utils";
 import type {
   Product,
   ProductFilter,
   ProductSort,
 } from "@/lib/validations/base/product";
-import { createAPIHeaders } from "@/lib/utils";
-import {
-  parseError,
-  enhancedFetch,
-  retryOperation,
-  logError,
-  type EnhancedError,
-  ErrorType,
-  ErrorSeverity,
-} from "@/lib/error-handling";
 
 interface ProductsData {
   products: Product[];
@@ -403,8 +403,7 @@ export default function AdminProductsPage() {
       const data = await response.json();
       setStats(data.stats);
     } catch (_error) {
-      // eslint-disable-next-line no-console
-      // console.error("Error fetching product stats:", error);
+      console.error("Error fetching product stats:", _error);
     }
   };
 

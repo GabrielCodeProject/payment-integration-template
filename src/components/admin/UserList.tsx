@@ -1,27 +1,41 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import { Input } from "@/components/ui/input";
+import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Pagination, PaginationContent, PaginationItem, PaginationLink, PaginationNext, PaginationPrevious } from "@/components/ui/pagination";
+import { Input } from "@/components/ui/input";
+import {
+  Pagination,
+  PaginationContent,
+  PaginationItem,
+  PaginationLink,
+  PaginationNext,
+  PaginationPrevious,
+} from "@/components/ui/pagination";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { Skeleton } from "@/components/ui/skeleton";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
+import { PERMISSIONS } from "@/lib/permissions";
+import type { UserRole } from "@prisma/client";
+import { formatDistanceToNow } from "date-fns";
+import { Eye, RefreshCcw, Search, UserCheck, UserX } from "lucide-react";
+import { useEffect, useState } from "react";
+import { PermissionGuard } from "./PermissionGuard";
 import { RoleBadge } from "./RoleBadge";
 import { UserDetailModal } from "./UserDetailModal";
-import { PermissionGuard } from "./PermissionGuard";
-import { PERMISSIONS } from "@/lib/permissions";
-import {
-  Search,
-  Eye,
-  UserX,
-  UserCheck,
-  RefreshCcw,
-} from "lucide-react";
-import { formatDistanceToNow } from "date-fns";
-import type { UserRole } from "@prisma/client";
 
 interface User {
   id: string;
@@ -54,7 +68,7 @@ interface PaginationInfo {
 
 /**
  * UserList Component
- * 
+ *
  * Comprehensive user management interface with pagination, search, and filtering.
  * Integrates with the admin API for user data management.
  */
@@ -69,16 +83,24 @@ export function UserList({
   const [pagination, setPagination] = useState<PaginationInfo | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  
+
   // Filters and search
   const [searchTerm, setSearchTerm] = useState(initialSearch);
-  const [roleFilter, setRoleFilter] = useState<UserRole | "all">(initialRole || "all");
-  const [statusFilter, setStatusFilter] = useState<"all" | "active" | "inactive">(
-    initialIsActive !== undefined ? (initialIsActive ? "active" : "inactive") : "all"
+  const [roleFilter, setRoleFilter] = useState<UserRole | "all">(
+    initialRole || "all"
+  );
+  const [statusFilter, setStatusFilter] = useState<
+    "all" | "active" | "inactive"
+  >(
+    initialIsActive !== undefined
+      ? initialIsActive
+        ? "active"
+        : "inactive"
+      : "all"
   );
   const [currentPage, setCurrentPage] = useState(initialPage);
   const [itemsPerPage, setItemsPerPage] = useState(initialLimit);
-  
+
   // UI state
   const [selectedUser, setSelectedUser] = useState<User | null>(null);
   const [showUserModal, setShowUserModal] = useState(false);
@@ -104,13 +126,13 @@ export function UserList({
       }
 
       const response = await fetch(`/api/admin/users?${params}`);
-      
+
       if (!response.ok) {
         throw new Error(`Failed to fetch users: ${response.status}`);
       }
 
       const data = await response.json();
-      
+
       if (data.success) {
         setUsers(data.data);
         setPagination(data.pagination);
@@ -118,16 +140,19 @@ export function UserList({
         throw new Error(data.error || "Failed to fetch users");
       }
     } catch (err) {
-      // console.error("Error fetching users:", err);
+      console.error("Error fetching users:", err);
       setError(err instanceof Error ? err.message : "Failed to load users");
     } finally {
       setIsLoading(false);
     }
   };
 
-  const handleUserAction = async (userId: string, action: "activate" | "deactivate" | "view") => {
+  const handleUserAction = async (
+    userId: string,
+    action: "activate" | "deactivate" | "view"
+  ) => {
     if (action === "view") {
-      const user = users.find(u => u.id === userId);
+      const user = users.find((u) => u.id === userId);
       if (user) {
         setSelectedUser(user);
         setShowUserModal(true);
@@ -136,14 +161,15 @@ export function UserList({
     }
 
     try {
-      const endpoint = action === "activate" 
-        ? `/api/admin/users/${userId}?action=activate`
-        : `/api/admin/users/${userId}`;
-      
+      const endpoint =
+        action === "activate"
+          ? `/api/admin/users/${userId}?action=activate`
+          : `/api/admin/users/${userId}`;
+
       const method = action === "activate" ? "PATCH" : "DELETE";
-      
+
       const response = await fetch(endpoint, { method });
-      
+
       if (!response.ok) {
         throw new Error(`Failed to ${action} user`);
       }
@@ -151,7 +177,7 @@ export function UserList({
       // Refresh the user list
       await fetchUsers();
     } catch (err) {
-      // console.error(`Error ${action}ing user:`, err);
+      console.error(`Error ${action}ing user:`, err);
       setError(err instanceof Error ? err.message : `Failed to ${action} user`);
     }
   };
@@ -175,8 +201,14 @@ export function UserList({
 
     const pages = [];
     const maxVisiblePages = 5;
-    const startPage = Math.max(1, currentPage - Math.floor(maxVisiblePages / 2));
-    const endPage = Math.min(pagination.totalPages, startPage + maxVisiblePages - 1);
+    const startPage = Math.max(
+      1,
+      currentPage - Math.floor(maxVisiblePages / 2)
+    );
+    const endPage = Math.min(
+      pagination.totalPages,
+      startPage + maxVisiblePages - 1
+    );
 
     for (let i = startPage; i <= endPage; i++) {
       pages.push(i);
@@ -194,10 +226,14 @@ export function UserList({
                   setCurrentPage(currentPage - 1);
                 }
               }}
-              className={!pagination.hasPreviousPage ? "pointer-events-none opacity-50" : ""}
+              className={
+                !pagination.hasPreviousPage
+                  ? "pointer-events-none opacity-50"
+                  : ""
+              }
             />
           </PaginationItem>
-          
+
           {pages.map((page) => (
             <PaginationItem key={page}>
               <PaginationLink
@@ -212,7 +248,7 @@ export function UserList({
               </PaginationLink>
             </PaginationItem>
           ))}
-          
+
           <PaginationItem>
             <PaginationNext
               href="#"
@@ -222,7 +258,9 @@ export function UserList({
                   setCurrentPage(currentPage + 1);
                 }
               }}
-              className={!pagination.hasNextPage ? "pointer-events-none opacity-50" : ""}
+              className={
+                !pagination.hasNextPage ? "pointer-events-none opacity-50" : ""
+              }
             />
           </PaginationItem>
         </PaginationContent>
@@ -235,24 +273,26 @@ export function UserList({
       <CardHeader>
         <div className="flex items-center justify-between">
           <CardTitle>User Management</CardTitle>
-          <Button 
-            variant="outline" 
-            size="sm" 
+          <Button
+            variant="outline"
+            size="sm"
             onClick={fetchUsers}
             disabled={isLoading}
           >
-            <RefreshCcw className={`size-4 mr-2 ${isLoading ? 'animate-spin' : ''}`} />
+            <RefreshCcw
+              className={`mr-2 size-4 ${isLoading ? "animate-spin" : ""}`}
+            />
             Refresh
           </Button>
         </div>
       </CardHeader>
-      
+
       <CardContent>
         {/* Filters and Search */}
-        <div className="flex flex-col sm:flex-row gap-4 mb-6">
+        <div className="mb-6 flex flex-col gap-4 sm:flex-row">
           <div className="flex-1">
             <div className="relative">
-              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 size-4 text-muted-foreground" />
+              <Search className="text-muted-foreground absolute top-1/2 left-3 size-4 -translate-y-1/2 transform" />
               <Input
                 placeholder="Search users by name or email..."
                 value={searchTerm}
@@ -261,9 +301,12 @@ export function UserList({
               />
             </div>
           </div>
-          
+
           <div className="flex gap-2">
-            <Select value={roleFilter} onValueChange={(value) => handleFilterChange("role", value)}>
+            <Select
+              value={roleFilter}
+              onValueChange={(value) => handleFilterChange("role", value)}
+            >
               <SelectTrigger className="w-32">
                 <SelectValue placeholder="Role" />
               </SelectTrigger>
@@ -274,8 +317,11 @@ export function UserList({
                 <SelectItem value="CUSTOMER">Customer</SelectItem>
               </SelectContent>
             </Select>
-            
-            <Select value={statusFilter} onValueChange={(value) => handleFilterChange("status", value)}>
+
+            <Select
+              value={statusFilter}
+              onValueChange={(value) => handleFilterChange("status", value)}
+            >
               <SelectTrigger className="w-32">
                 <SelectValue placeholder="Status" />
               </SelectTrigger>
@@ -290,11 +336,11 @@ export function UserList({
 
         {/* Error State */}
         {error && (
-          <div className="bg-destructive/10 border border-destructive/20 rounded-lg p-4 mb-4">
+          <div className="bg-destructive/10 border-destructive/20 mb-4 rounded-lg border p-4">
             <p className="text-destructive text-sm">{error}</p>
-            <Button 
-              variant="outline" 
-              size="sm" 
+            <Button
+              variant="outline"
+              size="sm"
               onClick={fetchUsers}
               className="mt-2"
             >
@@ -304,7 +350,7 @@ export function UserList({
         )}
 
         {/* Users Table */}
-        <div className="border rounded-lg">
+        <div className="rounded-lg border">
           <Table>
             <TableHeader>
               <TableRow>
@@ -330,24 +376,33 @@ export function UserList({
                         </div>
                       </div>
                     </TableCell>
-                    <TableCell><Skeleton className="h-6 w-16" /></TableCell>
-                    <TableCell><Skeleton className="h-6 w-16" /></TableCell>
-                    <TableCell><Skeleton className="h-4 w-20" /></TableCell>
-                    <TableCell><Skeleton className="h-4 w-20" /></TableCell>
+                    <TableCell>
+                      <Skeleton className="h-6 w-16" />
+                    </TableCell>
+                    <TableCell>
+                      <Skeleton className="h-6 w-16" />
+                    </TableCell>
+                    <TableCell>
+                      <Skeleton className="h-4 w-20" />
+                    </TableCell>
+                    <TableCell>
+                      <Skeleton className="h-4 w-20" />
+                    </TableCell>
                     <TableCell className="text-right">
-                      <Skeleton className="h-8 w-24 ml-auto" />
+                      <Skeleton className="ml-auto h-8 w-24" />
                     </TableCell>
                   </TableRow>
                 ))
               ) : users.length === 0 ? (
                 // Empty state
                 <TableRow>
-                  <TableCell colSpan={6} className="text-center py-8">
+                  <TableCell colSpan={6} className="py-8 text-center">
                     <div className="text-muted-foreground">
-                      {searchTerm || roleFilter !== "all" || statusFilter !== "all" 
+                      {searchTerm ||
+                      roleFilter !== "all" ||
+                      statusFilter !== "all"
                         ? "No users match your filters"
-                        : "No users found"
-                      }
+                        : "No users found"}
                     </div>
                   </TableCell>
                 </TableRow>
@@ -357,25 +412,31 @@ export function UserList({
                   <TableRow key={user.id}>
                     <TableCell>
                       <div className="flex items-center gap-3">
-                        <div className="size-8 bg-primary/10 rounded-full flex items-center justify-center">
-                          <span className="text-xs font-medium text-primary">
+                        <div className="bg-primary/10 flex size-8 items-center justify-center rounded-full">
+                          <span className="text-primary text-xs font-medium">
                             {(user.name?.[0] || user.email[0]).toUpperCase()}
                           </span>
                         </div>
                         <div>
-                          <div className="font-medium">{user.name || "No name"}</div>
-                          <div className="text-sm text-muted-foreground">{user.email}</div>
+                          <div className="font-medium">
+                            {user.name || "No name"}
+                          </div>
+                          <div className="text-muted-foreground text-sm">
+                            {user.email}
+                          </div>
                         </div>
                       </div>
                     </TableCell>
-                    
+
                     <TableCell>
                       <RoleBadge role={user.role} size="sm" />
                     </TableCell>
-                    
+
                     <TableCell>
                       <div className="flex items-center gap-2">
-                        <Badge variant={user.isActive ? "default" : "secondary"}>
+                        <Badge
+                          variant={user.isActive ? "default" : "secondary"}
+                        >
                           {user.isActive ? "Active" : "Inactive"}
                         </Badge>
                         {!user.emailVerified && (
@@ -385,18 +446,21 @@ export function UserList({
                         )}
                       </div>
                     </TableCell>
-                    
-                    <TableCell className="text-sm text-muted-foreground">
-                      {formatDistanceToNow(new Date(user.createdAt), { addSuffix: true })}
+
+                    <TableCell className="text-muted-foreground text-sm">
+                      {formatDistanceToNow(new Date(user.createdAt), {
+                        addSuffix: true,
+                      })}
                     </TableCell>
-                    
-                    <TableCell className="text-sm text-muted-foreground">
-                      {user.lastLoginAt 
-                        ? formatDistanceToNow(new Date(user.lastLoginAt), { addSuffix: true })
-                        : "Never"
-                      }
+
+                    <TableCell className="text-muted-foreground text-sm">
+                      {user.lastLoginAt
+                        ? formatDistanceToNow(new Date(user.lastLoginAt), {
+                            addSuffix: true,
+                          })
+                        : "Never"}
                     </TableCell>
-                    
+
                     <TableCell className="text-right">
                       <div className="flex items-center justify-end gap-2">
                         <Button
@@ -406,13 +470,15 @@ export function UserList({
                         >
                           <Eye className="size-4" />
                         </Button>
-                        
+
                         <PermissionGuard permission={PERMISSIONS.USER_ACTIVATE}>
                           {user.isActive ? (
                             <Button
                               variant="ghost"
                               size="sm"
-                              onClick={() => handleUserAction(user.id, "deactivate")}
+                              onClick={() =>
+                                handleUserAction(user.id, "deactivate")
+                              }
                             >
                               <UserX className="size-4" />
                             </Button>
@@ -420,7 +486,9 @@ export function UserList({
                             <Button
                               variant="ghost"
                               size="sm"
-                              onClick={() => handleUserAction(user.id, "activate")}
+                              onClick={() =>
+                                handleUserAction(user.id, "activate")
+                              }
                             >
                               <UserCheck className="size-4" />
                             </Button>
@@ -440,20 +508,22 @@ export function UserList({
 
         {/* Results Summary */}
         {pagination && !isLoading && (
-          <div className="flex items-center justify-between text-sm text-muted-foreground mt-4">
+          <div className="text-muted-foreground mt-4 flex items-center justify-between text-sm">
             <div>
-              Showing {((currentPage - 1) * itemsPerPage) + 1} to {Math.min(currentPage * itemsPerPage, pagination.totalItems)} of {pagination.totalItems} users
+              Showing {(currentPage - 1) * itemsPerPage + 1} to{" "}
+              {Math.min(currentPage * itemsPerPage, pagination.totalItems)} of{" "}
+              {pagination.totalItems} users
             </div>
             <div className="flex items-center gap-2">
               <span>Items per page:</span>
-              <Select 
-                value={itemsPerPage.toString()} 
+              <Select
+                value={itemsPerPage.toString()}
                 onValueChange={(value) => {
                   setItemsPerPage(Number(value));
                   setCurrentPage(1);
                 }}
               >
-                <SelectTrigger className="w-20 h-8">
+                <SelectTrigger className="h-8 w-20">
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>

@@ -1,151 +1,154 @@
 /**
  * Roles Information API
- * 
+ *
  * Provides secure endpoints for role management information including
  * available roles, permissions, and role distribution statistics.
  * Requires ADMIN role authentication with audit logging.
  */
 
-import { NextRequest } from "next/server";
-import { withPermission, createApiErrorResponse, getAuditContext } from "@/lib/auth/server-session";
-import { 
-  PERMISSIONS, 
-  ROLE_PERMISSIONS, 
-  ROLE_HIERARCHY, 
-  PERMISSION_GROUPS, 
-  ROLES,
-  getRolePermissions,
-  getMinimumRoleForPermission,
-  canManageRole
-} from "@/lib/permissions";
+import {
+  createApiErrorResponse,
+  getAuditContext,
+  withPermission,
+} from "@/lib/auth/server-session";
 import { db } from "@/lib/db";
+import {
+  PERMISSIONS,
+  PERMISSION_GROUPS,
+  ROLES,
+  ROLE_HIERARCHY,
+  ROLE_PERMISSIONS,
+  canManageRole,
+  getMinimumRoleForPermission,
+  getRolePermissions,
+} from "@/lib/permissions";
 import type { UserRole } from "@prisma/client";
+import { NextRequest } from "next/server";
 
 /**
  * GET /api/admin/roles
- * 
+ *
  * Retrieve comprehensive role information including permissions and statistics.
  * Requires ADMIN role and ROLE_VIEW permission.
  */
-export const GET = withPermission(
-  async (request: NextRequest, session) => {
-    try {
-      const auditContext = getAuditContext(request, session);
-      
-      // Get role distribution statistics
-      const roleStats = await db.user.groupBy({
-        by: ["role"],
-        _count: { role: true },
-        where: { isActive: true }, // Only count active users
-      });
+export const GET = withPermission(async (request: NextRequest, session) => {
+  try {
+    const auditContext = getAuditContext(request, session);
 
-      // Convert to more readable format
-      const roleDistribution: Record<UserRole, number> = {
-        ADMIN: 0,
-        SUPPORT: 0,
-        CUSTOMER: 0,
+    // Get role distribution statistics
+    const roleStats = await db.user.groupBy({
+      by: ["role"],
+      _count: { role: true },
+      where: { isActive: true }, // Only count active users
+    });
+
+    // Convert to more readable format
+    const roleDistribution: Record<UserRole, number> = {
+      ADMIN: 0,
+      SUPPORT: 0,
+      CUSTOMER: 0,
+    };
+
+    roleStats.forEach((stat) => {
+      roleDistribution[stat.role] = stat._count.role;
+    });
+
+    // Get total user count for percentages
+    const totalActiveUsers = await db.user.count({
+      where: { isActive: true },
+    });
+
+    // Build comprehensive role information
+    const rolesInfo = Object.entries(ROLES).map(([roleName, roleValue]) => {
+      const permissions = getRolePermissions(roleValue);
+      const userCount = roleDistribution[roleValue];
+      const percentage =
+        totalActiveUsers > 0 ? (userCount / totalActiveUsers) * 100 : 0;
+
+      return {
+        name: roleName,
+        value: roleValue,
+        description: getRoleDescription(roleValue),
+        permissions: permissions,
+        permissionCount: permissions.length,
+        hierarchy: ROLE_HIERARCHY[roleValue],
+        userCount,
+        percentage: Math.round(percentage * 100) / 100,
+        canManage: Object.values(ROLES).filter((targetRole) =>
+          canManageRole(session.user.role as UserRole, targetRole)
+        ),
       };
+    });
 
-      roleStats.forEach((stat) => {
-        roleDistribution[stat.role] = stat._count.role;
-      });
-
-      // Get total user count for percentages
-      const totalActiveUsers = await db.user.count({
-        where: { isActive: true },
-      });
-
-      // Build comprehensive role information
-      const rolesInfo = Object.entries(ROLES).map(([roleName, roleValue]) => {
-        const permissions = getRolePermissions(roleValue);
-        const userCount = roleDistribution[roleValue];
-        const percentage = totalActiveUsers > 0 ? (userCount / totalActiveUsers) * 100 : 0;
-        
-        return {
-          name: roleName,
-          value: roleValue,
-          description: getRoleDescription(roleValue),
-          permissions: permissions,
-          permissionCount: permissions.length,
-          hierarchy: ROLE_HIERARCHY[roleValue],
-          userCount,
-          percentage: Math.round(percentage * 100) / 100,
-          canManage: Object.values(ROLES).filter(targetRole => 
-            canManageRole(session.user.role as UserRole, targetRole)
-          ),
-        };
-      });
-
-      // Build permission information grouped by category
-      const permissionInfo = Object.entries(PERMISSION_GROUPS).map(([groupName, permissions]) => ({
+    // Build permission information grouped by category
+    const permissionInfo = Object.entries(PERMISSION_GROUPS).map(
+      ([groupName, permissions]) => ({
         group: groupName,
-        permissions: permissions.map(permission => ({
+        permissions: permissions.map((permission) => ({
           name: permission,
           description: getPermissionDescription(permission),
           minimumRole: getMinimumRoleForPermission(permission),
-          rolesWithAccess: Object.values(ROLES).filter(role => 
+          rolesWithAccess: Object.values(ROLES).filter((role) =>
             getRolePermissions(role).includes(permission)
           ),
         })),
-      }));
+      })
+    );
 
-      // Role transition matrix (what roles can assign what roles)
-      const roleTransitionMatrix = Object.values(ROLES).map(assignerRole => ({
-        assignerRole,
-        canAssign: Object.values(ROLES).filter(targetRole => 
-          canManageRole(assignerRole, targetRole)
-        ),
-      }));
+    // Role transition matrix (what roles can assign what roles)
+    const roleTransitionMatrix = Object.values(ROLES).map((assignerRole) => ({
+      assignerRole,
+      canAssign: Object.values(ROLES).filter((targetRole) =>
+        canManageRole(assignerRole, targetRole)
+      ),
+    }));
 
-      // Log audit event
-      await logRoleViewEvent(auditContext);
+    // Log audit event
+    await logRoleViewEvent(auditContext);
 
-      return Response.json({
-        success: true,
-        data: {
-          roles: rolesInfo,
-          permissions: permissionInfo,
-          statistics: {
-            totalActiveUsers,
-            roleDistribution,
-            roleTransitionMatrix,
-          },
-          meta: {
-            lastUpdated: new Date().toISOString(),
-            permissionSystem: "RBAC",
-            version: "1.0",
-          },
+    return Response.json({
+      success: true,
+      data: {
+        roles: rolesInfo,
+        permissions: permissionInfo,
+        statistics: {
+          totalActiveUsers,
+          roleDistribution,
+          roleTransitionMatrix,
         },
         meta: {
-          requestId: crypto.randomUUID(),
-          timestamp: new Date().toISOString(),
+          lastUpdated: new Date().toISOString(),
+          permissionSystem: "RBAC",
+          version: "1.0",
         },
-      });
+      },
+      meta: {
+        requestId: crypto.randomUUID(),
+        timestamp: new Date().toISOString(),
+      },
+    });
+  } catch (_error) {
+    console.error("[API] Roles information error:", _error);
 
-    } catch (_error) {
-      // console.error("[API] Roles information error:", error);
-      
-      if (_error instanceof Error && _error.message.includes("permission")) {
-        return createApiErrorResponse(403, _error.message);
-      }
-      
-      return createApiErrorResponse(500, "Failed to retrieve role information");
+    if (_error instanceof Error && _error.message.includes("permission")) {
+      return createApiErrorResponse(403, _error.message);
     }
-  },
-  PERMISSIONS.ROLE_VIEW
-);
+
+    return createApiErrorResponse(500, "Failed to retrieve role information");
+  }
+}, PERMISSIONS.ROLE_VIEW);
 
 /**
  * GET /api/admin/roles/permissions
- * 
+ *
  * Retrieve detailed permission information (alternative endpoint).
  */
 export async function getPermissions(request: NextRequest, session: any) {
   try {
     const auditContext = getAuditContext(request, session);
-    
+
     // Build detailed permission matrix
-    const permissionMatrix = Object.values(PERMISSIONS).map(permission => ({
+    const permissionMatrix = Object.values(PERMISSIONS).map((permission) => ({
       permission,
       description: getPermissionDescription(permission),
       minimumRole: getMinimumRoleForPermission(permission),
@@ -156,15 +159,17 @@ export async function getPermissions(request: NextRequest, session: any) {
     }));
 
     // Group permissions by category
-    const categorizedPermissions = Object.entries(PERMISSION_GROUPS).map(([category, permissions]) => ({
-      category,
-      description: getCategoryDescription(category),
-      permissions: permissions.map(permission => ({
-        permission,
-        description: getPermissionDescription(permission),
-        minimumRole: getMinimumRoleForPermission(permission),
-      })),
-    }));
+    const categorizedPermissions = Object.entries(PERMISSION_GROUPS).map(
+      ([category, permissions]) => ({
+        category,
+        description: getCategoryDescription(category),
+        permissions: permissions.map((permission) => ({
+          permission,
+          description: getPermissionDescription(permission),
+          minimumRole: getMinimumRoleForPermission(permission),
+        })),
+      })
+    );
 
     // Log audit event
     await logPermissionViewEvent(auditContext);
@@ -185,10 +190,12 @@ export async function getPermissions(request: NextRequest, session: any) {
         timestamp: new Date().toISOString(),
       },
     });
-
   } catch (_error) {
-    // console.error("[API] Permissions information error:", error);
-    return createApiErrorResponse(500, "Failed to retrieve permission information");
+    console.error("[API] Permissions information error:", _error);
+    return createApiErrorResponse(
+      500,
+      "Failed to retrieve permission information"
+    );
   }
 }
 
@@ -257,10 +264,12 @@ function getPermissionDescription(permission: string): string {
  */
 function getCategoryDescription(category: string): string {
   const descriptions: Record<string, string> = {
-    USER_MANAGEMENT: "Permissions for managing user accounts, profiles, and authentication",
+    USER_MANAGEMENT:
+      "Permissions for managing user accounts, profiles, and authentication",
     ORDER_MANAGEMENT: "Permissions for viewing and managing customer orders",
     PAYMENT_MANAGEMENT: "Permissions for processing and managing payments",
-    SYSTEM_ADMINISTRATION: "Permissions for system configuration, monitoring, and audit logs",
+    SYSTEM_ADMINISTRATION:
+      "Permissions for system configuration, monitoring, and audit logs",
   };
 
   return descriptions[category] || "Category description not available";
@@ -287,7 +296,7 @@ async function logRoleViewEvent(auditContext: any): Promise<void> {
       },
     });
   } catch (_error) {
-    // console.error("Failed to log role view event:", error);
+    console.error("Failed to log role view event:", _error);
   }
 }
 
@@ -312,7 +321,7 @@ async function logPermissionViewEvent(auditContext: any): Promise<void> {
       },
     });
   } catch (_error) {
-    // console.error("Failed to log permission view event:", error);
+    console.error("Failed to log permission view event:", _error);
   }
 }
 

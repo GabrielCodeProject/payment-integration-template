@@ -1,16 +1,13 @@
 "use client";
 
-import React, { useState } from "react";
-import { useRouter } from "next/navigation";
-import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Eye, EyeOff, Loader2 } from "lucide-react";
+import { useRouter } from "next/navigation";
+import { useState } from "react";
+import { useForm } from "react-hook-form";
 import { toast } from "sonner";
 
-import { registrationSchema, type Registration } from "@/lib/validations/base/auth";
-import { signUp } from "@/lib/auth/client";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import { Checkbox } from "@/components/ui/checkbox";
 import {
   Form,
@@ -20,6 +17,12 @@ import {
   FormLabel,
   FormMessage,
 } from "@/components/ui/form";
+import { Input } from "@/components/ui/input";
+import { signUp } from "@/lib/auth/client";
+import {
+  registrationSchema,
+  type Registration,
+} from "@/lib/validations/base/auth";
 import { PasswordStrengthIndicator } from "./PasswordStrengthIndicator";
 
 interface RegistrationFormProps {
@@ -65,7 +68,9 @@ export function RegistrationForm({ onSuccess }: RegistrationFormProps) {
         // Handle specific errors
         switch (response._error.message) {
           case "User already exists":
-            toast.error("An account with this email already exists. Please sign in instead.");
+            toast.error(
+              "An account with this email already exists. Please sign in instead."
+            );
             break;
           case "Invalid email":
             toast.error("Please provide a valid email address.");
@@ -74,22 +79,26 @@ export function RegistrationForm({ onSuccess }: RegistrationFormProps) {
             toast.error("Please choose a stronger password.");
             break;
           default:
-            toast.error(response._error.message || "Registration failed. Please try again.");
+            toast.error(
+              response._error.message ||
+                "Registration failed. Please try again."
+            );
         }
         return;
       }
 
       // Success
-      toast.success("Registration successful! Please check your email to verify your account.");
-      
+      toast.success(
+        "Registration successful! Please check your email to verify your account."
+      );
+
       if (onSuccess) {
         onSuccess(data.email);
       } else {
         router.push(`/verify-email?email=${encodeURIComponent(data.email)}`);
       }
     } catch (_error) {
-      // eslint-disable-next-line no-console
-      // console.error("Registration error:", error);
+      console.error("Registration error:", _error);
       toast.error("An unexpected error occurred. Please try again.");
     } finally {
       setIsLoading(false);
@@ -187,7 +196,7 @@ export function RegistrationForm({ onSuccess }: RegistrationFormProps) {
                     type="button"
                     variant="ghost"
                     size="sm"
-                    className="absolute right-0 top-0 h-full px-3 hover:bg-transparent"
+                    className="absolute top-0 right-0 h-full px-3 hover:bg-transparent"
                     onClick={() => setShowPassword(!showPassword)}
                     disabled={isLoading}
                   >
@@ -201,7 +210,10 @@ export function RegistrationForm({ onSuccess }: RegistrationFormProps) {
               </FormControl>
               <FormMessage />
               {password && (
-                <PasswordStrengthIndicator password={password} className="mt-2" />
+                <PasswordStrengthIndicator
+                  password={password}
+                  className="mt-2"
+                />
               )}
             </FormItem>
           )}
@@ -226,7 +238,7 @@ export function RegistrationForm({ onSuccess }: RegistrationFormProps) {
                     type="button"
                     variant="ghost"
                     size="sm"
-                    className="absolute right-0 top-0 h-full px-3 hover:bg-transparent"
+                    className="absolute top-0 right-0 h-full px-3 hover:bg-transparent"
                     onClick={() => setShowConfirmPassword(!showConfirmPassword)}
                     disabled={isLoading}
                   >
@@ -248,7 +260,7 @@ export function RegistrationForm({ onSuccess }: RegistrationFormProps) {
             control={form.control}
             name="agreeToTerms"
             render={({ field }) => (
-              <FormItem className="flex flex-row items-start space-x-3 space-y-0">
+              <FormItem className="flex flex-row items-start space-y-0 space-x-3">
                 <FormControl>
                   <Checkbox
                     checked={field.value}
@@ -263,7 +275,7 @@ export function RegistrationForm({ onSuccess }: RegistrationFormProps) {
                       href="/terms"
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="text-blue-600 hover:text-blue-500 underline"
+                      className="text-blue-600 underline hover:text-blue-500"
                     >
                       Terms of Service
                     </a>
@@ -278,7 +290,7 @@ export function RegistrationForm({ onSuccess }: RegistrationFormProps) {
             control={form.control}
             name="agreeToPrivacy"
             render={({ field }) => (
-              <FormItem className="flex flex-row items-start space-x-3 space-y-0">
+              <FormItem className="flex flex-row items-start space-y-0 space-x-3">
                 <FormControl>
                   <Checkbox
                     checked={field.value}
@@ -293,7 +305,7 @@ export function RegistrationForm({ onSuccess }: RegistrationFormProps) {
                       href="/privacy"
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="text-blue-600 hover:text-blue-500 underline"
+                      className="text-blue-600 underline hover:text-blue-500"
                     >
                       Privacy Policy
                     </a>
@@ -308,7 +320,7 @@ export function RegistrationForm({ onSuccess }: RegistrationFormProps) {
             control={form.control}
             name="marketingOptIn"
             render={({ field }) => (
-              <FormItem className="flex flex-row items-start space-x-3 space-y-0">
+              <FormItem className="flex flex-row items-start space-y-0 space-x-3">
                 <FormControl>
                   <Checkbox
                     checked={field.value}
@@ -318,7 +330,8 @@ export function RegistrationForm({ onSuccess }: RegistrationFormProps) {
                 </FormControl>
                 <div className="space-y-1 leading-none">
                   <FormLabel className="text-sm text-slate-600 dark:text-slate-400">
-                    I would like to receive marketing emails and updates (optional)
+                    I would like to receive marketing emails and updates
+                    (optional)
                   </FormLabel>
                 </div>
               </FormItem>
@@ -347,7 +360,7 @@ export function RegistrationForm({ onSuccess }: RegistrationFormProps) {
             Already have an account?{" "}
             <a
               href="/login"
-              className="text-blue-600 hover:text-blue-500 font-medium underline"
+              className="font-medium text-blue-600 underline hover:text-blue-500"
             >
               Sign in
             </a>

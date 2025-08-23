@@ -1,6 +1,6 @@
 /**
  * Email Service Configuration
- * 
+ *
  * This file provides email sending capabilities using Resend
  * for authentication-related emails and notifications.
  */
@@ -31,7 +31,7 @@ export function getEmailVerificationTemplate(
   _userEmail: string
 ): EmailTemplate {
   const subject = `Verify your email address for ${APP_NAME}`;
-  
+
   const html = `
     <!DOCTYPE html>
     <html>
@@ -117,7 +117,7 @@ export function getPasswordResetTemplate(
   _userEmail: string
 ): EmailTemplate {
   const subject = `Reset your password for ${APP_NAME}`;
-  
+
   const html = `
     <!DOCTYPE html>
     <html>
@@ -205,7 +205,7 @@ export function getWelcomeEmailTemplate(
   _userEmail: string
 ): EmailTemplate {
   const subject = `Welcome to ${APP_NAME}!`;
-  
+
   const html = `
     <!DOCTYPE html>
     <html>
@@ -302,19 +302,23 @@ export async function sendEmail({
 }) {
   try {
     // Check if Resend API key is configured
-    if (!process.env.RESEND_API_KEY || process.env.RESEND_API_KEY === "re_placeholder_key_for_development_testing") {
-      // eslint-disable-next-line no-console
-      // console.warn("⚠️ Email not sent: Resend API key not configured");
-      // eslint-disable-next-line no-console
-      // console.log(`📧 Email would be sent to: ${to}`);
-      // eslint-disable-next-line no-console
-      // console.log(`📧 Subject: ${subject}`);
-      // eslint-disable-next-line no-console
-      // console.log(`📧 From: ${from}`);
-      return { 
-        success: false, 
-        error: "Email service not configured. Please set RESEND_API_KEY in your environment variables.",
-        isDevelopment: true 
+    if (
+      !process.env.RESEND_API_KEY ||
+      process.env.RESEND_API_KEY ===
+        "re_placeholder_key_for_development_testing"
+    ) {
+      console.warn("⚠️ Email not sent: Resend API key not configured");
+
+      console.log(`📧 Email would be sent to: ${to}`);
+
+      console.log(`📧 Subject: ${subject}`);
+
+      console.log(`📧 From: ${from}`);
+      return {
+        success: false,
+        error:
+          "Email service not configured. Please set RESEND_API_KEY in your environment variables.",
+        isDevelopment: true,
       };
     }
 
@@ -324,57 +328,58 @@ export async function sendEmail({
       subject,
       html,
     };
-    
+
     if (text) {
       emailOptions.text = text;
     }
 
     const result = await resend.emails.send(emailOptions);
 
-    // eslint-disable-next-line no-console
-    // console.log(`✅ Email sent successfully to ${to} (ID: ${result.data?.id})`);
+    console.log(`✅ Email sent successfully to ${to} (ID: ${result.data?.id})`);
     return { success: true, id: result.data?.id };
   } catch (_error) {
     // Enhanced error logging with more context
-    const errorMessage = error instanceof Error ? _error.message : String(error);
-    
-    // eslint-disable-next-line no-console
-    // console.error("❌ Failed to send email:", {
-    //   to,
-    //   subject,
-    //   from,
-    //   error: errorMessage,
-    //   timestamp: new Date().toISOString()
-    // });
+    const errorMessage =
+      _error instanceof Error ? _error.message : String(_error);
+
+    console.error("❌ Failed to send email:", {
+      to,
+      subject,
+      from,
+      error: errorMessage,
+      timestamp: new Date().toISOString(),
+    });
 
     // Check for common Resend errors
     if (errorMessage.includes("401") || errorMessage.includes("Unauthorized")) {
-      // eslint-disable-next-line no-console
-      // console.error("🔐 Resend API Key is invalid. Please check your RESEND_API_KEY in .env.local");
-      return { 
-        success: false, 
+      console.error(
+        "🔐 Resend API Key is invalid. Please check your RESEND_API_KEY in .env.local"
+      );
+      return {
+        success: false,
         error: "Invalid API key. Please check your Resend configuration.",
-        details: errorMessage 
+        details: errorMessage,
       };
     }
 
     if (errorMessage.includes("403") || errorMessage.includes("Forbidden")) {
-      // eslint-disable-next-line no-console
-      // console.error("🚫 Resend API access denied. Verify your account and sender domain.");
-      return { 
-        success: false, 
-        error: "Access denied. Please verify your Resend account and sender domain.",
-        details: errorMessage 
+      console.error(
+        "🚫 Resend API access denied. Verify your account and sender domain."
+      );
+      return {
+        success: false,
+        error:
+          "Access denied. Please verify your Resend account and sender domain.",
+        details: errorMessage,
       };
     }
 
     if (errorMessage.includes("rate limit")) {
-      // eslint-disable-next-line no-console
-      // console.error("⏱️ Resend rate limit exceeded. Please try again later.");
-      return { 
-        success: false, 
+      console.error("⏱️ Resend rate limit exceeded. Please try again later.");
+      return {
+        success: false,
         error: "Rate limit exceeded. Please try again later.",
-        details: errorMessage 
+        details: errorMessage,
       };
     }
 
@@ -401,10 +406,7 @@ export async function sendEmailVerification(
 /**
  * Send password reset email
  */
-export async function sendPasswordReset(
-  userEmail: string,
-  resetUrl: string
-) {
+export async function sendPasswordReset(userEmail: string, resetUrl: string) {
   const template = getPasswordResetTemplate(resetUrl, userEmail);
   return sendEmail({
     to: userEmail,
@@ -417,10 +419,7 @@ export async function sendPasswordReset(
 /**
  * Send welcome email
  */
-export async function sendWelcomeEmail(
-  userEmail: string,
-  userName: string
-) {
+export async function sendWelcomeEmail(userEmail: string, userName: string) {
   const template = getWelcomeEmailTemplate(userName, userEmail);
   return sendEmail({
     to: userEmail,

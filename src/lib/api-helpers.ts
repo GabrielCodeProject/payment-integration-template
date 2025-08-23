@@ -1,13 +1,13 @@
 /**
  * API Helper Functions for Product CRUD Routes
- * 
+ *
  * Provides simplified interfaces for common API operations including
  * rate limiting, audit logging, and utility functions.
  */
 
-import { NextRequest } from 'next/server';
-import { checkRateLimit, getClientIP } from '@/lib/rate-limiting';
-import { auditService } from '@/lib/audit';
+import { auditService } from "@/lib/audit";
+import { checkRateLimit, getClientIP } from "@/lib/rate-limiting";
+import { NextRequest } from "next/server";
 
 /**
  * Rate limiting configuration interface
@@ -37,7 +37,7 @@ export async function rateLimit(
 ): Promise<RateLimitResult> {
   try {
     // Generate key using provided function or default to IP
-    const key = options.keyGenerator 
+    const key = options.keyGenerator
       ? options.keyGenerator(request)
       : `ip:${getClientIP(request)}`;
 
@@ -54,7 +54,7 @@ export async function rateLimit(
       totalHits: result.totalHits,
     };
   } catch (_error) {
-    // console.error('Rate limiting error:', error);
+    console.error("Rate limiting error:", _error);
     // On error, allow the request but log the issue
     return { success: true };
   }
@@ -73,7 +73,7 @@ export interface AuditActionParams {
   userAgent: string;
   sessionId?: string;
   details: Record<string, any>;
-  severity: 'INFO' | 'WARNING' | 'ERROR' | 'CRITICAL';
+  severity: "INFO" | "WARNING" | "ERROR" | "CRITICAL";
 }
 
 /**
@@ -98,7 +98,7 @@ export async function auditAction(params: AuditActionParams): Promise<void> {
     });
   } catch (_error) {
     // Don't let audit logging failures break the main operation
-    // console.error('Audit logging failed:', error);
+    console.error("Audit logging failed:", _error);
   }
 }
 
@@ -109,12 +109,12 @@ export function getClientInfo(request: NextRequest): {
   ipAddress: string;
   userAgent: string;
 } {
-  const forwarded = request.headers.get('x-forwarded-for');
-  const ipAddress = forwarded ? forwarded.split(',')[0].trim() : 
-                   request.headers.get('x-real-ip') || 
-                   'unknown';
+  const forwarded = request.headers.get("x-forwarded-for");
+  const ipAddress = forwarded
+    ? forwarded.split(",")[0].trim()
+    : request.headers.get("x-real-ip") || "unknown";
 
-  const userAgent = request.headers.get('user-agent') || 'unknown';
+  const userAgent = request.headers.get("user-agent") || "unknown";
 
   return { ipAddress, userAgent };
 }
@@ -135,13 +135,15 @@ export function createStandardErrorResponse(
         code: code || `ERROR_${status}`,
         status,
         timestamp: new Date().toISOString(),
-        ...(details && process.env.NODE_ENV === 'development' ? { details } : {}),
+        ...(details && process.env.NODE_ENV === "development"
+          ? { details }
+          : {}),
       },
     }),
     {
       status,
       headers: {
-        'Content-Type': 'application/json',
+        "Content-Type": "application/json",
       },
     }
   );
@@ -165,7 +167,7 @@ export function createStandardSuccessResponse(
     {
       status,
       headers: {
-        'Content-Type': 'application/json',
+        "Content-Type": "application/json",
       },
     }
   );
@@ -174,7 +176,9 @@ export function createStandardSuccessResponse(
 /**
  * Parse JSON body with error handling
  */
-export async function parseJsonBody<T = any>(request: NextRequest): Promise<{
+export async function parseJsonBody<T = any>(
+  request: NextRequest
+): Promise<{
   success: boolean;
   data?: T;
   error?: string;
@@ -183,9 +187,9 @@ export async function parseJsonBody<T = any>(request: NextRequest): Promise<{
     const data = await request.json();
     return { success: true, data };
   } catch (_error) {
-    return { 
-      success: false, 
-      error: 'Invalid JSON in request body' 
+    return {
+      success: false,
+      error: "Invalid JSON in request body",
     };
   }
 }
@@ -198,8 +202,11 @@ export function validatePagination(searchParams: URLSearchParams): {
   limit: number;
   offset: number;
 } {
-  const page = Math.max(1, parseInt(searchParams.get('page') || '1', 10));
-  const limit = Math.min(100, Math.max(1, parseInt(searchParams.get('limit') || '20', 10)));
+  const page = Math.max(1, parseInt(searchParams.get("page") || "1", 10));
+  const limit = Math.min(
+    100,
+    Math.max(1, parseInt(searchParams.get("limit") || "20", 10))
+  );
   const offset = (page - 1) * limit;
 
   return { page, limit, offset };
@@ -221,7 +228,7 @@ export function buildPaginationMeta(
   hasPrevPage: boolean;
 } {
   const pages = Math.ceil(total / limit);
-  
+
   return {
     page,
     pages,
@@ -237,7 +244,7 @@ export function buildPaginationMeta(
  */
 export function sanitizeString(input: string): string {
   return input
-    .replace(/[<>]/g, '') // Remove potential XSS vectors
+    .replace(/[<>]/g, "") // Remove potential XSS vectors
     .trim()
     .substring(0, 1000); // Limit length
 }
@@ -247,8 +254,8 @@ export function sanitizeString(input: string): string {
  */
 export function sanitizeSearchQuery(query: string): string {
   return query
-    .replace(/[<>]/g, '') // Remove potential XSS vectors
-    .replace(/[^\w\s-_.,!?]/g, '') // Allow only safe characters
+    .replace(/[<>]/g, "") // Remove potential XSS vectors
+    .replace(/[^\w\s-_.,!?]/g, "") // Allow only safe characters
     .trim()
     .substring(0, 200); // Limit length
 }
@@ -258,16 +265,17 @@ export function sanitizeSearchQuery(query: string): string {
  */
 export function parseSortParams(
   searchParams: URLSearchParams,
-  allowedFields: string[] = ['createdAt', 'name', 'price']
+  allowedFields: string[] = ["createdAt", "name", "price"]
 ): {
   sort: string;
-  sortDirection: 'asc' | 'desc';
+  sortDirection: "asc" | "desc";
 } {
-  const sort = searchParams.get('sort') || 'createdAt';
-  const sortDirection = (searchParams.get('sortDirection') === 'asc') ? 'asc' : 'desc';
+  const sort = searchParams.get("sort") || "createdAt";
+  const sortDirection =
+    searchParams.get("sortDirection") === "asc" ? "asc" : "desc";
 
   // Validate sort field
-  const validSort = allowedFields.includes(sort) ? sort : 'createdAt';
+  const validSort = allowedFields.includes(sort) ? sort : "createdAt";
 
   return { sort: validSort, sortDirection };
 }
@@ -275,23 +283,25 @@ export function parseSortParams(
 /**
  * Build cache headers for different content types
  */
-export function getCacheHeaders(type: 'static' | 'dynamic' | 'no-cache'): Record<string, string> {
+export function getCacheHeaders(
+  type: "static" | "dynamic" | "no-cache"
+): Record<string, string> {
   switch (type) {
-    case 'static':
+    case "static":
       return {
-        'Cache-Control': 'public, s-maxage=3600, stale-while-revalidate=86400', // 1 hour cache, 24 hour SWR
-        'Vary': 'Accept, Accept-Encoding',
+        "Cache-Control": "public, s-maxage=3600, stale-while-revalidate=86400", // 1 hour cache, 24 hour SWR
+        Vary: "Accept, Accept-Encoding",
       };
-    case 'dynamic':
+    case "dynamic":
       return {
-        'Cache-Control': 'public, s-maxage=300, stale-while-revalidate=600', // 5 min cache, 10 min SWR
-        'Vary': 'Accept, Accept-Encoding',
+        "Cache-Control": "public, s-maxage=300, stale-while-revalidate=600", // 5 min cache, 10 min SWR
+        Vary: "Accept, Accept-Encoding",
       };
-    case 'no-cache':
+    case "no-cache":
       return {
-        'Cache-Control': 'no-cache, no-store, must-revalidate',
-        'Pragma': 'no-cache',
-        'Expires': '0',
+        "Cache-Control": "no-cache, no-store, must-revalidate",
+        Pragma: "no-cache",
+        Expires: "0",
       };
     default:
       return {};
@@ -301,11 +311,14 @@ export function getCacheHeaders(type: 'static' | 'dynamic' | 'no-cache'): Record
 /**
  * Convert price to display format
  */
-export function formatPrice(price: number | string, currency: string = 'USD'): string {
-  const numericPrice = typeof price === 'string' ? parseFloat(price) : price;
-  
-  return new Intl.NumberFormat('en-US', {
-    style: 'currency',
+export function formatPrice(
+  price: number | string,
+  currency: string = "USD"
+): string {
+  const numericPrice = typeof price === "string" ? parseFloat(price) : price;
+
+  return new Intl.NumberFormat("en-US", {
+    style: "currency",
     currency,
   }).format(numericPrice);
 }
@@ -313,7 +326,10 @@ export function formatPrice(price: number | string, currency: string = 'USD'): s
 /**
  * Calculate discount percentage
  */
-export function calculateDiscount(originalPrice: number, salePrice: number): number {
+export function calculateDiscount(
+  originalPrice: number,
+  salePrice: number
+): number {
   if (originalPrice <= 0 || salePrice <= 0) return 0;
   return Math.round((1 - salePrice / originalPrice) * 100);
 }
@@ -324,10 +340,10 @@ export function calculateDiscount(originalPrice: number, salePrice: number): num
 export function generateSlug(name: string): string {
   return name
     .toLowerCase()
-    .replace(/[^\w\s-]/g, '') // Remove special characters
-    .replace(/\s+/g, '-') // Replace spaces with hyphens
-    .replace(/-+/g, '-') // Replace multiple hyphens with single
-    .replace(/^-|-$/g, ''); // Remove leading/trailing hyphens
+    .replace(/[^\w\s-]/g, "") // Remove special characters
+    .replace(/\s+/g, "-") // Replace spaces with hyphens
+    .replace(/-+/g, "-") // Replace multiple hyphens with single
+    .replace(/^-|-$/g, ""); // Remove leading/trailing hyphens
 }
 
 /**
@@ -341,7 +357,7 @@ export function isValidEmail(email: string): boolean {
 /**
  * Generate random identifier
  */
-export function generateId(prefix: string = ''): string {
+export function generateId(prefix: string = ""): string {
   const timestamp = Date.now().toString(36);
   const random = Math.random().toString(36).substring(2);
   return prefix ? `${prefix}_${timestamp}_${random}` : `${timestamp}_${random}`;
@@ -360,7 +376,7 @@ export function deepClone<T>(obj: T): T {
 export function isEmpty(obj: any): boolean {
   if (obj === null || obj === undefined) return true;
   if (Array.isArray(obj)) return obj.length === 0;
-  if (typeof obj === 'object') return Object.keys(obj).length === 0;
-  if (typeof obj === 'string') return obj.trim() === '';
+  if (typeof obj === "object") return Object.keys(obj).length === 0;
+  if (typeof obj === "string") return obj.trim() === "";
   return false;
 }

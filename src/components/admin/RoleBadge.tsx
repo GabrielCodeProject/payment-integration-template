@@ -1,10 +1,14 @@
 "use client";
 
 import { Badge } from "@/components/ui/badge";
-import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 import { getRolePermissions } from "@/lib/permissions";
 import type { UserRole } from "@prisma/client";
-import { Shield, ShieldCheck, Crown } from "lucide-react";
+import { Crown, Shield, ShieldCheck } from "lucide-react";
 
 interface RoleBadgeProps {
   role: UserRole;
@@ -16,7 +20,7 @@ interface RoleBadgeProps {
 
 /**
  * RoleBadge Component
- * 
+ *
  * Displays a role badge with appropriate color coding and optional permission tooltips.
  * Provides visual role indicators with hover information about permissions.
  */
@@ -87,11 +91,7 @@ export function RoleBadge({
   const BadgeContent = (
     <Badge
       variant={config.variant}
-      className={`
-        inline-flex items-center gap-1.5 font-medium
-        ${sizeClasses[size]}
-        ${className}
-      `}
+      className={`inline-flex items-center gap-1.5 font-medium ${sizeClasses[size]} ${className} `}
     >
       {showIcon && <Icon className={iconSizes[size]} />}
       <span className="capitalize">{role.toLowerCase()}</span>
@@ -104,25 +104,25 @@ export function RoleBadge({
 
   return (
     <Tooltip>
-      <TooltipTrigger asChild>
-        {BadgeContent}
-      </TooltipTrigger>
+      <TooltipTrigger asChild>{BadgeContent}</TooltipTrigger>
       <TooltipContent side="bottom" className="max-w-sm">
         <div className="space-y-2">
           <div className="font-semibold">{role} Role</div>
-          <div className="text-xs text-muted-foreground">
+          <div className="text-muted-foreground text-xs">
             {config.description}
           </div>
           <div className="space-y-1">
-            <div className="text-xs font-medium">Permissions ({permissions.length}):</div>
-            <div className="grid grid-cols-1 gap-0.5 text-xs text-muted-foreground max-h-32 overflow-y-auto">
+            <div className="text-xs font-medium">
+              Permissions ({permissions.length}):
+            </div>
+            <div className="text-muted-foreground grid max-h-32 grid-cols-1 gap-0.5 overflow-y-auto text-xs">
               {permissions.slice(0, 8).map((permission) => (
                 <div key={permission} className="truncate">
                   • {permission.replace(/[_:]/g, " ").toLowerCase()}
                 </div>
               ))}
               {permissions.length > 8 && (
-                <div className="text-xs text-muted-foreground/70 italic">
+                <div className="text-muted-foreground/70 text-xs italic">
                   +{permissions.length - 8} more permissions...
                 </div>
               )}
@@ -136,7 +136,7 @@ export function RoleBadge({
 
 /**
  * RoleIndicator Component
- * 
+ *
  * Simple role indicator without badge styling, used in compact layouts
  */
 export function RoleIndicator({
@@ -177,9 +177,11 @@ export function RoleIndicator({
   const Icon = config.icon;
 
   return (
-    <div className={`inline-flex items-center gap-1.5 text-sm ${config.color} ${className}`}>
+    <div
+      className={`inline-flex items-center gap-1.5 text-sm ${config.color} ${className}`}
+    >
       {showIcon && <Icon className="size-4" />}
-      <span className="capitalize font-medium">{role.toLowerCase()}</span>
+      <span className="font-medium capitalize">{role.toLowerCase()}</span>
     </div>
   );
 }

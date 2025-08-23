@@ -1,17 +1,20 @@
 /**
  * Server-Side Session Management for API Routes
- * 
+ *
  * This module provides full database-backed session validation
  * for API routes and server components that can't use Edge Runtime.
  * Enhanced with granular permission checking and audit logging.
  */
 
-import { NextRequest } from "next/server";
-import { auth } from "@/lib/auth/config";
-import { validateResourceAccess, checkPermissionWithAudit } from "@/lib/permissions";
-import { db } from "@/lib/db";
 import type { Session } from "@/lib/auth/config";
+import { auth } from "@/lib/auth/config";
+import { db } from "@/lib/db";
 import type { Permission, UserRole } from "@/lib/permissions";
+import {
+  checkPermissionWithAudit,
+  validateResourceAccess,
+} from "@/lib/permissions";
+import { NextRequest } from "next/server";
 
 /**
  * Get and validate session with full database verification
@@ -22,7 +25,7 @@ export async function getServerSession(
 ): Promise<Session | null> {
   try {
     const headers = new Headers();
-    
+
     if (request) {
       // Copy cookies from the request
       const cookie = request.headers.get("cookie");
@@ -36,8 +39,7 @@ export async function getServerSession(
   } catch (_error) {
     // Don't log in production to avoid noise
     if (process.env.NODE_ENV === "development") {
-      // eslint-disable-next-line no-console
-      // console.error("Server session validation error:", error);
+      console.error("Server session validation error:", _error);
     }
     return null;
   }
@@ -86,7 +88,7 @@ export async function validateApiAccess(
   if (requiredRole) {
     const userRole = session.user.role || "CUSTOMER";
     const hasPermission = checkRolePermission(userRole, requiredRole);
-    
+
     if (!hasPermission) {
       return {
         isValid: false,
@@ -188,9 +190,10 @@ export async function validatePermission(
   }
 
   const userRole = session.user.role as UserRole;
-  const ipAddress = request.headers.get("x-forwarded-for") || 
-                   request.headers.get("x-real-ip") || 
-                   "unknown";
+  const ipAddress =
+    request.headers.get("x-forwarded-for") ||
+    request.headers.get("x-real-ip") ||
+    "unknown";
   const userAgent = request.headers.get("user-agent") || "unknown";
 
   // Check permission with audit logging
@@ -296,7 +299,11 @@ export async function validateResourcePermission<T extends Record<string, any>>(
  * Middleware wrapper for API routes with permission-based access
  */
 export function withPermission(
-  handler: (request: NextRequest, session: Session, auditData?: any) => Promise<Response>,
+  handler: (
+    request: NextRequest,
+    session: Session,
+    auditData?: any
+  ) => Promise<Response>,
   permission: Permission,
   resourceId?: string | ((request: NextRequest) => Promise<string>)
 ) {
@@ -330,14 +337,14 @@ export function withPermission(
       return await handler(request, session, auditData);
     } catch (_handlerError) {
       // Log API errors for security monitoring
-      // console.error("API handler error:", {
-      //   error: _handlerError,
-      //   permission,
-      //   userId: session.user.id,
-      //   userAgent: request.headers.get("user-agent"),
-      //   ipAddress: request.headers.get("x-forwarded-for"),
-      // });
-      
+      console.error("API handler error:", {
+        error: _handlerError,
+        permission,
+        userId: session.user.id,
+        userAgent: request.headers.get("user-agent"),
+        ipAddress: request.headers.get("x-forwarded-for"),
+      });
+
       return createApiErrorResponse(500, "Internal server error");
     }
   };
@@ -351,7 +358,10 @@ export function withAuth(
   requiredRole?: "ADMIN" | "SUPPORT" | "CUSTOMER"
 ) {
   return async (request: NextRequest): Promise<Response> => {
-    const { isValid, session, error } = await validateApiAccess(request, requiredRole);
+    const { isValid, session, error } = await validateApiAccess(
+      request,
+      requiredRole
+    );
 
     if (!isValid || !session) {
       return createApiErrorResponse(
@@ -363,8 +373,7 @@ export function withAuth(
     try {
       return await handler(request, session);
     } catch (_handlerError) {
-      // eslint-disable-next-line no-console
-      // console.error("API handler error:", _handlerError);
+      console.error("API handler error:", _handlerError);
       return createApiErrorResponse(500, "Internal server error");
     }
   };
@@ -402,14 +411,17 @@ async function logSecurityEvent(event: {
     });
   } catch (_error) {
     // Don't throw on audit log failures, but log the error
-    // console.error("Failed to log security event:", error);
+    console.error("Failed to log security event:", _error);
   }
 }
 
 /**
  * Get audit context from request for logging
  */
-export function getAuditContext(request: NextRequest, session: Session): {
+export function getAuditContext(
+  request: NextRequest,
+  session: Session
+): {
   adminUserId: string;
   adminRole: UserRole;
   ipAddress: string;
@@ -419,9 +431,10 @@ export function getAuditContext(request: NextRequest, session: Session): {
   return {
     adminUserId: session.user.id,
     adminRole: session.user.role as UserRole,
-    ipAddress: request.headers.get("x-forwarded-for") || 
-               request.headers.get("x-real-ip") || 
-               "unknown",
+    ipAddress:
+      request.headers.get("x-forwarded-for") ||
+      request.headers.get("x-real-ip") ||
+      "unknown",
     userAgent: request.headers.get("user-agent") || "unknown",
     sessionId: session.sessionId,
   };

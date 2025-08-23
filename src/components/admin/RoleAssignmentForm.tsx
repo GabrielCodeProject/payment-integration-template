@@ -1,6 +1,9 @@
 "use client";
 
-import { useState } from "react";
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
   Dialog,
   DialogContent,
@@ -9,33 +12,36 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Alert, AlertDescription } from "@/components/ui/alert";
-import { RoleBadge } from "./RoleBadge";
-import { usePermissions } from "./PermissionGuard";
 import {
-  ROLES,
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import {
   PERMISSIONS,
-  getRolePermissions,
-  canManageRole,
-  validateRoleTransition,
   PERMISSION_GROUPS,
+  ROLES,
+  canManageRole,
+  getRolePermissions,
+  validateRoleTransition,
 } from "@/lib/permissions";
 import { createAPIHeaders } from "@/lib/utils";
-import {
-  Shield,
-  AlertTriangle,
-  CheckCircle2,
-  ArrowRight,
-  Users,
-  Crown,
-  ShieldCheck,
-  Loader2,
-} from "lucide-react";
 import type { UserRole } from "@prisma/client";
+import {
+  AlertTriangle,
+  ArrowRight,
+  CheckCircle2,
+  Crown,
+  Loader2,
+  Shield,
+  ShieldCheck,
+  Users,
+} from "lucide-react";
+import { useState } from "react";
+import { usePermissions } from "./PermissionGuard";
+import { RoleBadge } from "./RoleBadge";
 
 interface RoleAssignmentFormProps {
   user: {
@@ -51,7 +57,7 @@ interface RoleAssignmentFormProps {
 
 /**
  * RoleAssignmentForm Component
- * 
+ *
  * Secure role assignment interface with permission preview and validation.
  * Includes role transition validation and security risk assessment.
  */
@@ -68,18 +74,22 @@ export function RoleAssignmentForm({
 
   // Validate if current user can assign the selected role
   const canAssignRole = canManageRole(userRole!, selectedRole);
-  const roleTransition = validateRoleTransition(user.role, selectedRole, userRole!);
-  
+  const roleTransition = validateRoleTransition(
+    user.role,
+    selectedRole,
+    userRole!
+  );
+
   // Get permissions for selected role
   const selectedRolePermissions = getRolePermissions(selectedRole);
   const currentRolePermissions = getRolePermissions(user.role);
-  
+
   // Calculate permission changes
   const addedPermissions = selectedRolePermissions.filter(
-    p => !currentRolePermissions.includes(p)
+    (p) => !currentRolePermissions.includes(p)
   );
   const removedPermissions = currentRolePermissions.filter(
-    p => !selectedRolePermissions.includes(p)
+    (p) => !selectedRolePermissions.includes(p)
   );
 
   const handleRoleUpdate = async () => {
@@ -101,11 +111,13 @@ export function RoleAssignmentForm({
 
       if (!response.ok) {
         const errorData = await response.json();
-        throw new Error(errorData.error || `Failed to update role: ${response.status}`);
+        throw new Error(
+          errorData.error || `Failed to update role: ${response.status}`
+        );
       }
 
       const data = await response.json();
-      
+
       if (!data.success) {
         throw new Error(data.error || "Failed to update role");
       }
@@ -116,7 +128,7 @@ export function RoleAssignmentForm({
         onRoleUpdated();
       }
     } catch (err) {
-      // console.error("Error updating role:", err);
+      console.error("Error updating role:", err);
       setError(err instanceof Error ? err.message : "Failed to update role");
     } finally {
       setIsLoading(false);
@@ -163,7 +175,7 @@ export function RoleAssignmentForm({
   };
 
   // Get available roles that the current user can assign
-  const availableRoles = Object.values(ROLES).filter(role => 
+  const availableRoles = Object.values(ROLES).filter((role) =>
     canManageRole(userRole!, role)
   );
 
@@ -189,15 +201,15 @@ export function RoleAssignmentForm({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+      <DialogContent className="max-h-[90vh] max-w-2xl overflow-y-auto">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <Shield className="size-5" />
             Update User Role
           </DialogTitle>
           <DialogDescription>
-            Change the role for <strong>{user.name || user.email}</strong>. 
-            This will immediately update their access permissions.
+            Change the role for <strong>{user.name || user.email}</strong>. This
+            will immediately update their access permissions.
           </DialogDescription>
         </DialogHeader>
 
@@ -205,19 +217,23 @@ export function RoleAssignmentForm({
           {/* Current vs New Role */}
           <div className="flex items-center gap-4">
             <div className="flex-1">
-              <label className="text-sm font-medium text-muted-foreground">Current Role</label>
+              <label className="text-muted-foreground text-sm font-medium">
+                Current Role
+              </label>
               <div className="mt-1">
                 <RoleBadge role={user.role} />
               </div>
             </div>
-            
-            <ArrowRight className="size-5 text-muted-foreground" />
-            
+
+            <ArrowRight className="text-muted-foreground size-5" />
+
             <div className="flex-1">
-              <label className="text-sm font-medium text-muted-foreground">New Role</label>
+              <label className="text-muted-foreground text-sm font-medium">
+                New Role
+              </label>
               <div className="mt-1">
-                <Select 
-                  value={selectedRole} 
+                <Select
+                  value={selectedRole}
                   onValueChange={(value) => setSelectedRole(value as UserRole)}
                 >
                   <SelectTrigger>
@@ -227,16 +243,18 @@ export function RoleAssignmentForm({
                     {availableRoles.map((role) => {
                       const Icon = getRoleIcon(role);
                       const canAssign = canManageRole(userRole!, role);
-                      
+
                       return (
-                        <SelectItem 
-                          key={role} 
+                        <SelectItem
+                          key={role}
                           value={role}
                           disabled={!canAssign}
                         >
                           <div className="flex items-center gap-2">
                             <Icon className="size-4" />
-                            <span className="capitalize">{role.toLowerCase()}</span>
+                            <span className="capitalize">
+                              {role.toLowerCase()}
+                            </span>
                             {!canAssign && (
                               <Badge variant="outline" className="text-xs">
                                 Restricted
@@ -255,15 +273,19 @@ export function RoleAssignmentForm({
           {/* Role Description */}
           <Card>
             <CardHeader>
-              <CardTitle className="text-base flex items-center gap-2">
+              <CardTitle className="flex items-center gap-2 text-base">
                 <div className="flex items-center gap-2">
-                  {React.createElement(getRoleIcon(selectedRole), { className: "size-4" })}
-                  <span className="capitalize">{selectedRole.toLowerCase()} Role</span>
+                  {React.createElement(getRoleIcon(selectedRole), {
+                    className: "size-4",
+                  })}
+                  <span className="capitalize">
+                    {selectedRole.toLowerCase()} Role
+                  </span>
                 </div>
               </CardTitle>
             </CardHeader>
             <CardContent>
-              <p className="text-sm text-muted-foreground">
+              <p className="text-muted-foreground text-sm">
                 {getRoleDescription(selectedRole)}
               </p>
             </CardContent>
@@ -271,18 +293,22 @@ export function RoleAssignmentForm({
 
           {/* Security Risk Assessment */}
           {roleTransition.securityRisk && (
-            <Alert className={getSecurityRiskColor(roleTransition.securityRisk)}>
+            <Alert
+              className={getSecurityRiskColor(roleTransition.securityRisk)}
+            >
               <AlertTriangle className="size-4" />
               <AlertDescription>
                 <strong>Security Risk: {roleTransition.securityRisk}</strong>
                 {roleTransition.securityRisk === "HIGH" && (
-                  <span className="block mt-1">
-                    This role change grants significant privileges. Ensure this user is authorized for administrative access.
+                  <span className="mt-1 block">
+                    This role change grants significant privileges. Ensure this
+                    user is authorized for administrative access.
                   </span>
                 )}
                 {roleTransition.securityRisk === "MEDIUM" && (
-                  <span className="block mt-1">
-                    This role change increases user privileges. Verify this elevation is appropriate.
+                  <span className="mt-1 block">
+                    This role change increases user privileges. Verify this
+                    elevation is appropriate.
                   </span>
                 )}
               </AlertDescription>
@@ -291,20 +317,23 @@ export function RoleAssignmentForm({
 
           {/* Permission Changes */}
           {(addedPermissions.length > 0 || removedPermissions.length > 0) && (
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
               {/* Added Permissions */}
               {addedPermissions.length > 0 && (
                 <Card>
                   <CardHeader>
-                    <CardTitle className="text-sm flex items-center gap-2 text-green-600">
+                    <CardTitle className="flex items-center gap-2 text-sm text-green-600">
                       <CheckCircle2 className="size-4" />
                       Permissions Added ({addedPermissions.length})
                     </CardTitle>
                   </CardHeader>
                   <CardContent>
-                    <div className="space-y-1 max-h-32 overflow-y-auto">
+                    <div className="max-h-32 space-y-1 overflow-y-auto">
                       {addedPermissions.map((permission) => (
-                        <div key={permission} className="text-xs text-muted-foreground">
+                        <div
+                          key={permission}
+                          className="text-muted-foreground text-xs"
+                        >
                           + {permission.replace(/[_:]/g, " ").toLowerCase()}
                         </div>
                       ))}
@@ -317,15 +346,18 @@ export function RoleAssignmentForm({
               {removedPermissions.length > 0 && (
                 <Card>
                   <CardHeader>
-                    <CardTitle className="text-sm flex items-center gap-2 text-red-600">
+                    <CardTitle className="flex items-center gap-2 text-sm text-red-600">
                       <AlertTriangle className="size-4" />
                       Permissions Removed ({removedPermissions.length})
                     </CardTitle>
                   </CardHeader>
                   <CardContent>
-                    <div className="space-y-1 max-h-32 overflow-y-auto">
+                    <div className="max-h-32 space-y-1 overflow-y-auto">
                       {removedPermissions.map((permission) => (
-                        <div key={permission} className="text-xs text-muted-foreground">
+                        <div
+                          key={permission}
+                          className="text-muted-foreground text-xs"
+                        >
                           - {permission.replace(/[_:]/g, " ").toLowerCase()}
                         </div>
                       ))}
@@ -339,36 +371,40 @@ export function RoleAssignmentForm({
           {/* Permission Groups Preview */}
           <Card>
             <CardHeader>
-              <CardTitle className="text-sm">Permission Groups for {selectedRole}</CardTitle>
+              <CardTitle className="text-sm">
+                Permission Groups for {selectedRole}
+              </CardTitle>
             </CardHeader>
             <CardContent>
               <div className="grid grid-cols-2 gap-2">
-                {Object.entries(PERMISSION_GROUPS).map(([groupName, permissions]) => {
-                  const hasAnyPermission = permissions.some(p => 
-                    selectedRolePermissions.includes(p)
-                  );
-                  const hasAllPermissions = permissions.every(p => 
-                    selectedRolePermissions.includes(p)
-                  );
-                  
-                  if (!hasAnyPermission) return null;
-                  
-                  return (
-                    <div key={groupName} className="flex items-center gap-2">
-                      <Badge 
-                        variant={hasAllPermissions ? "default" : "secondary"}
-                        className="text-xs"
-                      >
-                        {groupName.replace(/_/g, " ")}
-                      </Badge>
-                      {hasAllPermissions ? (
-                        <CheckCircle2 className="size-3 text-green-600" />
-                      ) : (
-                        <div className="size-3 rounded-full bg-yellow-500" />
-                      )}
-                    </div>
-                  );
-                })}
+                {Object.entries(PERMISSION_GROUPS).map(
+                  ([groupName, permissions]) => {
+                    const hasAnyPermission = permissions.some((p) =>
+                      selectedRolePermissions.includes(p)
+                    );
+                    const hasAllPermissions = permissions.every((p) =>
+                      selectedRolePermissions.includes(p)
+                    );
+
+                    if (!hasAnyPermission) return null;
+
+                    return (
+                      <div key={groupName} className="flex items-center gap-2">
+                        <Badge
+                          variant={hasAllPermissions ? "default" : "secondary"}
+                          className="text-xs"
+                        >
+                          {groupName.replace(/_/g, " ")}
+                        </Badge>
+                        {hasAllPermissions ? (
+                          <CheckCircle2 className="size-3 text-green-600" />
+                        ) : (
+                          <div className="size-3 rounded-full bg-yellow-500" />
+                        )}
+                      </div>
+                    );
+                  }
+                )}
               </div>
             </CardContent>
           </Card>
@@ -388,15 +424,16 @@ export function RoleAssignmentForm({
             <Alert className="border-destructive">
               <AlertTriangle className="size-4" />
               <AlertDescription className="text-destructive">
-                You don&apos;t have permission to assign the {selectedRole} role.
+                You don&apos;t have permission to assign the {selectedRole}{" "}
+                role.
               </AlertDescription>
             </Alert>
           )}
         </div>
 
         <DialogFooter>
-          <Button 
-            variant="outline" 
+          <Button
+            variant="outline"
             onClick={() => onOpenChange(false)}
             disabled={isLoading}
           >
@@ -405,15 +442,15 @@ export function RoleAssignmentForm({
           <Button
             onClick={handleRoleUpdate}
             disabled={
-              !canAssignRole || 
-              !roleTransition.allowed || 
+              !canAssignRole ||
+              !roleTransition.allowed ||
               selectedRole === user.role ||
               isLoading
             }
           >
             {isLoading ? (
               <>
-                <Loader2 className="size-4 mr-2 animate-spin" />
+                <Loader2 className="mr-2 size-4 animate-spin" />
                 Updating...
               </>
             ) : (

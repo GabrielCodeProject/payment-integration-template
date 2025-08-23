@@ -1,12 +1,12 @@
 /**
  * Edge Runtime Compatible Middleware Utilities
- * 
+ *
  * This module provides all middleware functionality without any database
  * or Node.js API dependencies for Edge Runtime compatibility.
  */
 
-import { NextRequest, NextResponse } from "next/server";
 import { getCookieCache, getSessionCookie } from "better-auth/cookies";
+import { NextRequest, NextResponse } from "next/server";
 
 // Types for Edge Runtime middleware
 export interface EdgeAuthConfig {
@@ -34,7 +34,6 @@ export interface EdgeSession {
     expiresAt: Date;
   };
 }
-
 
 /**
  * Default auth configuration for Edge Runtime
@@ -66,15 +65,16 @@ export async function getEdgeSession(
     const secret = process.env.BETTER_AUTH_SECRET;
     if (!secret) {
       if (process.env.NODE_ENV === "development") {
-        // eslint-disable-next-line no-console
-        // console.warn("BETTER_AUTH_SECRET not found, session validation will be limited");
+        console.warn(
+          "BETTER_AUTH_SECRET not found, session validation will be limited"
+        );
       }
       return null;
     }
 
     // First, try to get session from cookie cache (if enabled)
     const cachedSession = await getCookieCache(request, { secret });
-    
+
     if (cachedSession) {
       return {
         user: {
@@ -95,7 +95,7 @@ export async function getEdgeSession(
     // Fallback: Check if session cookie exists (for optimistic redirects)
     // This is not secure but allows for basic route protection
     const sessionCookie = getSessionCookie(request);
-    
+
     if (sessionCookie) {
       // We have a session cookie but no cache data
       // Return minimal session info to allow access, but API routes should do full validation
@@ -109,7 +109,7 @@ export async function getEdgeSession(
         },
         session: {
           id: "unknown",
-          userId: "unknown", 
+          userId: "unknown",
           expiresAt: new Date(Date.now() + 24 * 60 * 60 * 1000), // 24 hours from now
         },
       };
@@ -118,30 +118,37 @@ export async function getEdgeSession(
     return null;
   } catch (_error) {
     if (process.env.NODE_ENV === "development") {
-      // eslint-disable-next-line no-console
-      // console.error("Edge session validation error:", error);
+      console.error("Edge session validation error:", _error);
     }
     return null;
   }
 }
 
-
 /**
  * Route checking functions (Edge Runtime compatible)
  */
-export function isPublicRoute(pathname: string, config: EdgeAuthConfig): boolean {
+export function isPublicRoute(
+  pathname: string,
+  config: EdgeAuthConfig
+): boolean {
   return config.publicRoutes.some(
     (route) => pathname === route || pathname.startsWith(route + "/")
   );
 }
 
-export function isProtectedRoute(pathname: string, config: EdgeAuthConfig): boolean {
+export function isProtectedRoute(
+  pathname: string,
+  config: EdgeAuthConfig
+): boolean {
   return config.protectedRoutes.some(
     (route) => pathname === route || pathname.startsWith(route + "/")
   );
 }
 
-export function isAdminRoute(pathname: string, config: EdgeAuthConfig): boolean {
+export function isAdminRoute(
+  pathname: string,
+  config: EdgeAuthConfig
+): boolean {
   return config.adminRoutes.some(
     (route) => pathname === route || pathname.startsWith(route + "/")
   );
@@ -153,19 +160,28 @@ export function isAuthRoute(pathname: string, config: EdgeAuthConfig): boolean {
   );
 }
 
-export function isPublicApiRoute(pathname: string, config: EdgeAuthConfig): boolean {
+export function isPublicApiRoute(
+  pathname: string,
+  config: EdgeAuthConfig
+): boolean {
   return config.apiPublicRoutes.some(
     (route) => pathname === route || pathname.startsWith(route + "/")
   );
 }
 
-export function isProtectedApiRoute(pathname: string, config: EdgeAuthConfig): boolean {
+export function isProtectedApiRoute(
+  pathname: string,
+  config: EdgeAuthConfig
+): boolean {
   return config.apiProtectedRoutes.some(
     (route) => pathname === route || pathname.startsWith(route + "/")
   );
 }
 
-export function isAdminApiRoute(pathname: string, config: EdgeAuthConfig): boolean {
+export function isAdminApiRoute(
+  pathname: string,
+  config: EdgeAuthConfig
+): boolean {
   return config.apiAdminRoutes.some(
     (route) => pathname === route || pathname.startsWith(route + "/")
   );
@@ -238,10 +254,10 @@ export async function validateEdgeRouteAccess(
   // Auth routes - redirect if already authenticated
   if (isAuthRoute(pathname, config)) {
     if (session?.user) {
-      return { 
-        isAllowed: false, 
-        session, 
-        reason: "Already authenticated"
+      return {
+        isAllowed: false,
+        session,
+        reason: "Already authenticated",
       };
     }
     return { isAllowed: true, session };
@@ -253,18 +269,18 @@ export async function validateEdgeRouteAccess(
     isProtectedApiRoute(pathname, config)
   ) {
     if (!session?.user) {
-      return { 
-        isAllowed: false, 
-        session, 
-        reason: "Authentication required"
+      return {
+        isAllowed: false,
+        session,
+        reason: "Authentication required",
       };
     }
 
     if (session.user.isActive === false) {
-      return { 
-        isAllowed: false, 
-        session, 
-        reason: "Account is deactivated"
+      return {
+        isAllowed: false,
+        session,
+        reason: "Account is deactivated",
       };
     }
 
@@ -274,18 +290,18 @@ export async function validateEdgeRouteAccess(
   // Admin routes - require admin role
   if (isAdminRoute(pathname, config) || isAdminApiRoute(pathname, config)) {
     if (!session?.user) {
-      return { 
-        isAllowed: false, 
-        session, 
-        reason: "Authentication required"
+      return {
+        isAllowed: false,
+        session,
+        reason: "Authentication required",
       };
     }
 
     if (!hasRequiredRole(session, "ADMIN")) {
-      return { 
-        isAllowed: false, 
-        session, 
-        reason: "Admin access required"
+      return {
+        isAllowed: false,
+        session,
+        reason: "Admin access required",
       };
     }
 
@@ -324,17 +340,16 @@ export function logAuthEvent(
   }
 ): void {
   if (process.env.NODE_ENV === "development") {
-    // eslint-disable-next-line no-console
-    // console.log(`[AUTH-${event.toUpperCase()}]`, {
-    //   timestamp: new Date().toISOString(),
-    //   ...details,
-    // });
+    console.log(`[AUTH-${event.toUpperCase()}]`, {
+      timestamp: new Date().toISOString(),
+      ..._details,
+    });
   }
 }
 
 /**
  * Rate limiting (Edge Runtime compatible)
- * 
+ *
  * Note: This is a simple Edge Runtime compatible version.
  * For production use, the enhanced rate limiting in /lib/rate-limiting.ts
  * provides Redis support and better persistence.

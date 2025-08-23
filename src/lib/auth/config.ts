@@ -8,10 +8,10 @@
  * - Session management for NextJS middleware
  */
 
-import { betterAuth } from "better-auth";
-import { prismaAdapter } from "better-auth/adapters/prisma";
 import { db } from "@/lib/db";
 import { sendEmailVerification, sendPasswordReset } from "@/lib/email";
+import { betterAuth } from "better-auth";
+import { prismaAdapter } from "better-auth/adapters/prisma";
 
 export const auth = betterAuth({
   // Database configuration
@@ -75,22 +75,36 @@ export const auth = betterAuth({
 
   // Email verification configuration
   emailVerification: {
-    sendVerificationEmail: async ({ user, url }: { user: { email: string }; url: string }) => {
+    sendVerificationEmail: async ({
+      user,
+      url,
+    }: {
+      user: { email: string };
+      url: string;
+    }) => {
       const result = await sendEmailVerification(user.email, url);
       if (!result.success && process.env.NODE_ENV === "development") {
-        // eslint-disable-next-line no-console
-        // console.log(`📧 Verification email would be sent to ${user.email} with URL: ${url}`);
+        console.log(
+          `📧 Verification email would be sent to ${user.email} with URL: ${url}`
+        );
       }
     },
   },
 
   // Password reset configuration
   forgetPassword: {
-    sendResetPassword: async ({ user, url }: { user: { email: string }; url: string }) => {
+    sendResetPassword: async ({
+      user,
+      url,
+    }: {
+      user: { email: string };
+      url: string;
+    }) => {
       const result = await sendPasswordReset(user.email, url);
       if (!result.success && process.env.NODE_ENV === "development") {
-        // eslint-disable-next-line no-console
-        // console.log(`📧 Password reset email would be sent to ${user.email} with URL: ${url}`);
+        console.log(
+          `📧 Password reset email would be sent to ${user.email} with URL: ${url}`
+        );
       }
     },
   },
@@ -175,8 +189,7 @@ export async function getServerSession(): Promise<Session | null> {
   } catch (_error) {
     // Don't log in production to avoid noise
     if (process.env.NODE_ENV === "development") {
-      // eslint-disable-next-line no-console
-      // console.error("Failed to get server session:", error);
+      console.error("Failed to get server session:", error);
     }
     return null;
   }

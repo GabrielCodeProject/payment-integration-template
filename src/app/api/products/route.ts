@@ -1,10 +1,10 @@
 /**
  * Product API Routes - Main endpoint for product listing and creation
- * 
+ *
  * Handles:
  * - GET: List products with filtering, pagination, and sorting
  * - POST: Create new products (admin only)
- * 
+ *
  * Features:
  * - Role-based access control (public read, admin write)
  * - Input validation with Zod schemas
@@ -15,13 +15,21 @@
  * - Response caching for public endpoints
  */
 
-import { NextRequest, NextResponse } from 'next/server';
-import { z } from 'zod';
-import { ProductService } from '@/services/products/product.service';
-import { db } from '@/lib/db';
-import { validateApiAccess, createApiErrorResponse, getAuditContext } from '@/lib/auth/server-session';
-import { createProductSchema, productFilterSchema, productSortSchema } from '@/lib/validations/base/product';
-import { rateLimit, auditAction } from '@/lib/api-helpers';
+import { auditAction, rateLimit } from "@/lib/api-helpers";
+import {
+  createApiErrorResponse,
+  getAuditContext,
+  validateApiAccess,
+} from "@/lib/auth/server-session";
+import { db } from "@/lib/db";
+import {
+  createProductSchema,
+  productFilterSchema,
+  productSortSchema,
+} from "@/lib/validations/base/product";
+import { ProductService } from "@/services/products/product.service";
+import { NextRequest, NextResponse } from "next/server";
+import { z } from "zod";
 
 const productService = new ProductService(db);
 
@@ -31,36 +39,91 @@ const getProductsQuerySchema = z.object({
   page: z.coerce.number().min(1).default(1),
   limit: z.coerce.number().min(1).max(100).default(20),
   cursor: z.string().optional(),
-  
+
   // Filtering
   name: z.string().optional(),
-  type: z.enum(['ONE_TIME', 'SUBSCRIPTION', 'USAGE_BASED']).optional(),
-  isActive: z.string().optional().transform(val => val === undefined ? undefined : val === 'true'),
-  isDigital: z.string().optional().transform(val => val === undefined ? undefined : val === 'true'),
-  inStock: z.string().optional().transform(val => val === undefined ? undefined : val === 'true'),
+  type: z.enum(["ONE_TIME", "SUBSCRIPTION", "USAGE_BASED"]).optional(),
+  isActive: z
+    .string()
+    .optional()
+    .transform((val) => (val === undefined ? undefined : val === "true")),
+  isDigital: z
+    .string()
+    .optional()
+    .transform((val) => (val === undefined ? undefined : val === "true")),
+  inStock: z
+    .string()
+    .optional()
+    .transform((val) => (val === undefined ? undefined : val === "true")),
   priceMin: z.coerce.number().min(0).optional(),
   priceMax: z.coerce.number().min(0).optional(),
-  categoryIds: z.string().optional().transform(val => val ? val.split(',').filter(Boolean) : undefined),
-  tagIds: z.string().optional().transform(val => val ? val.split(',').filter(Boolean) : undefined),
-  createdAfter: z.string().optional().transform(val => val ? new Date(val) : undefined),
-  createdBefore: z.string().optional().transform(val => val ? new Date(val) : undefined),
-  
+  categoryIds: z
+    .string()
+    .optional()
+    .transform((val) => (val ? val.split(",").filter(Boolean) : undefined)),
+  tagIds: z
+    .string()
+    .optional()
+    .transform((val) => (val ? val.split(",").filter(Boolean) : undefined)),
+  createdAfter: z
+    .string()
+    .optional()
+    .transform((val) => (val ? new Date(val) : undefined)),
+  createdBefore: z
+    .string()
+    .optional()
+    .transform((val) => (val ? new Date(val) : undefined)),
+
   // Visibility and Availability Filters
-  status: z.enum(['DRAFT', 'PUBLISHED', 'ARCHIVED', 'SCHEDULED']).optional(),
-  isPublished: z.string().optional().transform(val => val === undefined ? undefined : val === 'true'),
-  publishedAfter: z.string().optional().transform(val => val ? new Date(val) : undefined),
-  publishedBefore: z.string().optional().transform(val => val ? new Date(val) : undefined),
-  availableAfter: z.string().optional().transform(val => val ? new Date(val) : undefined),
-  availableBefore: z.string().optional().transform(val => val ? new Date(val) : undefined),
-  restrictedRegions: z.string().optional().transform(val => val ? val.split(',').filter(Boolean) : undefined),
-  allowedUserRoles: z.string().optional().transform(val => val ? val.split(',').filter(Boolean).map(role => role as 'CUSTOMER' | 'ADMIN' | 'SUPPORT') : undefined),
-  isLimited: z.string().optional().transform(val => val === undefined ? undefined : val === 'true'),
-  hasAvailableCapacity: z.string().optional().transform(val => val === undefined ? undefined : val === 'true'),
-  
+  status: z.enum(["DRAFT", "PUBLISHED", "ARCHIVED", "SCHEDULED"]).optional(),
+  isPublished: z
+    .string()
+    .optional()
+    .transform((val) => (val === undefined ? undefined : val === "true")),
+  publishedAfter: z
+    .string()
+    .optional()
+    .transform((val) => (val ? new Date(val) : undefined)),
+  publishedBefore: z
+    .string()
+    .optional()
+    .transform((val) => (val ? new Date(val) : undefined)),
+  availableAfter: z
+    .string()
+    .optional()
+    .transform((val) => (val ? new Date(val) : undefined)),
+  availableBefore: z
+    .string()
+    .optional()
+    .transform((val) => (val ? new Date(val) : undefined)),
+  restrictedRegions: z
+    .string()
+    .optional()
+    .transform((val) => (val ? val.split(",").filter(Boolean) : undefined)),
+  allowedUserRoles: z
+    .string()
+    .optional()
+    .transform((val) =>
+      val
+        ? val
+            .split(",")
+            .filter(Boolean)
+            .map((role) => role as "CUSTOMER" | "ADMIN" | "SUPPORT")
+        : undefined
+    ),
+  isLimited: z
+    .string()
+    .optional()
+    .transform((val) => (val === undefined ? undefined : val === "true")),
+  hasAvailableCapacity: z
+    .string()
+    .optional()
+    .transform((val) => (val === undefined ? undefined : val === "true")),
+
   // Sorting
   sort: productSortSchema.optional(),
-  sortDirection: z.enum(['asc', 'desc']).default('desc'),
-  
+  sortDirection: z.enum(["asc", "desc"]).default("desc"),
+
   // Search
   search: z.string().optional(),
 });
@@ -69,7 +132,7 @@ type GetProductsQuery = z.infer<typeof getProductsQuerySchema>;
 
 /**
  * GET /api/products - List products with filtering and pagination
- * 
+ *
  * Query Parameters:
  * - page: Page number (default: 1)
  * - limit: Items per page (default: 20, max: 100)
@@ -93,26 +156,33 @@ export async function GET(request: NextRequest) {
       windowMs: 15 * 60 * 1000, // 15 minutes
       maxRequests: 100, // 100 requests per window
       keyGenerator: (req) => {
-        const forwarded = req.headers.get('x-forwarded-for');
-        const ip = forwarded ? forwarded.split(',')[0] : 'unknown';
+        const forwarded = req.headers.get("x-forwarded-for");
+        const ip = forwarded ? forwarded.split(",")[0] : "unknown";
         return `products_list_${ip}`;
       },
     });
 
     if (!rateLimitResult.success) {
-      return createApiErrorResponse(429, 'Too many requests. Please try again later.');
+      return createApiErrorResponse(
+        429,
+        "Too many requests. Please try again later."
+      );
     }
 
     // Parse and validate query parameters
     const url = new URL(request.url);
     const queryParams = Object.fromEntries(url.searchParams.entries());
-    
+
     let validatedQuery: GetProductsQuery;
     try {
       validatedQuery = getProductsQuerySchema.parse(queryParams);
     } catch (_error) {
       if (_error instanceof z.ZodError) {
-        return createApiErrorResponse(400, 'Invalid query parameters', _error.issues);
+        return createApiErrorResponse(
+          400,
+          "Invalid query parameters",
+          _error.issues
+        );
       }
       throw _error;
     }
@@ -130,7 +200,7 @@ export async function GET(request: NextRequest) {
       tagIds: validatedQuery.tagIds,
       createdAfter: validatedQuery.createdAfter,
       createdBefore: validatedQuery.createdBefore,
-      
+
       // Visibility and availability filters
       status: validatedQuery.status,
       isPublished: validatedQuery.isPublished,
@@ -147,14 +217,14 @@ export async function GET(request: NextRequest) {
     // Fetch products with pagination and filtering
     const result = await productService.findMany(
       filters,
-      validatedQuery.sort || 'createdAt',
+      validatedQuery.sort || "createdAt",
       validatedQuery.sortDirection,
       validatedQuery.page,
       validatedQuery.limit
     );
 
     // Transform products for public API (remove sensitive fields)
-    const publicProducts = result.products.map(product => ({
+    const publicProducts = result.products.map((product) => ({
       id: product.id,
       name: product.name,
       description: product.description,
@@ -166,17 +236,19 @@ export async function GET(request: NextRequest) {
       metaTitle: product.metaTitle,
       metaDescription: product.metaDescription,
       // Transform categories and tags
-      categories: product.categories?.map(pc => ({
-        id: pc.category.id,
-        name: pc.category.name,
-        slug: pc.category.slug,
-      })) || [],
-      tags: product.tags?.map(pt => ({
-        id: pt.tag.id,
-        name: pt.tag.name,
-        slug: pt.tag.slug,
-        color: pt.tag.color,
-      })) || [],
+      categories:
+        product.categories?.map((pc) => ({
+          id: pc.category.id,
+          name: pc.category.name,
+          slug: pc.category.slug,
+        })) || [],
+      tags:
+        product.tags?.map((pt) => ({
+          id: pt.tag.id,
+          name: pt.tag.name,
+          slug: pt.tag.slug,
+          color: pt.tag.color,
+        })) || [],
       images: product.images,
       thumbnail: product.thumbnail,
       type: product.type,
@@ -184,7 +256,7 @@ export async function GET(request: NextRequest) {
       isActive: product.isActive,
       isDigital: product.isDigital,
       requiresShipping: product.requiresShipping,
-      
+
       // Visibility and availability (public fields only)
       status: product.status,
       isPublished: product.isPublished,
@@ -192,16 +264,19 @@ export async function GET(request: NextRequest) {
       availableFrom: product.availableFrom,
       availableTo: product.availableTo,
       isLimited: product.isLimited,
-      
+
       // Calculate derived fields
       inStock: product.isDigital || (product.stockQuantity || 0) > 0,
       isOnSale: !!product.compareAtPrice,
-      discountPercentage: product.compareAtPrice 
-        ? Math.round((1 - Number(product.price) / Number(product.compareAtPrice)) * 100)
+      discountPercentage: product.compareAtPrice
+        ? Math.round(
+            (1 - Number(product.price) / Number(product.compareAtPrice)) * 100
+          )
         : undefined,
-      hasAvailableCapacity: product.isLimited && product.maxUsers
-        ? product.currentUsers < product.maxUsers
-        : true,
+      hasAvailableCapacity:
+        product.isLimited && product.maxUsers
+          ? product.currentUsers < product.maxUsers
+          : true,
       createdAt: product.createdAt,
       updatedAt: product.updatedAt,
     }));
@@ -222,48 +297,52 @@ export async function GET(request: NextRequest) {
 
     // Set cache headers for public product listings
     const cacheHeaders = {
-      'Cache-Control': 'public, s-maxage=300, stale-while-revalidate=600', // 5 min cache, 10 min SWR
-      'Vary': 'Accept, Accept-Encoding',
+      "Cache-Control": "public, s-maxage=300, stale-while-revalidate=600", // 5 min cache, 10 min SWR
+      Vary: "Accept, Accept-Encoding",
     };
 
-    return NextResponse.json(response, { 
+    return NextResponse.json(response, {
       status: 200,
       headers: cacheHeaders,
     });
-
   } catch (_error) {
-    // console.error('Error fetching products:', error);
-    return createApiErrorResponse(500, 'Failed to fetch products');
+    return createApiErrorResponse(500, "Failed to fetch products");
   }
 }
 
 /**
  * POST /api/products - Create a new product (admin only)
- * 
+ *
  * Requires ADMIN role and valid product data.
  * Automatically handles Stripe product creation if configured.
  */
 export async function POST(request: NextRequest) {
   try {
     // Validate admin authentication
-    const { isValid, session, error } = await validateApiAccess(request, 'ADMIN');
-    
+    const { isValid, session, error } = await validateApiAccess(
+      request,
+      "ADMIN"
+    );
+
     if (!isValid || !session) {
       return createApiErrorResponse(
         error?.code || 401,
-        error?.message || 'Admin authentication required'
+        error?.message || "Admin authentication required"
       );
     }
 
     // Apply stricter rate limiting for admin operations
     const rateLimitResult = await rateLimit(request, {
-      windowMs: 15 * 60 * 1000, // 15 minutes  
+      windowMs: 15 * 60 * 1000, // 15 minutes
       maxRequests: 50, // 50 admin operations per window
       keyGenerator: () => `products_create_${session.user.id}`,
     });
 
     if (!rateLimitResult.success) {
-      return createApiErrorResponse(429, 'Too many admin requests. Please try again later.');
+      return createApiErrorResponse(
+        429,
+        "Too many admin requests. Please try again later."
+      );
     }
 
     // Parse and validate request body
@@ -271,7 +350,7 @@ export async function POST(request: NextRequest) {
     try {
       requestData = await request.json();
     } catch {
-      return createApiErrorResponse(400, 'Invalid JSON in request body');
+      return createApiErrorResponse(400, "Invalid JSON in request body");
     }
 
     let validatedData;
@@ -279,7 +358,11 @@ export async function POST(request: NextRequest) {
       validatedData = createProductSchema.parse(requestData);
     } catch (_error) {
       if (_error instanceof z.ZodError) {
-        return createApiErrorResponse(400, 'Invalid product data', _error.issues);
+        return createApiErrorResponse(
+          400,
+          "Invalid product data",
+          _error.issues
+        );
       }
       throw _error;
     }
@@ -290,8 +373,8 @@ export async function POST(request: NextRequest) {
     // Log the admin action for audit
     const auditContext = getAuditContext(request, session);
     await auditAction({
-      action: 'CREATE_PRODUCT',
-      resource: 'Product',
+      action: "CREATE_PRODUCT",
+      resource: "Product",
       resourceId: product.id,
       adminUserId: auditContext.adminUserId,
       adminRole: auditContext.adminRole,
@@ -303,29 +386,29 @@ export async function POST(request: NextRequest) {
         price: product.price,
         sku: product.sku,
       },
-      severity: 'INFO',
+      severity: "INFO",
     });
 
     // Return created product (with admin fields)
-    return NextResponse.json({
-      product,
-      message: 'Product created successfully',
-    }, { status: 201 });
-
+    return NextResponse.json(
+      {
+        product,
+        message: "Product created successfully",
+      },
+      { status: 201 }
+    );
   } catch (_error) {
-    // console.error('Error creating product:', error);
-    
     // Handle specific business logic errors
     if (_error instanceof Error) {
-      if (_error.message.includes('already exists')) {
+      if (_error.message.includes("already exists")) {
         return createApiErrorResponse(409, _error.message);
       }
-      if (_error.message.includes('validation')) {
+      if (_error.message.includes("validation")) {
         return createApiErrorResponse(400, _error.message);
       }
     }
 
-    return createApiErrorResponse(500, 'Failed to create product');
+    return createApiErrorResponse(500, "Failed to create product");
   }
 }
 
@@ -336,10 +419,10 @@ export async function OPTIONS() {
   return new NextResponse(null, {
     status: 200,
     headers: {
-      'Access-Control-Allow-Origin': '*',
-      'Access-Control-Allow-Methods': 'GET, POST, OPTIONS',
-      'Access-Control-Allow-Headers': 'Content-Type, Authorization',
-      'Access-Control-Max-Age': '86400',
+      "Access-Control-Allow-Origin": "*",
+      "Access-Control-Allow-Methods": "GET, POST, OPTIONS",
+      "Access-Control-Allow-Headers": "Content-Type, Authorization",
+      "Access-Control-Max-Age": "86400",
     },
   });
 }

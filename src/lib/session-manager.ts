@@ -1,6 +1,6 @@
 /**
  * Advanced Session Management Service for Payment Integration Template
- * 
+ *
  * This service provides comprehensive session management capabilities including:
  * - Session enumeration and tracking
  * - Secure session refresh and token rotation
@@ -10,9 +10,9 @@
  */
 
 import { PrismaClient } from "@prisma/client";
-import { db } from "./db";
-import { auditService, AuditContext } from "./audit";
 import { headers } from "next/headers";
+import { AuditContext, auditService } from "./audit";
+import { db } from "./db";
 
 // Session management types and interfaces
 export interface SessionInfo {
@@ -101,7 +101,7 @@ export class SessionManager {
    */
   async getUserSessions(
     userId: string,
-    options: { 
+    options: {
       includeExpired?: boolean;
       includeSecurity?: boolean;
       currentSessionId?: string;
@@ -116,10 +116,10 @@ export class SessionManager {
 
       const sessions = await this.db.session.findMany({
         where: whereClause,
-        orderBy: { updatedAt: 'desc' },
+        orderBy: { updatedAt: "desc" },
       });
 
-      const sessionInfos: SessionInfo[] = sessions.map(session => ({
+      const sessionInfos: SessionInfo[] = sessions.map((session) => ({
         id: session.id,
         token: session.token,
         userId: session.userId,
@@ -137,11 +137,11 @@ export class SessionManager {
 
       // Audit the session enumeration
       await auditService.createAuditLog({
-        tableName: 'sessions',
+        tableName: "sessions",
         recordId: userId,
-        action: 'ACCESS',
+        action: "ACCESS",
         metadata: {
-          operation: 'getUserSessions',
+          operation: "getUserSessions",
           sessionCount: sessionInfos.length,
           includeExpired: options.includeExpired,
         },
@@ -149,7 +149,9 @@ export class SessionManager {
 
       return sessionInfos;
     } catch (_error) {
-      throw new Error(`Failed to get user sessions: ${error instanceof Error ? _error.message : 'Unknown error'}`);
+      throw new Error(
+        `Failed to get user sessions: ${error instanceof Error ? _error.message : "Unknown error"}`
+      );
     }
   }
 
@@ -172,7 +174,7 @@ export class SessionManager {
       if (!session) {
         return {
           success: false,
-          error: 'Session not found',
+          error: "Session not found",
           rotated: false,
         };
       }
@@ -181,7 +183,7 @@ export class SessionManager {
       if (session.expiresAt <= now) {
         return {
           success: false,
-          error: 'Session expired',
+          error: "Session expired",
           rotated: false,
         };
       }
@@ -199,7 +201,9 @@ export class SessionManager {
 
       // Extend expiry if requested
       if (extendExpiry) {
-        newExpiresAt = new Date(now.getTime() + this.defaultLimits.maxSessionDuration * 1000);
+        newExpiresAt = new Date(
+          now.getTime() + this.defaultLimits.maxSessionDuration * 1000
+        );
       }
 
       // Update session
@@ -214,20 +218,22 @@ export class SessionManager {
 
       // Audit the refresh operation
       await auditService.createAuditLog({
-        tableName: 'sessions',
+        tableName: "sessions",
         recordId: sessionId,
-        action: 'UPDATE',
+        action: "UPDATE",
         oldValues: {
-          token: rotateToken ? '[MASKED]' : session.token,
+          token: rotateToken ? "[MASKED]" : session.token,
           expiresAt: session.expiresAt,
         },
         newValues: {
-          token: rotateToken ? '[MASKED]' : newToken,
+          token: rotateToken ? "[MASKED]" : newToken,
           expiresAt: newExpiresAt,
         },
-        changedFields: rotateToken ? ['token', 'expiresAt', 'updatedAt'] : ['expiresAt', 'updatedAt'],
+        changedFields: rotateToken
+          ? ["token", "expiresAt", "updatedAt"]
+          : ["expiresAt", "updatedAt"],
         metadata: {
-          operation: 'refreshSession',
+          operation: "refreshSession",
           tokenRotated: rotateToken,
           expiryExtended: extendExpiry,
           userId: session.userId,
@@ -244,7 +250,7 @@ export class SessionManager {
     } catch (_error) {
       return {
         success: false,
-        error: `Failed to refresh session: ${error instanceof Error ? _error.message : 'Unknown error'}`,
+        error: `Failed to refresh session: ${error instanceof Error ? _error.message : "Unknown error"}`,
         rotated: false,
       };
     }
@@ -275,9 +281,9 @@ export class SessionManager {
 
       // Audit the termination
       await auditService.createAuditLog({
-        tableName: 'sessions',
+        tableName: "sessions",
         recordId: sessionId,
-        action: 'DELETE',
+        action: "DELETE",
         oldValues: {
           userId: session.userId,
           expiresAt: session.expiresAt,
@@ -285,8 +291,8 @@ export class SessionManager {
           userAgent: session.userAgent,
         },
         metadata: {
-          operation: 'terminateSession',
-          reason: options.reason || 'manual_termination',
+          operation: "terminateSession",
+          reason: options.reason || "manual_termination",
           userId: session.userId,
         },
         ...(options.auditContext && { context: options.auditContext }),
@@ -294,7 +300,9 @@ export class SessionManager {
 
       return true;
     } catch (_error) {
-      throw new Error(`Failed to terminate session: ${error instanceof Error ? _error.message : 'Unknown error'}`);
+      throw new Error(
+        `Failed to terminate session: ${error instanceof Error ? _error.message : "Unknown error"}`
+      );
     }
   }
 
@@ -312,7 +320,9 @@ export class SessionManager {
     try {
       const whereClause = {
         userId,
-        ...(options.excludeCurrentSession ? { id: { not: options.excludeCurrentSession } } : {}),
+        ...(options.excludeCurrentSession
+          ? { id: { not: options.excludeCurrentSession } }
+          : {}),
       };
 
       // Get sessions before deletion for audit
@@ -327,15 +337,15 @@ export class SessionManager {
 
       // Audit the bulk termination
       await auditService.createAuditLog({
-        tableName: 'sessions',
+        tableName: "sessions",
         recordId: userId,
-        action: 'DELETE',
+        action: "DELETE",
         metadata: {
-          operation: 'terminateAllSessions',
-          reason: options.reason || 'bulk_termination',
+          operation: "terminateAllSessions",
+          reason: options.reason || "bulk_termination",
           excludedSessionId: options.excludeCurrentSession,
           terminatedCount: result.count,
-          terminatedSessions: sessionsToDelete.map(s => ({
+          terminatedSessions: sessionsToDelete.map((s) => ({
             id: s.id,
             ipAddress: s.ipAddress,
             userAgent: s.userAgent,
@@ -346,7 +356,9 @@ export class SessionManager {
 
       return result.count;
     } catch (_error) {
-      throw new Error(`Failed to terminate all sessions: ${error instanceof Error ? _error.message : 'Unknown error'}`);
+      throw new Error(
+        `Failed to terminate all sessions: ${error instanceof Error ? _error.message : "Unknown error"}`
+      );
     }
   }
 
@@ -368,7 +380,7 @@ export class SessionManager {
           userId,
           expiresAt: { gt: now },
         },
-        orderBy: { updatedAt: 'asc' }, // Oldest first for displacement
+        orderBy: { updatedAt: "asc" }, // Oldest first for displacement
       });
 
       let displacedSessions = 0;
@@ -393,7 +405,7 @@ export class SessionManager {
 
         for (const session of sessionsToDisplace) {
           await this.terminateSession(session.id, {
-            reason: 'session_limit_enforcement',
+            reason: "session_limit_enforcement",
             ...(auditContext && { auditContext }),
           });
           displacedSessions++;
@@ -401,12 +413,15 @@ export class SessionManager {
       }
 
       // Check for suspicious sessions (if security monitoring is enabled)
-      if (effectiveLimits.enforceIpValidation || effectiveLimits.enforceDeviceValidation) {
+      if (
+        effectiveLimits.enforceIpValidation ||
+        effectiveLimits.enforceDeviceValidation
+      ) {
         for (const session of activeSessions) {
           const security = await this.evaluateSessionSecurity(session);
           if (security.suspicious && security.riskScore > 0.7) {
             await this.terminateSession(session.id, {
-              reason: 'suspicious_activity',
+              reason: "suspicious_activity",
               ...(auditContext && { auditContext }),
             });
             suspiciousSessions++;
@@ -423,11 +438,11 @@ export class SessionManager {
 
       // Audit the enforcement action
       await auditService.createAuditLog({
-        tableName: 'sessions',
+        tableName: "sessions",
         recordId: userId,
-        action: 'UPDATE',
+        action: "UPDATE",
         metadata: {
-          operation: 'enforceSessionLimits',
+          operation: "enforceSessionLimits",
           limits: effectiveLimits,
           result,
         },
@@ -436,7 +451,9 @@ export class SessionManager {
 
       return result;
     } catch (_error) {
-      throw new Error(`Failed to enforce session limits: ${error instanceof Error ? _error.message : 'Unknown error'}`);
+      throw new Error(
+        `Failed to enforce session limits: ${error instanceof Error ? _error.message : "Unknown error"}`
+      );
     }
   }
 
@@ -448,20 +465,19 @@ export class SessionManager {
       const now = new Date();
       const last24Hours = new Date(now.getTime() - 24 * 60 * 60 * 1000);
 
-      const [
-        totalSessions,
-        activeSessions,
-        expiredSessions,
-        recentLogins,
-      ] = await Promise.all([
-        this.db.session.count({ where: { userId } }),
-        this.db.session.count({ where: { userId, expiresAt: { gt: now } } }),
-        this.db.session.count({ where: { userId, expiresAt: { lte: now } } }),
-        this.db.session.count({ where: { userId, createdAt: { gte: last24Hours } } }),
-      ]);
+      const [totalSessions, activeSessions, expiredSessions, recentLogins] =
+        await Promise.all([
+          this.db.session.count({ where: { userId } }),
+          this.db.session.count({ where: { userId, expiresAt: { gt: now } } }),
+          this.db.session.count({ where: { userId, expiresAt: { lte: now } } }),
+          this.db.session.count({
+            where: { userId, createdAt: { gte: last24Hours } },
+          }),
+        ]);
 
       // Calculate average session duration properly
-      const averageSessionDuration = await this.calculateProperAverageSessionDuration(userId);
+      const averageSessionDuration =
+        await this.calculateProperAverageSessionDuration(userId);
 
       return {
         totalSessions,
@@ -472,7 +488,9 @@ export class SessionManager {
         averageSessionDuration,
       };
     } catch (_error) {
-      throw new Error(`Failed to get session stats: ${error instanceof Error ? _error.message : 'Unknown error'}`);
+      throw new Error(
+        `Failed to get session stats: ${error instanceof Error ? _error.message : "Unknown error"}`
+      );
     }
   }
 
@@ -486,7 +504,8 @@ export class SessionManager {
     try {
       const now = new Date();
       const expiresAt = new Date(
-        now.getTime() + (options.maxAge || this.defaultLimits.maxSessionDuration) * 1000
+        now.getTime() +
+          (options.maxAge || this.defaultLimits.maxSessionDuration) * 1000
       );
 
       const token = await this.generateSecureToken();
@@ -508,9 +527,9 @@ export class SessionManager {
 
       // Audit session creation
       await auditService.createAuditLog({
-        tableName: 'sessions',
+        tableName: "sessions",
         recordId: session.id,
-        action: 'CREATE',
+        action: "CREATE",
         newValues: {
           userId,
           expiresAt,
@@ -518,7 +537,7 @@ export class SessionManager {
           userAgent: options.userAgent,
         },
         metadata: {
-          operation: 'createSession',
+          operation: "createSession",
           deviceType: this.parseDeviceType(options.userAgent),
           browser: this.parseBrowser(options.userAgent),
           location: this.parseLocation(options.ipAddress),
@@ -541,7 +560,9 @@ export class SessionManager {
         isCurrent: true,
       };
     } catch (_error) {
-      throw new Error(`Failed to create session: ${error instanceof Error ? _error.message : 'Unknown error'}`);
+      throw new Error(
+        `Failed to create session: ${error instanceof Error ? _error.message : "Unknown error"}`
+      );
     }
   }
 
@@ -567,11 +588,11 @@ export class SessionManager {
 
       // Audit cleanup operation
       await auditService.createAuditLog({
-        tableName: 'sessions',
-        recordId: 'system',
-        action: 'DELETE',
+        tableName: "sessions",
+        recordId: "system",
+        action: "DELETE",
         metadata: {
-          operation: 'cleanupExpiredSessions',
+          operation: "cleanupExpiredSessions",
           result,
           automated: true,
         },
@@ -579,7 +600,9 @@ export class SessionManager {
 
       return result;
     } catch (_error) {
-      throw new Error(`Failed to cleanup expired sessions: ${error instanceof Error ? _error.message : 'Unknown error'}`);
+      throw new Error(
+        `Failed to cleanup expired sessions: ${error instanceof Error ? _error.message : "Unknown error"}`
+      );
     }
   }
 
@@ -604,7 +627,7 @@ export class SessionManager {
           userAgent: true,
         },
         take: 10,
-        orderBy: { createdAt: 'desc' },
+        orderBy: { createdAt: "desc" },
       });
 
       let riskScore = 0;
@@ -613,10 +636,8 @@ export class SessionManager {
 
       // Check for unusual IP address
       if (session.ipAddress) {
-        const knownIps = userSessions
-          .map(s => s.ipAddress)
-          .filter(Boolean);
-        
+        const knownIps = userSessions.map((s) => s.ipAddress).filter(Boolean);
+
         if (knownIps.length > 0 && !knownIps.includes(session.ipAddress)) {
           unusualLocation = true;
           riskScore += 0.3;
@@ -626,10 +647,13 @@ export class SessionManager {
       // Check for unusual user agent
       if (session.userAgent) {
         const knownUserAgents = userSessions
-          .map(s => s.userAgent)
+          .map((s) => s.userAgent)
           .filter(Boolean);
-        
-        if (knownUserAgents.length > 0 && !knownUserAgents.includes(session.userAgent)) {
+
+        if (
+          knownUserAgents.length > 0 &&
+          !knownUserAgents.includes(session.userAgent)
+        ) {
           unusualDevice = true;
           riskScore += 0.2;
         }
@@ -657,22 +681,26 @@ export class SessionManager {
    */
   private async generateSecureToken(): Promise<string> {
     // Use crypto.randomUUID() for secure token generation
-    return `sess_${crypto.randomUUID().replace(/-/g, '')}${Date.now().toString(36)}`;
+    return `sess_${crypto.randomUUID().replace(/-/g, "")}${Date.now().toString(36)}`;
   }
 
   /**
    * Parse device type from user agent
    */
   private parseDeviceType(userAgent?: string | null): string {
-    if (!userAgent) return 'Unknown';
-    
+    if (!userAgent) return "Unknown";
+
     const ua = userAgent.toLowerCase();
-    if (ua.includes('mobile') || ua.includes('android') || ua.includes('iphone')) {
-      return 'Mobile';
-    } else if (ua.includes('tablet') || ua.includes('ipad')) {
-      return 'Tablet';
+    if (
+      ua.includes("mobile") ||
+      ua.includes("android") ||
+      ua.includes("iphone")
+    ) {
+      return "Mobile";
+    } else if (ua.includes("tablet") || ua.includes("ipad")) {
+      return "Tablet";
     } else {
-      return 'Desktop';
+      return "Desktop";
     }
   }
 
@@ -680,37 +708,39 @@ export class SessionManager {
    * Parse browser from user agent
    */
   private parseBrowser(userAgent?: string | null): string {
-    if (!userAgent) return 'Unknown';
-    
+    if (!userAgent) return "Unknown";
+
     const ua = userAgent.toLowerCase();
-    if (ua.includes('chrome')) return 'Chrome';
-    if (ua.includes('firefox')) return 'Firefox';
-    if (ua.includes('safari')) return 'Safari';
-    if (ua.includes('edge')) return 'Edge';
-    if (ua.includes('opera')) return 'Opera';
-    
-    return 'Other';
+    if (ua.includes("chrome")) return "Chrome";
+    if (ua.includes("firefox")) return "Firefox";
+    if (ua.includes("safari")) return "Safari";
+    if (ua.includes("edge")) return "Edge";
+    if (ua.includes("opera")) return "Opera";
+
+    return "Other";
   }
 
   /**
    * Parse location from IP address (placeholder - would integrate with GeoIP service)
    */
   private parseLocation(ipAddress?: string | null): string {
-    if (!ipAddress) return 'Unknown';
-    
+    if (!ipAddress) return "Unknown";
+
     // In production, you would integrate with a GeoIP service
     // For now, return a placeholder
-    return 'Unknown Location';
+    return "Unknown Location";
   }
 
   /**
    * Calculate proper average session duration for a user
    */
-  private async calculateProperAverageSessionDuration(userId: string): Promise<number> {
+  private async calculateProperAverageSessionDuration(
+    userId: string
+  ): Promise<number> {
     try {
       // Get sessions that have been used (have both createdAt and updatedAt)
       const sessions = await this.db.session.findMany({
-        where: { 
+        where: {
           userId,
         },
         select: {
@@ -719,7 +749,7 @@ export class SessionManager {
           expiresAt: true,
         },
         take: 100, // Limit to recent 100 sessions for performance
-        orderBy: { updatedAt: 'desc' },
+        orderBy: { updatedAt: "desc" },
       });
 
       if (sessions.length === 0) {
@@ -728,17 +758,17 @@ export class SessionManager {
 
       // Calculate duration for each session
       const durations = sessions
-        .map(session => {
+        .map((session) => {
           // Calculate session duration based on activity
           const now = new Date();
-          
+
           // If session is expired, use the expiry time or last activity time
-          const sessionEndTime = session.expiresAt < now 
-            ? session.expiresAt 
-            : session.updatedAt;
-          
-          const durationMs = sessionEndTime.getTime() - session.createdAt.getTime();
-          
+          const sessionEndTime =
+            session.expiresAt < now ? session.expiresAt : session.updatedAt;
+
+          const durationMs =
+            sessionEndTime.getTime() - session.createdAt.getTime();
+
           // Only include sessions that have meaningful duration (at least 1 minute)
           return durationMs > 60000 ? durationMs : null;
         })
@@ -748,16 +778,17 @@ export class SessionManager {
       if (durations.length === 0) {
         return 0;
       }
-      
-      const averageDurationMs = durations.reduce((sum, duration) => sum + duration, 0) / durations.length;
+
+      const averageDurationMs =
+        durations.reduce((sum, duration) => sum + duration, 0) /
+        durations.length;
       return Math.floor(averageDurationMs / 1000); // Convert to seconds
     } catch (_error) {
       // Return 0 if calculation fails
-      // // console.warn('Failed to calculate average session duration:', _error);
+      console.warn("Failed to calculate average session duration:", _error);
       return 0;
     }
   }
-
 }
 
 // Rate limiting for session operations
@@ -768,7 +799,10 @@ export class SessionRateLimiter {
     getUserSessions: { windowMs: 60 * 1000, maxAttempts: 30 }, // 30 per minute
   };
 
-  private static attemptCounts = new Map<string, { count: number; resetTime: number }>();
+  private static attemptCounts = new Map<
+    string,
+    { count: number; resetTime: number }
+  >();
 
   static async checkRateLimit(
     operation: keyof typeof SessionRateLimiter.LIMITS,
@@ -779,7 +813,7 @@ export class SessionRateLimiter {
     const now = Date.now();
 
     const existing = this.attemptCounts.get(key);
-    
+
     if (!existing || now > existing.resetTime) {
       // First attempt or window has reset
       this.attemptCounts.set(key, {
@@ -820,22 +854,22 @@ export const sessionManager = new SessionManager();
 export async function getCurrentSession(): Promise<SessionInfo | null> {
   try {
     const headersList = await headers();
-    const authHeader = headersList.get('authorization');
-    const cookieHeader = headersList.get('cookie');
+    const authHeader = headersList.get("authorization");
+    const cookieHeader = headersList.get("cookie");
 
     // Try to get session token from auth header or cookie
     let sessionToken: string | null = null;
 
-    if (authHeader?.startsWith('Bearer ')) {
+    if (authHeader?.startsWith("Bearer ")) {
       sessionToken = authHeader.substring(7);
     } else if (cookieHeader) {
       // Parse session token from cookie (BetterAuth format)
       const sessionCookie = cookieHeader
-        .split(';')
-        .find((c: string) => c.trim().startsWith('better-auth.session_token='));
-      
+        .split(";")
+        .find((c: string) => c.trim().startsWith("better-auth.session_token="));
+
       if (sessionCookie) {
-        sessionToken = sessionCookie.split('=')[1] ?? null;
+        sessionToken = sessionCookie.split("=")[1] ?? null;
       }
     }
 

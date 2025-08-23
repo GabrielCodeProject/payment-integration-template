@@ -1,11 +1,11 @@
 /**
  * Individual Tag API Routes - CRUD operations for specific tags
- * 
+ *
  * Handles:
  * - GET: Retrieve specific tag with optional product details
  * - PUT: Update tag (admin only)
  * - DELETE: Delete tag (admin only)
- * 
+ *
  * Features:
  * - Role-based access control (public read, admin write/delete)
  * - Input validation with Zod schemas
@@ -14,13 +14,17 @@
  * - Response caching for public endpoints
  */
 
-import { NextRequest, NextResponse } from 'next/server';
-import { z } from 'zod';
-import { db } from '@/lib/db';
-import { validateApiAccess, createApiErrorResponse, getAuditContext } from '@/lib/auth/server-session';
-import { updateTagSchema } from '@/lib/validations/base/tag';
-import { cuidSchema } from '@/lib/validations/base/common';
-import { rateLimit, auditAction } from '@/lib/api-helpers';
+import { auditAction, rateLimit } from "@/lib/api-helpers";
+import {
+  createApiErrorResponse,
+  getAuditContext,
+  validateApiAccess,
+} from "@/lib/auth/server-session";
+import { db } from "@/lib/db";
+import { cuidSchema } from "@/lib/validations/base/common";
+import { updateTagSchema } from "@/lib/validations/base/tag";
+import { NextRequest, NextResponse } from "next/server";
+import { z } from "zod";
 
 // Route parameter validation
 const routeParamsSchema = z.object({
@@ -29,13 +33,16 @@ const routeParamsSchema = z.object({
 
 // Query parameters for GET request
 const getTagQuerySchema = z.object({
-  includeProducts: z.string().optional().transform(val => val === 'true'),
+  includeProducts: z
+    .string()
+    .optional()
+    .transform((val) => val === "true"),
   productsLimit: z.coerce.number().min(1).max(50).default(10),
 });
 
 /**
  * GET /api/tags/[id] - Retrieve a specific tag
- * 
+ *
  * Query Parameters:
  * - includeProducts: Include associated products (default: false)
  * - productsLimit: Limit number of products to return (default: 10, max: 50)
@@ -58,14 +65,17 @@ export async function GET(
       windowMs: 15 * 60 * 1000, // 15 minutes
       maxRequests: 100, // 100 requests per window
       keyGenerator: (req) => {
-        const forwarded = req.headers.get('x-forwarded-for');
-        const ip = forwarded ? forwarded.split(',')[0] : 'unknown';
+        const forwarded = req.headers.get("x-forwarded-for");
+        const ip = forwarded ? forwarded.split(",")[0] : "unknown";
         return `tag_get_${ip}`;
       },
     });
 
     if (!rateLimitResult.success) {
-      return createApiErrorResponse(429, 'Too many requests. Please try again later.');
+      return createApiErrorResponse(
+        429,
+        "Too many requests. Please try again later."
+      );
     }
 
     // Fetch tag with optional products
@@ -77,31 +87,33 @@ export async function GET(
             products: true,
           },
         },
-        ...(query.includeProducts ? {
-          products: {
-            take: query.productsLimit,
-            include: {
-              product: {
-                select: {
-                  id: true,
-                  name: true,
-                  slug: true,
-                  price: true,
-                  currency: true,
-                  thumbnail: true,
-                  isActive: true,
-                  type: true,
-                  createdAt: true,
+        ...(query.includeProducts
+          ? {
+              products: {
+                take: query.productsLimit,
+                include: {
+                  product: {
+                    select: {
+                      id: true,
+                      name: true,
+                      slug: true,
+                      price: true,
+                      currency: true,
+                      thumbnail: true,
+                      isActive: true,
+                      type: true,
+                      createdAt: true,
+                    },
+                  },
                 },
               },
-            },
-          },
-        } : {}),
+            }
+          : {}),
       },
     });
 
     if (!tag) {
-      return createApiErrorResponse(404, 'Tag not found');
+      return createApiErrorResponse(404, "Tag not found");
     }
 
     // Transform response for public API
@@ -113,30 +125,33 @@ export async function GET(
       productCount: tag._count.products,
       createdAt: tag.createdAt,
       updatedAt: tag.updatedAt,
-      ...(query.includeProducts && 'products' in tag ? {
-        products: tag.products.map((pt: any) => pt.product),
-      } : {}),
+      ...(query.includeProducts && "products" in tag
+        ? {
+            products: tag.products.map((pt: any) => pt.product),
+          }
+        : {}),
     };
 
     // Set cache headers
     const cacheHeaders = {
-      'Cache-Control': 'public, s-maxage=300, stale-while-revalidate=600',
-      'Vary': 'Accept, Accept-Encoding',
+      "Cache-Control": "public, s-maxage=300, stale-while-revalidate=600",
+      Vary: "Accept, Accept-Encoding",
     };
 
     return NextResponse.json(response, {
       status: 200,
       headers: cacheHeaders,
     });
-
   } catch (_error) {
-    // console.error('Error fetching tag:', error);
-    
     if (_error instanceof z.ZodError) {
-      return createApiErrorResponse(400, 'Invalid request parameters', _error.issues);
+      return createApiErrorResponse(
+        400,
+        "Invalid request parameters",
+        _error.issues
+      );
     }
 
-    return createApiErrorResponse(500, 'Failed to fetch tag');
+    return createApiErrorResponse(500, "Failed to fetch tag");
   }
 }
 
@@ -152,12 +167,15 @@ export async function PUT(
     const { id } = routeParamsSchema.parse(params);
 
     // Validate admin authentication
-    const { isValid, session, error } = await validateApiAccess(request, 'ADMIN');
-    
+    const { isValid, session, error } = await validateApiAccess(
+      request,
+      "ADMIN"
+    );
+
     if (!isValid || !session) {
       return createApiErrorResponse(
         error?.code || 401,
-        error?.message || 'Admin authentication required'
+        error?.message || "Admin authentication required"
       );
     }
 
@@ -169,7 +187,10 @@ export async function PUT(
     });
 
     if (!rateLimitResult.success) {
-      return createApiErrorResponse(429, 'Too many admin requests. Please try again later.');
+      return createApiErrorResponse(
+        429,
+        "Too many admin requests. Please try again later."
+      );
     }
 
     // Parse and validate request body
@@ -177,7 +198,7 @@ export async function PUT(
     try {
       requestData = await request.json();
     } catch {
-      return createApiErrorResponse(400, 'Invalid JSON in request body');
+      return createApiErrorResponse(400, "Invalid JSON in request body");
     }
 
     // Add ID to validation data
@@ -188,7 +209,7 @@ export async function PUT(
       validatedData = updateTagSchema.parse(requestData);
     } catch (_error) {
       if (_error instanceof z.ZodError) {
-        return createApiErrorResponse(400, 'Invalid tag data', _error.issues);
+        return createApiErrorResponse(400, "Invalid tag data", _error.issues);
       }
       throw _error;
     }
@@ -199,7 +220,7 @@ export async function PUT(
     });
 
     if (!existingTag) {
-      return createApiErrorResponse(404, 'Tag not found');
+      return createApiErrorResponse(404, "Tag not found");
     }
 
     // Check for duplicate name/slug (excluding current tag)
@@ -210,7 +231,16 @@ export async function PUT(
             { id: { not: id } },
             {
               OR: [
-                ...(validatedData.name ? [{ name: { equals: validatedData.name, mode: 'insensitive' } }] : []),
+                ...(validatedData.name
+                  ? [
+                      {
+                        name: {
+                          equals: validatedData.name,
+                          mode: "insensitive",
+                        },
+                      },
+                    ]
+                  : []),
                 ...(validatedData.slug ? [{ slug: validatedData.slug }] : []),
               ],
             },
@@ -219,11 +249,19 @@ export async function PUT(
       });
 
       if (duplicateTag) {
-        if (duplicateTag.name.toLowerCase() === validatedData.name?.toLowerCase()) {
-          return createApiErrorResponse(409, 'A tag with this name already exists');
+        if (
+          duplicateTag.name.toLowerCase() === validatedData.name?.toLowerCase()
+        ) {
+          return createApiErrorResponse(
+            409,
+            "A tag with this name already exists"
+          );
         }
         if (duplicateTag.slug === validatedData.slug) {
-          return createApiErrorResponse(409, 'A tag with this slug already exists');
+          return createApiErrorResponse(
+            409,
+            "A tag with this slug already exists"
+          );
         }
       }
     }
@@ -234,15 +272,17 @@ export async function PUT(
       data: {
         ...(validatedData.name && { name: validatedData.name }),
         ...(validatedData.slug && { slug: validatedData.slug }),
-        ...(validatedData.color !== undefined && { color: validatedData.color }),
+        ...(validatedData.color !== undefined && {
+          color: validatedData.color,
+        }),
       },
     });
 
     // Log the admin action for audit
     const auditContext = getAuditContext(request, session);
     await auditAction({
-      action: 'UPDATE_TAG',
-      resource: 'Tag',
+      action: "UPDATE_TAG",
+      resource: "Tag",
       resourceId: updatedTag.id,
       adminUserId: auditContext.adminUserId,
       adminRole: auditContext.adminRole,
@@ -252,24 +292,25 @@ export async function PUT(
         tagName: updatedTag.name,
         tagSlug: updatedTag.slug,
         tagColor: updatedTag.color,
-        changes: Object.keys(validatedData).filter(key => key !== 'id'),
+        changes: Object.keys(validatedData).filter((key) => key !== "id"),
       },
-      severity: 'INFO',
+      severity: "INFO",
     });
 
     return NextResponse.json({
       tag: updatedTag,
-      message: 'Tag updated successfully',
+      message: "Tag updated successfully",
     });
-
   } catch (_error) {
-    // console.error('Error updating tag:', error);
-    
     if (_error instanceof z.ZodError) {
-      return createApiErrorResponse(400, 'Invalid request parameters', _error.issues);
+      return createApiErrorResponse(
+        400,
+        "Invalid request parameters",
+        _error.issues
+      );
     }
 
-    return createApiErrorResponse(500, 'Failed to update tag');
+    return createApiErrorResponse(500, "Failed to update tag");
   }
 }
 
@@ -285,12 +326,15 @@ export async function DELETE(
     const { id } = routeParamsSchema.parse(params);
 
     // Validate admin authentication
-    const { isValid, session, error } = await validateApiAccess(request, 'ADMIN');
-    
+    const { isValid, session, error } = await validateApiAccess(
+      request,
+      "ADMIN"
+    );
+
     if (!isValid || !session) {
       return createApiErrorResponse(
         error?.code || 401,
-        error?.message || 'Admin authentication required'
+        error?.message || "Admin authentication required"
       );
     }
 
@@ -302,7 +346,10 @@ export async function DELETE(
     });
 
     if (!rateLimitResult.success) {
-      return createApiErrorResponse(429, 'Too many admin requests. Please try again later.');
+      return createApiErrorResponse(
+        429,
+        "Too many admin requests. Please try again later."
+      );
     }
 
     // Check if tag exists
@@ -318,16 +365,16 @@ export async function DELETE(
     });
 
     if (!existingTag) {
-      return createApiErrorResponse(404, 'Tag not found');
+      return createApiErrorResponse(404, "Tag not found");
     }
 
     // Check for query parameter to force delete
     const url = new URL(request.url);
-    const forceDelete = url.searchParams.get('force') === 'true';
+    const forceDelete = url.searchParams.get("force") === "true";
 
     if (existingTag._count.products > 0 && !forceDelete) {
       return createApiErrorResponse(
-        400, 
+        400,
         `Tag has ${existingTag._count.products} associated products. Use ?force=true to delete anyway.`
       );
     }
@@ -340,8 +387,8 @@ export async function DELETE(
     // Log the admin action for audit
     const auditContext = getAuditContext(request, session);
     await auditAction({
-      action: 'DELETE_TAG',
-      resource: 'Tag',
+      action: "DELETE_TAG",
+      resource: "Tag",
       resourceId: id,
       adminUserId: auditContext.adminUserId,
       adminRole: auditContext.adminRole,
@@ -354,25 +401,26 @@ export async function DELETE(
         productCount: existingTag._count.products,
         forceDelete,
       },
-      severity: 'WARN',
+      severity: "WARN",
     });
 
     return NextResponse.json({
-      message: 'Tag deleted successfully',
+      message: "Tag deleted successfully",
       deletedTag: {
         id: existingTag.id,
         name: existingTag.name,
         productCount: existingTag._count.products,
       },
     });
-
   } catch (_error) {
-    // console.error('Error deleting tag:', error);
-    
     if (_error instanceof z.ZodError) {
-      return createApiErrorResponse(400, 'Invalid request parameters', _error.issues);
+      return createApiErrorResponse(
+        400,
+        "Invalid request parameters",
+        _error.issues
+      );
     }
 
-    return createApiErrorResponse(500, 'Failed to delete tag');
+    return createApiErrorResponse(500, "Failed to delete tag");
   }
 }

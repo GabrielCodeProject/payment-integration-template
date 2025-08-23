@@ -1,7 +1,7 @@
 /**
  * Audit Logging System - TypeScript Utilities
  * NextJS Stripe Payment Template
- * 
+ *
  * Provides comprehensive audit logging capabilities with automatic
  * database triggers and manual logging functions for security compliance.
  */
@@ -23,7 +23,7 @@ export interface AuditLogEntry {
   id: string;
   tableName: string;
   recordId: string;
-  action: 'CREATE' | 'UPDATE' | 'DELETE';
+  action: "CREATE" | "UPDATE" | "DELETE";
   userId?: string | null;
   userEmail?: string | null;
   ipAddress?: string | null;
@@ -85,12 +85,12 @@ export class AuditService {
           ${context.requestId || null}::TEXT
         )
       `;
-      
+
       // Store context for manual operations
       this.defaultContext = { ...context };
     } catch (_error) {
       // Failed to set audit context - don't block operations
-      // console.warn('Failed to set audit context:', _error);
+      console.warn("Failed to set audit context:", _error);
       // Still store context for manual operations
       this.defaultContext = { ...context };
     }
@@ -105,7 +105,7 @@ export class AuditService {
       this.defaultContext = {};
     } catch (_error) {
       // Failed to clear audit context - don't block operations
-      // console.warn('Failed to clear audit context:', _error);
+      console.warn("Failed to clear audit context:", _error);
       this.defaultContext = {};
     }
   }
@@ -117,7 +117,15 @@ export class AuditService {
   async createAuditLog(params: {
     tableName: string;
     recordId: string;
-    action: 'CREATE' | 'UPDATE' | 'DELETE' | 'LOGIN' | 'LOGOUT' | 'ACCESS' | 'EXPORT' | 'IMPORT';
+    action:
+      | "CREATE"
+      | "UPDATE"
+      | "DELETE"
+      | "LOGIN"
+      | "LOGOUT"
+      | "ACCESS"
+      | "EXPORT"
+      | "IMPORT";
     oldValues?: unknown;
     newValues?: unknown;
     changedFields?: string[];
@@ -125,7 +133,7 @@ export class AuditService {
     context?: AuditContext;
   }): Promise<void> {
     const auditContext = { ...this.defaultContext, ...params.context };
-    
+
     try {
       // Try using stored procedure first
       await this.db.$executeRaw`
@@ -136,11 +144,15 @@ export class AuditService {
           ${params.oldValues ? JSON.stringify(params.oldValues) : null}::JSON,
           ${params.newValues ? JSON.stringify(params.newValues) : null}::JSON,
           ${params.changedFields || []}::TEXT[],
-          ${params.metadata ? JSON.stringify({
-            ...params.metadata,
-            manual_entry: true,
-            context: auditContext
-          }) : JSON.stringify({ manual_entry: true, context: auditContext })}::JSON
+          ${
+            params.metadata
+              ? JSON.stringify({
+                  ...params.metadata,
+                  manual_entry: true,
+                  context: auditContext,
+                })
+              : JSON.stringify({ manual_entry: true, context: auditContext })
+          }::JSON
         )
       `;
     } catch (_storedProcError) {
@@ -155,21 +167,27 @@ export class AuditService {
             userEmail: auditContext.userEmail || null,
             ipAddress: auditContext.ipAddress || null,
             userAgent: auditContext.userAgent || null,
-            oldValues: params.oldValues ? JSON.stringify(params.oldValues) : null,
-            newValues: params.newValues ? JSON.stringify(params.newValues) : null,
+            oldValues: params.oldValues
+              ? JSON.stringify(params.oldValues)
+              : null,
+            newValues: params.newValues
+              ? JSON.stringify(params.newValues)
+              : null,
             changedFields: params.changedFields || [],
             sessionId: auditContext.sessionId || null,
             requestId: auditContext.requestId || null,
-            metadata: params.metadata ? JSON.stringify({
-              ...params.metadata,
-              manual_entry: true,
-              context: auditContext
-            }) : JSON.stringify({ manual_entry: true, context: auditContext }),
+            metadata: params.metadata
+              ? JSON.stringify({
+                  ...params.metadata,
+                  manual_entry: true,
+                  context: auditContext,
+                })
+              : JSON.stringify({ manual_entry: true, context: auditContext }),
           },
         });
       } catch (fallbackError) {
         // Don't fail the main operation if audit logging fails
-        // console.warn('Audit logging failed:', fallbackError);
+        console.warn("Audit logging failed:", fallbackError);
       }
     }
   }
@@ -190,24 +208,30 @@ export class AuditService {
           ${options.limit || 50}::INTEGER
         )
       `;
-      
-      return result.map(entry => ({
+
+      return result.map((entry) => ({
         ...entry,
         timestamp: new Date(entry.timestamp),
-        oldValues: entry.oldValues ? JSON.parse(entry.oldValues as string) : null,
-        newValues: entry.newValues ? JSON.parse(entry.newValues as string) : null,
+        oldValues: entry.oldValues
+          ? JSON.parse(entry.oldValues as string)
+          : null,
+        newValues: entry.newValues
+          ? JSON.parse(entry.newValues as string)
+          : null,
         metadata: entry.metadata ? JSON.parse(entry.metadata as string) : null,
       }));
     } catch (_error) {
       // Failed to get audit trail
-      throw new Error('Failed to retrieve audit trail');
+      throw new Error("Failed to retrieve audit trail");
     }
   }
 
   /**
    * Query audit logs with flexible filtering
    */
-  async queryAuditLogs(options: AuditQueryOptions = {}): Promise<AuditLogEntry[]> {
+  async queryAuditLogs(
+    options: AuditQueryOptions = {}
+  ): Promise<AuditLogEntry[]> {
     const {
       limit = 100,
       offset = 0,
@@ -215,7 +239,7 @@ export class AuditService {
       endDate,
       actions,
       userId,
-      tableName
+      tableName,
     } = options;
 
     try {
@@ -247,9 +271,10 @@ export class AuditService {
         parameters.push(tableName);
       }
 
-      const whereClause = whereConditions.length > 0 
-        ? `WHERE ${whereConditions.join(' AND ')}` 
-        : '';
+      const whereClause =
+        whereConditions.length > 0
+          ? `WHERE ${whereConditions.join(" AND ")}`
+          : "";
 
       const query = `
         SELECT * FROM audit_logs 
@@ -261,18 +286,25 @@ export class AuditService {
 
       parameters.push(limit, offset);
 
-      const result = await this.db.$queryRawUnsafe<AuditLogEntry[]>(query, ...parameters);
-      
-      return result.map(entry => ({
+      const result = await this.db.$queryRawUnsafe<AuditLogEntry[]>(
+        query,
+        ...parameters
+      );
+
+      return result.map((entry) => ({
         ...entry,
         timestamp: new Date(entry.timestamp),
-        oldValues: entry.oldValues ? JSON.parse(entry.oldValues as string) : null,
-        newValues: entry.newValues ? JSON.parse(entry.newValues as string) : null,
+        oldValues: entry.oldValues
+          ? JSON.parse(entry.oldValues as string)
+          : null,
+        newValues: entry.newValues
+          ? JSON.parse(entry.newValues as string)
+          : null,
         metadata: entry.metadata ? JSON.parse(entry.metadata as string) : null,
       }));
     } catch (_error) {
       // Failed to query audit logs
-      throw new Error('Failed to query audit logs');
+      throw new Error("Failed to query audit logs");
     }
   }
 
@@ -297,9 +329,10 @@ export class AuditService {
         parameters.push(endDate);
       }
 
-      const whereClause = whereConditions.length > 0 
-        ? `WHERE ${whereConditions.join(' AND ')}` 
-        : '';
+      const whereClause =
+        whereConditions.length > 0
+          ? `WHERE ${whereConditions.join(" AND ")}`
+          : "";
 
       // Get basic statistics
       const statsQuery = `
@@ -311,11 +344,13 @@ export class AuditService {
         ${whereClause}
       `;
 
-      const [stats] = await this.db.$queryRawUnsafe<Array<{
-        total_records: bigint;
-        earliest: Date | null;
-        latest: Date | null;
-      }>>(statsQuery, ...parameters);
+      const [stats] = await this.db.$queryRawUnsafe<
+        Array<{
+          total_records: bigint;
+          earliest: Date | null;
+          latest: Date | null;
+        }>
+      >(statsQuery, ...parameters);
 
       // Get action counts
       const actionCountsQuery = `
@@ -326,10 +361,12 @@ export class AuditService {
         ORDER BY count DESC
       `;
 
-      const actionCounts = await this.db.$queryRawUnsafe<Array<{
-        action: string;
-        count: bigint;
-      }>>(actionCountsQuery, ...parameters);
+      const actionCounts = await this.db.$queryRawUnsafe<
+        Array<{
+          action: string;
+          count: bigint;
+        }>
+      >(actionCountsQuery, ...parameters);
 
       // Get table counts
       const tableCountsQuery = `
@@ -340,10 +377,12 @@ export class AuditService {
         ORDER BY count DESC
       `;
 
-      const tableCounts = await this.db.$queryRawUnsafe<Array<{
-        tableName: string;
-        count: bigint;
-      }>>(tableCountsQuery, ...parameters);
+      const tableCounts = await this.db.$queryRawUnsafe<
+        Array<{
+          tableName: string;
+          count: bigint;
+        }>
+      >(tableCountsQuery, ...parameters);
 
       // Get user counts (excluding system entries)
       const userCountsQuery = `
@@ -357,10 +396,12 @@ export class AuditService {
         LIMIT 20
       `;
 
-      const userCounts = await this.db.$queryRawUnsafe<Array<{
-        userEmail: string;
-        count: bigint;
-      }>>(userCountsQuery, ...parameters);
+      const userCounts = await this.db.$queryRawUnsafe<
+        Array<{
+          userEmail: string;
+          count: bigint;
+        }>
+      >(userCountsQuery, ...parameters);
 
       return {
         totalRecords: Number(stats.total_records),
@@ -369,18 +410,18 @@ export class AuditService {
           latest: stats.latest,
         },
         actionCounts: Object.fromEntries(
-          actionCounts.map(item => [item.action, Number(item.count)])
+          actionCounts.map((item) => [item.action, Number(item.count)])
         ),
         tableCounts: Object.fromEntries(
-          tableCounts.map(item => [item.tableName, Number(item.count)])
+          tableCounts.map((item) => [item.tableName, Number(item.count)])
         ),
         userCounts: Object.fromEntries(
-          userCounts.map(item => [item.userEmail, Number(item.count)])
+          userCounts.map((item) => [item.userEmail, Number(item.count)])
         ),
       };
     } catch (_error) {
       // Failed to get audit summary
-      throw new Error('Failed to generate audit summary');
+      throw new Error("Failed to generate audit summary");
     }
   }
 
@@ -393,46 +434,52 @@ export class AuditService {
     batchSize: number = 1000
   ): Promise<number> {
     try {
-      const result = await this.db.$queryRaw<Array<{ cleanup_audit_logs: number }>>`
+      const result = await this.db.$queryRaw<
+        Array<{ cleanup_audit_logs: number }>
+      >`
         SELECT cleanup_audit_logs(
           ${retentionDays}::INTEGER,
           ${criticalRetentionDays}::INTEGER,
           ${batchSize}::INTEGER
         )
       `;
-      
+
       return result[0]?.cleanup_audit_logs || 0;
     } catch (_error) {
       // Failed to cleanup audit logs
-      throw new Error('Failed to cleanup audit logs');
+      throw new Error("Failed to cleanup audit logs");
     }
   }
 
   /**
    * Check if audit triggers are enabled
    */
-  async checkTriggerStatus(): Promise<Array<{
-    tableName: string;
-    triggerName: string;
-    triggerEnabled: boolean;
-  }>> {
+  async checkTriggerStatus(): Promise<
+    Array<{
+      tableName: string;
+      triggerName: string;
+      triggerEnabled: boolean;
+    }>
+  > {
     try {
-      const result = await this.db.$queryRaw<Array<{
-        table_name: string;
-        trigger_name: string;
-        trigger_enabled: boolean;
-      }>>`
+      const result = await this.db.$queryRaw<
+        Array<{
+          table_name: string;
+          trigger_name: string;
+          trigger_enabled: boolean;
+        }>
+      >`
         SELECT * FROM check_audit_trigger_status()
       `;
-      
-      return result.map(row => ({
+
+      return result.map((row) => ({
         tableName: row.table_name,
         triggerName: row.trigger_name,
         triggerEnabled: row.trigger_enabled,
       }));
     } catch (_error) {
       // Failed to check trigger status
-      throw new Error('Failed to check audit trigger status');
+      throw new Error("Failed to check audit trigger status");
     }
   }
 
@@ -444,7 +491,7 @@ export class AuditService {
       await this.db.$executeRaw`SELECT disable_audit_triggers()`;
     } catch (_error) {
       // Failed to disable audit triggers
-      throw new Error('Failed to disable audit triggers');
+      throw new Error("Failed to disable audit triggers");
     }
   }
 
@@ -456,7 +503,7 @@ export class AuditService {
       await this.db.$executeRaw`SELECT enable_audit_triggers()`;
     } catch (_error) {
       // Failed to enable audit triggers
-      throw new Error('Failed to enable audit triggers');
+      throw new Error("Failed to enable audit triggers");
     }
   }
 }
@@ -472,11 +519,11 @@ export class AuditHelpers {
     request: Request,
     user?: { id: string; email: string }
   ): AuditContext {
-    const userAgent = request.headers.get('user-agent') || undefined;
-    const forwarded = request.headers.get('x-forwarded-for');
-    const realIp = request.headers.get('x-real-ip');
-    const ipAddress = forwarded?.split(',')[0].trim() || realIp || undefined;
-    
+    const userAgent = request.headers.get("user-agent") || undefined;
+    const forwarded = request.headers.get("x-forwarded-for");
+    const realIp = request.headers.get("x-real-ip");
+    const ipAddress = forwarded?.split(",")[0].trim() || realIp || undefined;
+
     return {
       userId: user?.id,
       userEmail: user?.email,
@@ -496,10 +543,11 @@ export class AuditHelpers {
     return {
       userId: user?.id,
       userEmail: user?.email,
-      ipAddress: req.socket?.remoteAddress || 
-                 req.headers['x-forwarded-for']?.split(',')[0].trim() || 
-                 req.headers['x-real-ip'],
-      userAgent: req.headers['user-agent'],
+      ipAddress:
+        req.socket?.remoteAddress ||
+        req.headers["x-forwarded-for"]?.split(",")[0].trim() ||
+        req.headers["x-real-ip"],
+      userAgent: req.headers["user-agent"],
       requestId: crypto.randomUUID(),
     };
   }
@@ -519,24 +567,26 @@ export class AuditHelpers {
   ): T {
     return ((...args: Parameters<T>) => {
       const result = func(...args);
-      
+
       // Create audit log after function execution
       const recordId = auditParams.getRecordId(...args);
       const metadata = auditParams.getMetadata?.(...args) || {};
-      
-      auditService.createAuditLog({
-        tableName: auditParams.tableName,
-        recordId,
-        action: auditParams.action,
-        metadata: {
-          ...metadata,
-          functionName: func.name,
-          timestamp: new Date().toISOString(),
-        },
-      }).catch(_error => {
-        // Audit logging failed
-      });
-      
+
+      auditService
+        .createAuditLog({
+          tableName: auditParams.tableName,
+          recordId,
+          action: auditParams.action,
+          metadata: {
+            ...metadata,
+            functionName: func.name,
+            timestamp: new Date().toISOString(),
+          },
+        })
+        .catch((_error) => {
+          // Audit logging failed
+        });
+
       return result;
     }) as T;
   }
@@ -544,22 +594,25 @@ export class AuditHelpers {
   /**
    * Compare two objects and identify changed fields
    */
-  static getChangedFields(oldData: Record<string, unknown>, newData: Record<string, unknown>): string[] {
+  static getChangedFields(
+    oldData: Record<string, unknown>,
+    newData: Record<string, unknown>
+  ): string[] {
     const changedFields: string[] = [];
-    
+
     // Check all fields in new data
     for (const key in newData) {
-      if (key === 'updatedAt' || key === 'updated_at') continue; // Skip auto-update fields
-      
+      if (key === "updatedAt" || key === "updated_at") continue; // Skip auto-update fields
+
       const oldValue = oldData[key];
       const newValue = newData[key];
-      
+
       // Handle different types of comparisons
       if (oldValue === null && newValue !== null) {
         changedFields.push(key);
       } else if (oldValue !== null && newValue === null) {
         changedFields.push(key);
-      } else if (typeof oldValue === 'object' && typeof newValue === 'object') {
+      } else if (typeof oldValue === "object" && typeof newValue === "object") {
         // For objects, do a deep comparison (simplified)
         if (JSON.stringify(oldValue) !== JSON.stringify(newValue)) {
           changedFields.push(key);
@@ -568,52 +621,59 @@ export class AuditHelpers {
         changedFields.push(key);
       }
     }
-    
+
     // Check for deleted fields
     for (const key in oldData) {
-      if (!(key in newData) && key !== 'updatedAt' && key !== 'updated_at') {
+      if (!(key in newData) && key !== "updatedAt" && key !== "updated_at") {
         changedFields.push(key);
       }
     }
-    
+
     return changedFields;
   }
 
   /**
    * Mask sensitive data in audit logs
    */
-  static maskSensitiveData(data: Record<string, unknown>): Record<string, unknown> {
+  static maskSensitiveData(
+    data: Record<string, unknown>
+  ): Record<string, unknown> {
     const sensitiveFields = [
-      'password',
-      'token',
-      'apiKey',
-      'secret',
-      'privateKey',
-      'creditCard',
-      'ssn',
-      'taxId',
-      'bankAccount',
-      'routingNumber',
+      "password",
+      "token",
+      "apiKey",
+      "secret",
+      "privateKey",
+      "creditCard",
+      "ssn",
+      "taxId",
+      "bankAccount",
+      "routingNumber",
     ];
-    
+
     const masked = { ...data };
-    
-    sensitiveFields.forEach(field => {
-      if (field in masked && masked[field] !== null && masked[field] !== undefined) {
-        if (typeof masked[field] === 'string') {
+
+    sensitiveFields.forEach((field) => {
+      if (
+        field in masked &&
+        masked[field] !== null &&
+        masked[field] !== undefined
+      ) {
+        if (typeof masked[field] === "string") {
           // Show first 2 and last 2 characters for strings longer than 4 chars
           const str = masked[field] as string;
           if (str.length > 4) {
-            masked[field] = `${str.substring(0, 2)}***${str.substring(str.length - 2)}`;
+            masked[field] =
+              `${str.substring(0, 2)}***${str.substring(str.length - 2)}`;
           } else {
-            masked[field] = '[MASKED]';
+            masked[field] = "[MASKED]";
           }
         } else {
-          masked[field] = '[MASKED]';
+          masked[field] = "[MASKED]";
         }
       }
     });
-    
+
     return masked;
   }
 }
@@ -622,4 +682,9 @@ export class AuditHelpers {
 export const auditService = new AuditService();
 
 // Export types for external use
-export type { AuditLogEntry, AuditContext, AuditQueryOptions, AuditTrailSummary };
+export type {
+  AuditContext,
+  AuditLogEntry,
+  AuditQueryOptions,
+  AuditTrailSummary,
+};

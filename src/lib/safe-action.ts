@@ -28,22 +28,22 @@ export const actionClient = createSafeActionClient();
 export const authActionClient = actionClient.use(async ({ next, ctx }) => {
   const { auth } = await import("@/lib/auth/config");
   const { headers } = await import("next/headers");
-  
+
   try {
     // Get headers for the current request
     const headersList = await headers();
-    
+
     const session = await auth.api.getSession({
       headers: headersList,
     });
-    
+
     if (!session?.user) {
       throw new Error("Authentication required");
     }
 
     // Type assertion for additional fields from BetterAuth
     const user = session.user as any;
-    
+
     // Check if user account is active
     if (user.isActive === false) {
       throw new Error("Account is deactivated");
@@ -55,17 +55,17 @@ export const authActionClient = actionClient.use(async ({ next, ctx }) => {
         ...ctx,
         user: user,
         session: session,
-      }
+      },
     });
   } catch (_error) {
     // Log error details for debugging (only in development)
     if (process.env.NODE_ENV === "development") {
-      // console.error("Authentication error:", {
-      //   message: error instanceof Error ? _error.message : 'Unknown error',
-      //   headers: Array.from(headersList.keys()),
-      // });
+      console.error("Authentication error:", {
+        message: _error instanceof Error ? _error.message : "Unknown error",
+        headers: Array.from(headersList.keys()),
+      });
     }
-    
+
     // Return a generic authentication error
     throw new Error("Authentication failed");
   }

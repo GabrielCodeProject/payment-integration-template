@@ -8,9 +8,9 @@
  * - Performance optimizations for middleware
  */
 
-import { NextRequest, NextResponse } from "next/server";
-import { auth } from "@/auth/config";
 import type { Session, User } from "@/auth/config";
+import { auth } from "@/auth/config";
+import { NextRequest, NextResponse } from "next/server";
 
 // Types for middleware configuration
 export interface AuthConfig {
@@ -90,8 +90,7 @@ export async function getSessionFromRequest(
   } catch (_error) {
     // Don't log in production to avoid noise
     if (process.env.NODE_ENV === "development") {
-      // eslint-disable-next-line no-console
-      // console.error("Session validation error:", error);
+      console.error("Session validation error:", _error);
     }
     return null;
   }
@@ -384,8 +383,7 @@ export function logAuthEvent(
   // In production, this should integrate with your logging service
   // Only log in development to avoid console noise in production
   if (process.env.NODE_ENV === "development") {
-    // eslint-disable-next-line no-console
-    // console.log(`[AUTH-${event.toUpperCase()}]`, {
+    console.log(`[AUTH-${event.toUpperCase()}]`, {
       timestamp: new Date().toISOString(),
       ...details,
     });

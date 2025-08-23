@@ -1,21 +1,25 @@
 /**
  * Profile Image Upload Component
  * NextJS Stripe Payment Template
- * 
+ *
  * Drag & drop image upload component with preview, progress indication,
  * and image management capabilities (upload/delete).
  */
 
-'use client';
+"use client";
 
-import { useState, useCallback, useRef, useEffect } from 'react';
-import { Button } from '@/components/ui/button';
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { Progress } from '@/components/ui/progress';
-import { uploadProfileImage, deleteProfileImage, getProfile } from '@/app/actions/profile';
-import { toast } from 'sonner';
-import { cn } from '@/lib/utils';
-import type { ProfileResponse } from '@/lib/validations/base/user';
+import {
+  deleteProfileImage,
+  getProfile,
+  uploadProfileImage,
+} from "@/app/actions/profile";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Button } from "@/components/ui/button";
+import { Progress } from "@/components/ui/progress";
+import { cn } from "@/lib/utils";
+import type { ProfileResponse } from "@/lib/validations/base/user";
+import { useCallback, useEffect, useRef, useState } from "react";
+import { toast } from "sonner";
 
 interface FileWithPreview extends File {
   preview?: string;
@@ -31,7 +35,7 @@ export function ProfileImageUpload() {
   const [uploadProgress, setUploadProgress] = useState(0);
   const [dragActive, setDragActive] = useState(false);
   const [previewFile, setPreviewFile] = useState<FileWithPreview | null>(null);
-  
+
   const fileInputRef = useRef<HTMLInputElement>(null);
   const dropRef = useRef<HTMLDivElement>(null);
 
@@ -41,12 +45,12 @@ export function ProfileImageUpload() {
       setLoading(true);
       try {
         const result = await getProfile({});
-        
+
         if (result?.data?.success && result.data.data) {
           setProfile(result.data.data);
         }
       } catch (_error) {
-        // console.error('Failed to load profile:', error);
+        console.error("Failed to load profile:", _error);
       } finally {
         setLoading(false);
       }
@@ -59,9 +63,9 @@ export function ProfileImageUpload() {
   const handleDrag = useCallback((e: React.DragEvent) => {
     e.preventDefault();
     e.stopPropagation();
-    if (e.type === 'dragenter' || e.type === 'dragover') {
+    if (e.type === "dragenter" || e.type === "dragover") {
       setDragActive(true);
-    } else if (e.type === 'dragleave') {
+    } else if (e.type === "dragleave") {
       setDragActive(false);
     }
   }, []);
@@ -88,18 +92,22 @@ export function ProfileImageUpload() {
   // Process selected files
   const handleFiles = useCallback((files: FileList) => {
     const file = files[0];
-    
+
     if (!file) return;
 
     // Validate file type
-    if (!['image/jpeg', 'image/jpg', 'image/png', 'image/webp'].includes(file.type)) {
-      toast.error('Please upload a valid image file (JPEG, PNG, or WebP)');
+    if (
+      !["image/jpeg", "image/jpg", "image/png", "image/webp"].includes(
+        file.type
+      )
+    ) {
+      toast.error("Please upload a valid image file (JPEG, PNG, or WebP)");
       return;
     }
 
     // Validate file size (5MB limit)
     if (file.size > 5 * 1024 * 1024) {
-      toast.error('File size must be less than 5MB');
+      toast.error("File size must be less than 5MB");
       return;
     }
 
@@ -129,7 +137,7 @@ export function ProfileImageUpload() {
       }, 100);
 
       const formData = new FormData();
-      formData.append('image', previewFile);
+      formData.append("image", previewFile);
 
       const result = await uploadProfileImage({ image: previewFile });
 
@@ -137,22 +145,27 @@ export function ProfileImageUpload() {
       setUploadProgress(100);
 
       if (result?.data?.success && result.data.data) {
-        setProfile(prev => prev ? { ...prev, image: result.data.data.imageUrl } : null);
+        setProfile((prev) =>
+          prev ? { ...prev, image: result.data.data.imageUrl } : null
+        );
         setPreviewFile(null);
-        toast.success(result.data.message || 'Profile image uploaded successfully');
+        toast.success(
+          result.data.message || "Profile image uploaded successfully"
+        );
       } else {
-        throw new Error(result?.data?.error || 'Upload failed');
+        throw new Error(result?.data?.error || "Upload failed");
       }
     } catch (_error) {
-      // console.error('Upload error:', error);
-      toast.error(error instanceof Error ? _error.message : 'Failed to upload image');
+      toast.error(
+        _error instanceof Error ? _error.message : "Failed to upload image"
+      );
     } finally {
       setUploading(false);
       setUploadProgress(0);
-      
+
       // Clear file input
       if (fileInputRef.current) {
-        fileInputRef.current.value = '';
+        fileInputRef.current.value = "";
       }
     }
   };
@@ -162,19 +175,22 @@ export function ProfileImageUpload() {
     if (!profile?.image) return;
 
     setLoading(true);
-    
+
     try {
       const result = await deleteProfileImage({});
 
       if (result?.data?.success) {
-        setProfile(prev => prev ? { ...prev, image: undefined } : null);
-        toast.success(result.data.message || 'Profile image deleted successfully');
+        setProfile((prev) => (prev ? { ...prev, image: undefined } : null));
+        toast.success(
+          result.data.message || "Profile image deleted successfully"
+        );
       } else {
-        throw new Error(result?.data?.error || 'Delete failed');
+        throw new Error(result?.data?.error || "Delete failed");
       }
     } catch (_error) {
-      // console.error('Delete error:', error);
-      toast.error(error instanceof Error ? _error.message : 'Failed to delete image');
+      toast.error(
+        _error instanceof Error ? _error.message : "Failed to delete image"
+      );
     } finally {
       setLoading(false);
     }
@@ -187,27 +203,32 @@ export function ProfileImageUpload() {
     }
     setPreviewFile(null);
     if (fileInputRef.current) {
-      fileInputRef.current.value = '';
+      fileInputRef.current.value = "";
     }
   };
 
   // Get current image source
   const currentImageSrc = previewFile?.preview || profile?.image;
   const userInitials = profile?.name
-    ? profile.name.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2)
-    : profile?.email?.[0]?.toUpperCase() || '?';
+    ? profile.name
+        .split(" ")
+        .map((n) => n[0])
+        .join("")
+        .toUpperCase()
+        .slice(0, 2)
+    : profile?.email?.[0]?.toUpperCase() || "?";
 
   return (
     <div className="space-y-4">
       {/* Image Preview */}
       <div className="flex justify-center">
         <Avatar className="h-32 w-32 border-4 border-slate-200 dark:border-slate-700">
-          <AvatarImage 
-            src={currentImageSrc} 
+          <AvatarImage
+            src={currentImageSrc}
             alt="Profile image"
             className="object-cover"
           />
-          <AvatarFallback className="bg-slate-100 dark:bg-slate-800 text-2xl font-semibold">
+          <AvatarFallback className="bg-slate-100 text-2xl font-semibold dark:bg-slate-800">
             {userInitials}
           </AvatarFallback>
         </Avatar>
@@ -217,7 +238,7 @@ export function ProfileImageUpload() {
       {uploading && (
         <div className="space-y-2">
           <Progress value={uploadProgress} className="w-full" />
-          <p className="text-sm text-center text-slate-600 dark:text-slate-400">
+          <p className="text-center text-sm text-slate-600 dark:text-slate-400">
             Uploading... {uploadProgress}%
           </p>
         </div>
@@ -227,10 +248,10 @@ export function ProfileImageUpload() {
       <div
         ref={dropRef}
         className={cn(
-          "relative border-2 border-dashed rounded-lg p-6 text-center transition-colors",
+          "relative rounded-lg border-2 border-dashed p-6 text-center transition-colors",
           dragActive
             ? "border-blue-500 bg-blue-50 dark:bg-blue-950/20"
-            : "border-slate-300 dark:border-slate-600 hover:border-slate-400 dark:hover:border-slate-500",
+            : "border-slate-300 hover:border-slate-400 dark:border-slate-600 dark:hover:border-slate-500",
           uploading && "pointer-events-none opacity-50"
         )}
         onDragEnter={handleDrag}
@@ -243,10 +264,10 @@ export function ProfileImageUpload() {
           type="file"
           accept="image/jpeg,image/jpg,image/png,image/webp"
           onChange={handleChange}
-          className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
+          className="absolute inset-0 h-full w-full cursor-pointer opacity-0"
           disabled={uploading}
         />
-        
+
         <div className="space-y-2">
           <svg
             className="mx-auto h-8 w-8 text-slate-400"
@@ -264,7 +285,7 @@ export function ProfileImageUpload() {
           <div className="text-sm text-slate-600 dark:text-slate-400">
             <span className="font-semibold text-blue-600 dark:text-blue-400">
               Click to upload
-            </span>{' '}
+            </span>{" "}
             or drag and drop
           </div>
           <p className="text-xs text-slate-500 dark:text-slate-400">
@@ -282,7 +303,7 @@ export function ProfileImageUpload() {
               disabled={uploading}
               className="flex-1"
             >
-              {uploading ? 'Uploading...' : 'Upload Image'}
+              {uploading ? "Uploading..." : "Upload Image"}
             </Button>
             <Button
               variant="outline"
@@ -311,13 +332,13 @@ export function ProfileImageUpload() {
             size="sm"
             className="w-full"
           >
-            {loading ? 'Deleting...' : 'Remove Image'}
+            {loading ? "Deleting..." : "Remove Image"}
           </Button>
         )}
       </div>
 
       {/* Help Text */}
-      <p className="text-xs text-slate-500 dark:text-slate-400 text-center">
+      <p className="text-center text-xs text-slate-500 dark:text-slate-400">
         Your profile image will be visible to other users on the platform.
       </p>
     </div>

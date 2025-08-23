@@ -585,35 +585,35 @@ export function logError(
   context?: Record<string, unknown>
 ): void {
   if (process.env.NODE_ENV === "development") {
-    // eslint-disable-next-line no-console
     console.group(`🚨 ${error.type.toUpperCase()} [${error.severity}]`);
-    // eslint-disable-next-line no-console
-    // console.error("Message:", _error.message);
-    // eslint-disable-next-line no-console
-    // console.error("User Message:", error.userMessage);
-    // eslint-disable-next-line no-console
-    // console.error("Retryable:", error.isRetryable);
-    // eslint-disable-next-line no-console
-    if (error.statusCode) // console.error("Status:", error.statusCode);
-    // eslint-disable-next-line no-console
-    if (error.context) // console.error("Context:", error.context);
-    // eslint-disable-next-line no-console
-    if (context) // console.error("Additional Context:", context);
-    // eslint-disable-next-line no-console
-    if (error.originalError)
-      // console.error("Original Error:", error.originalError);
-    // eslint-disable-next-line no-console
+
+    console.error("Message:", _error.message);
+
+    console.error("User Message:", error.userMessage);
+
+    console.error("Retryable:", error.isRetryable);
+
+    if (error.statusCode)
+      if (error.context)
+        if (context)
+          // console.error("Status:", error.statusCode);
+
+          console.error("Context:", error.context);
+
+    if (error.originalError) console.error("Additional Context:", context);
+
+    console.error("Original Error:", error.originalError);
+
     console.groupEnd();
   } else {
     // In production, log minimal error information
-    // eslint-disable-next-line no-console
-    // console.error(`Error [${error.type}]:`, {
-    //   message: _error.message,
-    //   severity: error.severity,
-    //   statusCode: error.statusCode,
-    //   timestamp: error.timestamp,
-    //   // Don't log sensitive context in production
-    // });
+    console.error(`Error [${error.type}]:`, {
+      message: error.message,
+      severity: error.severity,
+      statusCode: error.statusCode,
+      timestamp: error.timestamp,
+      // Don't log sensitive context in production
+    });
   }
 }
 

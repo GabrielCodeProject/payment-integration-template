@@ -1,9 +1,9 @@
 /**
  * Pricing Tier Reorder API Route
- * 
+ *
  * Handles:
  * - POST: Reorder pricing tiers for a product (admin only)
- * 
+ *
  * Features:
  * - Admin-only access control
  * - Validation of tier ownership
@@ -11,15 +11,19 @@
  * - Transaction safety
  */
 
-import { NextRequest, NextResponse } from 'next/server';
-import { z } from 'zod';
-import { PricingTierService } from '@/services/pricing-tier.service';
-import { ProductService } from '@/services/products/product.service';
-import { db } from '@/lib/db';
-import { validateApiAccess, createApiErrorResponse, getAuditContext } from '@/lib/auth/server-session';
-import { reorderPricingTiersSchema } from '@/lib/validations/base/pricing-tier';
-import { cuidSchema } from '@/lib/validations/base/common';
-import { rateLimit, auditAction } from '@/lib/api-helpers';
+import { auditAction, rateLimit } from "@/lib/api-helpers";
+import {
+  createApiErrorResponse,
+  getAuditContext,
+  validateApiAccess,
+} from "@/lib/auth/server-session";
+import { db } from "@/lib/db";
+import { cuidSchema } from "@/lib/validations/base/common";
+import { reorderPricingTiersSchema } from "@/lib/validations/base/pricing-tier";
+import { PricingTierService } from "@/services/pricing-tier.service";
+import { ProductService } from "@/services/products/product.service";
+import { NextRequest, NextResponse } from "next/server";
+import { z } from "zod";
 
 const pricingTierService = new PricingTierService(db);
 const productService = new ProductService(db);
@@ -31,7 +35,7 @@ const paramsSchema = z.object({
 
 /**
  * POST /api/products/[id]/pricing-tiers/reorder - Reorder pricing tiers (admin only)
- * 
+ *
  * Updates the sort order of pricing tiers based on provided sequence.
  * Validates all tiers belong to the product before reordering.
  */
@@ -41,12 +45,15 @@ export async function POST(
 ) {
   try {
     // Validate admin authentication
-    const { isValid, session, error } = await validateApiAccess(request, 'ADMIN');
-    
+    const { isValid, session, error } = await validateApiAccess(
+      request,
+      "ADMIN"
+    );
+
     if (!isValid || !session) {
       return createApiErrorResponse(
         error?.code || 401,
-        error?.message || 'Admin authentication required'
+        error?.message || "Admin authentication required"
       );
     }
 
@@ -59,7 +66,7 @@ export async function POST(
       validatedParams = paramsSchema.parse(resolvedParams);
     } catch (_error) {
       if (_error instanceof z.ZodError) {
-        return createApiErrorResponse(400, 'Invalid product ID format');
+        return createApiErrorResponse(400, "Invalid product ID format");
       }
       throw _error;
     }
@@ -72,13 +79,16 @@ export async function POST(
     });
 
     if (!rateLimitResult.success) {
-      return createApiErrorResponse(429, 'Too many admin requests. Please try again later.');
+      return createApiErrorResponse(
+        429,
+        "Too many admin requests. Please try again later."
+      );
     }
 
     // Verify product exists
     const product = await productService.findById(validatedParams.id);
     if (!product) {
-      return createApiErrorResponse(404, 'Product not found');
+      return createApiErrorResponse(404, "Product not found");
     }
 
     // Parse and validate request body
@@ -86,7 +96,7 @@ export async function POST(
     try {
       requestData = await request.json();
     } catch {
-      return createApiErrorResponse(400, 'Invalid JSON in request body');
+      return createApiErrorResponse(400, "Invalid JSON in request body");
     }
 
     // Add the product ID to the request data
@@ -97,14 +107,21 @@ export async function POST(
       validatedData = reorderPricingTiersSchema.parse(reorderData);
     } catch (_error) {
       if (_error instanceof z.ZodError) {
-        return createApiErrorResponse(400, 'Invalid reorder data', _error.issues);
+        return createApiErrorResponse(
+          400,
+          "Invalid reorder data",
+          _error.issues
+        );
       }
       throw _error;
     }
 
     // Get current tiers to capture original order for audit
-    const originalTiers = await productService.getPricingTiers(validatedParams.id, true);
-    const originalOrder = originalTiers.map(tier => ({
+    const originalTiers = await productService.getPricingTiers(
+      validatedParams.id,
+      true
+    );
+    const originalOrder = originalTiers.map((tier) => ({
       id: tier.id,
       name: tier.name,
       sortOrder: tier.sortOrder,
@@ -116,8 +133,8 @@ export async function POST(
     // Log the admin action for audit
     const auditContext = getAuditContext(request, session);
     await auditAction({
-      action: 'REORDER_PRICING_TIERS',
-      resource: 'PricingTier',
+      action: "REORDER_PRICING_TIERS",
+      resource: "PricingTier",
       resourceId: validatedParams.id, // Use product ID as main resource
       adminUserId: auditContext.adminUserId,
       adminRole: auditContext.adminRole,
@@ -127,7 +144,7 @@ export async function POST(
         productId: validatedParams.id,
         productName: product.name,
         originalOrder,
-        newOrder: reorderedTiers.map(tier => ({
+        newOrder: reorderedTiers.map((tier) => ({
           id: tier.id,
           name: tier.name,
           sortOrder: tier.sortOrder,
@@ -135,31 +152,31 @@ export async function POST(
         tierCount: reorderedTiers.length,
         reorderedTierIds: validatedData.tierIds,
       },
-      severity: 'INFO',
+      severity: "INFO",
     });
 
-    return NextResponse.json({
-      tiers: reorderedTiers,
-      message: 'Pricing tiers reordered successfully',
-    }, { status: 200 });
-
+    return NextResponse.json(
+      {
+        tiers: reorderedTiers,
+        message: "Pricing tiers reordered successfully",
+      },
+      { status: 200 }
+    );
   } catch (_error) {
-    // console.error('Error reordering pricing tiers:', error);
-    
     // Handle specific business logic errors
     if (_error instanceof Error) {
-      if (_error.message.includes('not found')) {
+      if (_error.message.includes("not found")) {
         return createApiErrorResponse(404, _error.message);
       }
-      if (_error.message.includes('do not belong')) {
+      if (_error.message.includes("do not belong")) {
         return createApiErrorResponse(400, _error.message);
       }
-      if (_error.message.includes('validation')) {
+      if (_error.message.includes("validation")) {
         return createApiErrorResponse(400, _error.message);
       }
     }
 
-    return createApiErrorResponse(500, 'Failed to reorder pricing tiers');
+    return createApiErrorResponse(500, "Failed to reorder pricing tiers");
   }
 }
 
@@ -170,10 +187,10 @@ export async function OPTIONS() {
   return new NextResponse(null, {
     status: 200,
     headers: {
-      'Access-Control-Allow-Origin': '*',
-      'Access-Control-Allow-Methods': 'POST, OPTIONS',
-      'Access-Control-Allow-Headers': 'Content-Type, Authorization',
-      'Access-Control-Max-Age': '86400',
+      "Access-Control-Allow-Origin": "*",
+      "Access-Control-Allow-Methods": "POST, OPTIONS",
+      "Access-Control-Allow-Headers": "Content-Type, Authorization",
+      "Access-Control-Max-Age": "86400",
     },
   });
 }

@@ -1,11 +1,11 @@
 /**
  * Individual Category API Routes - CRUD operations for specific categories
- * 
+ *
  * Handles:
  * - GET: Retrieve specific category with optional product details
  * - PUT: Update category (admin only)
  * - DELETE: Delete category (admin only)
- * 
+ *
  * Features:
  * - Role-based access control (public read, admin write/delete)
  * - Input validation with Zod schemas
@@ -14,13 +14,17 @@
  * - Response caching for public endpoints
  */
 
-import { NextRequest, NextResponse } from 'next/server';
-import { z } from 'zod';
-import { db } from '@/lib/db';
-import { validateApiAccess, createApiErrorResponse, getAuditContext } from '@/lib/auth/server-session';
-import { updateCategorySchema } from '@/lib/validations/base/category';
-import { cuidSchema } from '@/lib/validations/base/common';
-import { rateLimit, auditAction } from '@/lib/api-helpers';
+import { auditAction, rateLimit } from "@/lib/api-helpers";
+import {
+  createApiErrorResponse,
+  getAuditContext,
+  validateApiAccess,
+} from "@/lib/auth/server-session";
+import { db } from "@/lib/db";
+import { updateCategorySchema } from "@/lib/validations/base/category";
+import { cuidSchema } from "@/lib/validations/base/common";
+import { NextRequest, NextResponse } from "next/server";
+import { z } from "zod";
 
 // Route parameter validation
 const routeParamsSchema = z.object({
@@ -29,13 +33,16 @@ const routeParamsSchema = z.object({
 
 // Query parameters for GET request
 const getCategoryQuerySchema = z.object({
-  includeProducts: z.string().optional().transform(val => val === 'true'),
+  includeProducts: z
+    .string()
+    .optional()
+    .transform((val) => val === "true"),
   productsLimit: z.coerce.number().min(1).max(50).default(10),
 });
 
 /**
  * GET /api/categories/[id] - Retrieve a specific category
- * 
+ *
  * Query Parameters:
  * - includeProducts: Include associated products (default: false)
  * - productsLimit: Limit number of products to return (default: 10, max: 50)
@@ -58,14 +65,17 @@ export async function GET(
       windowMs: 15 * 60 * 1000, // 15 minutes
       maxRequests: 100, // 100 requests per window
       keyGenerator: (req) => {
-        const forwarded = req.headers.get('x-forwarded-for');
-        const ip = forwarded ? forwarded.split(',')[0] : 'unknown';
+        const forwarded = req.headers.get("x-forwarded-for");
+        const ip = forwarded ? forwarded.split(",")[0] : "unknown";
         return `category_get_${ip}`;
       },
     });
 
     if (!rateLimitResult.success) {
-      return createApiErrorResponse(429, 'Too many requests. Please try again later.');
+      return createApiErrorResponse(
+        429,
+        "Too many requests. Please try again later."
+      );
     }
 
     // Fetch category with optional products
@@ -77,31 +87,33 @@ export async function GET(
             products: true,
           },
         },
-        ...(query.includeProducts ? {
-          products: {
-            take: query.productsLimit,
-            include: {
-              product: {
-                select: {
-                  id: true,
-                  name: true,
-                  slug: true,
-                  price: true,
-                  currency: true,
-                  thumbnail: true,
-                  isActive: true,
-                  type: true,
-                  createdAt: true,
+        ...(query.includeProducts
+          ? {
+              products: {
+                take: query.productsLimit,
+                include: {
+                  product: {
+                    select: {
+                      id: true,
+                      name: true,
+                      slug: true,
+                      price: true,
+                      currency: true,
+                      thumbnail: true,
+                      isActive: true,
+                      type: true,
+                      createdAt: true,
+                    },
+                  },
                 },
               },
-            },
-          },
-        } : {}),
+            }
+          : {}),
       },
     });
 
     if (!category) {
-      return createApiErrorResponse(404, 'Category not found');
+      return createApiErrorResponse(404, "Category not found");
     }
 
     // Transform response for public API
@@ -113,30 +125,33 @@ export async function GET(
       productCount: category._count.products,
       createdAt: category.createdAt,
       updatedAt: category.updatedAt,
-      ...(query.includeProducts && 'products' in category ? {
-        products: category.products.map((pc: any) => pc.product),
-      } : {}),
+      ...(query.includeProducts && "products" in category
+        ? {
+            products: category.products.map((pc: any) => pc.product),
+          }
+        : {}),
     };
 
     // Set cache headers
     const cacheHeaders = {
-      'Cache-Control': 'public, s-maxage=300, stale-while-revalidate=600',
-      'Vary': 'Accept, Accept-Encoding',
+      "Cache-Control": "public, s-maxage=300, stale-while-revalidate=600",
+      Vary: "Accept, Accept-Encoding",
     };
 
     return NextResponse.json(response, {
       status: 200,
       headers: cacheHeaders,
     });
-
   } catch (_error) {
-    // console.error('Error fetching category:', error);
-    
     if (_error instanceof z.ZodError) {
-      return createApiErrorResponse(400, 'Invalid request parameters', _error.issues);
+      return createApiErrorResponse(
+        400,
+        "Invalid request parameters",
+        _error.issues
+      );
     }
 
-    return createApiErrorResponse(500, 'Failed to fetch category');
+    return createApiErrorResponse(500, "Failed to fetch category");
   }
 }
 
@@ -152,12 +167,15 @@ export async function PUT(
     const { id } = routeParamsSchema.parse(params);
 
     // Validate admin authentication
-    const { isValid, session, error } = await validateApiAccess(request, 'ADMIN');
-    
+    const { isValid, session, error } = await validateApiAccess(
+      request,
+      "ADMIN"
+    );
+
     if (!isValid || !session) {
       return createApiErrorResponse(
         error?.code || 401,
-        error?.message || 'Admin authentication required'
+        error?.message || "Admin authentication required"
       );
     }
 
@@ -169,7 +187,10 @@ export async function PUT(
     });
 
     if (!rateLimitResult.success) {
-      return createApiErrorResponse(429, 'Too many admin requests. Please try again later.');
+      return createApiErrorResponse(
+        429,
+        "Too many admin requests. Please try again later."
+      );
     }
 
     // Parse and validate request body
@@ -177,7 +198,7 @@ export async function PUT(
     try {
       requestData = await request.json();
     } catch {
-      return createApiErrorResponse(400, 'Invalid JSON in request body');
+      return createApiErrorResponse(400, "Invalid JSON in request body");
     }
 
     // Add ID to validation data
@@ -188,7 +209,11 @@ export async function PUT(
       validatedData = updateCategorySchema.parse(requestData);
     } catch (_error) {
       if (_error instanceof z.ZodError) {
-        return createApiErrorResponse(400, 'Invalid category data', _error.issues);
+        return createApiErrorResponse(
+          400,
+          "Invalid category data",
+          _error.issues
+        );
       }
       throw _error;
     }
@@ -199,7 +224,7 @@ export async function PUT(
     });
 
     if (!existingCategory) {
-      return createApiErrorResponse(404, 'Category not found');
+      return createApiErrorResponse(404, "Category not found");
     }
 
     // Check for duplicate name/slug (excluding current category)
@@ -210,7 +235,16 @@ export async function PUT(
             { id: { not: id } },
             {
               OR: [
-                ...(validatedData.name ? [{ name: { equals: validatedData.name, mode: 'insensitive' } }] : []),
+                ...(validatedData.name
+                  ? [
+                      {
+                        name: {
+                          equals: validatedData.name,
+                          mode: "insensitive",
+                        },
+                      },
+                    ]
+                  : []),
                 ...(validatedData.slug ? [{ slug: validatedData.slug }] : []),
               ],
             },
@@ -219,11 +253,20 @@ export async function PUT(
       });
 
       if (duplicateCategory) {
-        if (duplicateCategory.name.toLowerCase() === validatedData.name?.toLowerCase()) {
-          return createApiErrorResponse(409, 'A category with this name already exists');
+        if (
+          duplicateCategory.name.toLowerCase() ===
+          validatedData.name?.toLowerCase()
+        ) {
+          return createApiErrorResponse(
+            409,
+            "A category with this name already exists"
+          );
         }
         if (duplicateCategory.slug === validatedData.slug) {
-          return createApiErrorResponse(409, 'A category with this slug already exists');
+          return createApiErrorResponse(
+            409,
+            "A category with this slug already exists"
+          );
         }
       }
     }
@@ -233,7 +276,9 @@ export async function PUT(
       where: { id },
       data: {
         ...(validatedData.name && { name: validatedData.name }),
-        ...(validatedData.description !== undefined && { description: validatedData.description }),
+        ...(validatedData.description !== undefined && {
+          description: validatedData.description,
+        }),
         ...(validatedData.slug && { slug: validatedData.slug }),
       },
     });
@@ -241,8 +286,8 @@ export async function PUT(
     // Log the admin action for audit
     const auditContext = getAuditContext(request, session);
     await auditAction({
-      action: 'UPDATE_CATEGORY',
-      resource: 'Category',
+      action: "UPDATE_CATEGORY",
+      resource: "Category",
       resourceId: updatedCategory.id,
       adminUserId: auditContext.adminUserId,
       adminRole: auditContext.adminRole,
@@ -251,24 +296,25 @@ export async function PUT(
       details: {
         categoryName: updatedCategory.name,
         categorySlug: updatedCategory.slug,
-        changes: Object.keys(validatedData).filter(key => key !== 'id'),
+        changes: Object.keys(validatedData).filter((key) => key !== "id"),
       },
-      severity: 'INFO',
+      severity: "INFO",
     });
 
     return NextResponse.json({
       category: updatedCategory,
-      message: 'Category updated successfully',
+      message: "Category updated successfully",
     });
-
   } catch (_error) {
-    // console.error('Error updating category:', error);
-    
     if (_error instanceof z.ZodError) {
-      return createApiErrorResponse(400, 'Invalid request parameters', _error.issues);
+      return createApiErrorResponse(
+        400,
+        "Invalid request parameters",
+        _error.issues
+      );
     }
 
-    return createApiErrorResponse(500, 'Failed to update category');
+    return createApiErrorResponse(500, "Failed to update category");
   }
 }
 
@@ -284,12 +330,15 @@ export async function DELETE(
     const { id } = routeParamsSchema.parse(params);
 
     // Validate admin authentication
-    const { isValid, session, error } = await validateApiAccess(request, 'ADMIN');
-    
+    const { isValid, session, error } = await validateApiAccess(
+      request,
+      "ADMIN"
+    );
+
     if (!isValid || !session) {
       return createApiErrorResponse(
         error?.code || 401,
-        error?.message || 'Admin authentication required'
+        error?.message || "Admin authentication required"
       );
     }
 
@@ -301,7 +350,10 @@ export async function DELETE(
     });
 
     if (!rateLimitResult.success) {
-      return createApiErrorResponse(429, 'Too many admin requests. Please try again later.');
+      return createApiErrorResponse(
+        429,
+        "Too many admin requests. Please try again later."
+      );
     }
 
     // Check if category exists
@@ -317,16 +369,16 @@ export async function DELETE(
     });
 
     if (!existingCategory) {
-      return createApiErrorResponse(404, 'Category not found');
+      return createApiErrorResponse(404, "Category not found");
     }
 
     // Check for query parameter to force delete
     const url = new URL(request.url);
-    const forceDelete = url.searchParams.get('force') === 'true';
+    const forceDelete = url.searchParams.get("force") === "true";
 
     if (existingCategory._count.products > 0 && !forceDelete) {
       return createApiErrorResponse(
-        400, 
+        400,
         `Category has ${existingCategory._count.products} associated products. Use ?force=true to delete anyway.`
       );
     }
@@ -339,8 +391,8 @@ export async function DELETE(
     // Log the admin action for audit
     const auditContext = getAuditContext(request, session);
     await auditAction({
-      action: 'DELETE_CATEGORY',
-      resource: 'Category',
+      action: "DELETE_CATEGORY",
+      resource: "Category",
       resourceId: id,
       adminUserId: auditContext.adminUserId,
       adminRole: auditContext.adminRole,
@@ -352,25 +404,28 @@ export async function DELETE(
         productCount: existingCategory._count.products,
         forceDelete,
       },
-      severity: 'WARN',
+      severity: "WARN",
     });
 
     return NextResponse.json({
-      message: 'Category deleted successfully',
+      message: "Category deleted successfully",
       deletedCategory: {
         id: existingCategory.id,
         name: existingCategory.name,
         productCount: existingCategory._count.products,
       },
     });
-
   } catch (_error) {
     // console.error('Error deleting category:', error);
-    
+
     if (_error instanceof z.ZodError) {
-      return createApiErrorResponse(400, 'Invalid request parameters', _error.issues);
+      return createApiErrorResponse(
+        400,
+        "Invalid request parameters",
+        _error.issues
+      );
     }
 
-    return createApiErrorResponse(500, 'Failed to delete category');
+    return createApiErrorResponse(500, "Failed to delete category");
   }
 }

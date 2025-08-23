@@ -1,17 +1,49 @@
-'use client'
+"use client";
 
-import React, { useState, useEffect } from 'react';
-import { Plus, Pencil, Trash2, Hash, Search, Filter, Palette } from 'lucide-react';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
-import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
-import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
-import { Label } from '@/components/ui/label';
-import { toast } from 'sonner';
-import { Skeleton } from '@/components/ui/skeleton';
-import { createAPIHeaders } from '@/lib/utils';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardFooter,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Skeleton } from "@/components/ui/skeleton";
+import { createAPIHeaders } from "@/lib/utils";
+import {
+  Filter,
+  Hash,
+  Palette,
+  Pencil,
+  Plus,
+  Search,
+  Trash2,
+} from "lucide-react";
+import React, { useEffect, useState } from "react";
+import { toast } from "sonner";
 
 interface Tag {
   id: string;
@@ -31,60 +63,63 @@ interface TagFormData {
 
 // Predefined colors for tags
 const PREDEFINED_COLORS = [
-  '#EF4444', // Red
-  '#F97316', // Orange
-  '#F59E0B', // Amber
-  '#EAB308', // Yellow
-  '#84CC16', // Lime
-  '#22C55E', // Green
-  '#10B981', // Emerald
-  '#06B6D4', // Cyan
-  '#0EA5E9', // Sky
-  '#3B82F6', // Blue
-  '#6366F1', // Indigo
-  '#8B5CF6', // Violet
-  '#A855F7', // Purple
-  '#D946EF', // Fuchsia
-  '#EC4899', // Pink
-  '#F43F5E', // Rose
+  "#EF4444", // Red
+  "#F97316", // Orange
+  "#F59E0B", // Amber
+  "#EAB308", // Yellow
+  "#84CC16", // Lime
+  "#22C55E", // Green
+  "#10B981", // Emerald
+  "#06B6D4", // Cyan
+  "#0EA5E9", // Sky
+  "#3B82F6", // Blue
+  "#6366F1", // Indigo
+  "#8B5CF6", // Violet
+  "#A855F7", // Purple
+  "#D946EF", // Fuchsia
+  "#EC4899", // Pink
+  "#F43F5E", // Rose
 ];
 
 export default function TagsPage() {
   const [tags, setTags] = useState<Tag[]>([]);
   const [loading, setLoading] = useState(true);
-  const [searchTerm, setSearchTerm] = useState('');
+  const [searchTerm, setSearchTerm] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
   const [isCreateOpen, setIsCreateOpen] = useState(false);
   const [isEditOpen, setIsEditOpen] = useState(false);
   const [isDeleteOpen, setIsDeleteOpen] = useState(false);
   const [selectedTag, setSelectedTag] = useState<Tag | null>(null);
-  const [formData, setFormData] = useState<TagFormData>({ name: '', color: PREDEFINED_COLORS[0] });
+  const [formData, setFormData] = useState<TagFormData>({
+    name: "",
+    color: PREDEFINED_COLORS[0],
+  });
   const [submitting, setSubmitting] = useState(false);
 
-  const fetchTags = async (page = 1, search = '') => {
+  const fetchTags = async (page = 1, search = "") => {
     try {
       const params = new URLSearchParams({
         page: page.toString(),
-        limit: '12',
-        includeProductCount: 'true',
+        limit: "12",
+        includeProductCount: "true",
       });
 
       if (search) {
-        params.append('name', search);
+        params.append("name", search);
       }
 
       const response = await fetch(`/api/tags?${params}`);
       if (!response.ok) {
-        throw new Error('Failed to fetch tags');
+        throw new Error("Failed to fetch tags");
       }
 
       const data = await response.json();
       setTags(data.tags);
       setTotalPages(data.pagination.pages);
     } catch (_error) {
-      // console.error('Error fetching tags:', error);
-      toast.error('Failed to load tags');
+      console.error("Error fetching tags:", _error);
+      toast.error("Failed to load tags");
     } finally {
       setLoading(false);
     }
@@ -101,36 +136,37 @@ export default function TagsPage() {
   };
 
   const resetForm = () => {
-    setFormData({ name: '', color: PREDEFINED_COLORS[0] });
+    setFormData({ name: "", color: PREDEFINED_COLORS[0] });
   };
 
   const handleCreateTag = async () => {
     if (!formData.name.trim()) {
-      toast.error('Tag name is required');
+      toast.error("Tag name is required");
       return;
     }
 
     setSubmitting(true);
     try {
-      const response = await fetch('/api/tags', {
-        method: 'POST',
+      const response = await fetch("/api/tags", {
+        method: "POST",
         headers: createAPIHeaders(),
         body: JSON.stringify(formData),
       });
 
       if (!response.ok) {
         const errorData = await response.json();
-        throw new Error(errorData.message || 'Failed to create tag');
+        throw new Error(errorData.message || "Failed to create tag");
       }
 
       await response.json();
-      toast.success('Tag created successfully');
+      toast.success("Tag created successfully");
       setIsCreateOpen(false);
       resetForm();
       fetchTags(1, searchTerm);
     } catch (_error) {
-      // console.error('Error creating tag:', error);
-      toast.error(_error instanceof Error ? _error.message : 'Failed to create tag');
+      toast.error(
+        _error instanceof Error ? _error.message : "Failed to create tag"
+      );
     } finally {
       setSubmitting(false);
     }
@@ -138,31 +174,32 @@ export default function TagsPage() {
 
   const handleEditTag = async () => {
     if (!selectedTag || !formData.name.trim()) {
-      toast.error('Tag name is required');
+      toast.error("Tag name is required");
       return;
     }
 
     setSubmitting(true);
     try {
       const response = await fetch(`/api/tags/${selectedTag.id}`, {
-        method: 'PUT',
+        method: "PUT",
         headers: createAPIHeaders(),
         body: JSON.stringify(formData),
       });
 
       if (!response.ok) {
         const errorData = await response.json();
-        throw new Error(errorData.message || 'Failed to update tag');
+        throw new Error(errorData.message || "Failed to update tag");
       }
 
-      toast.success('Tag updated successfully');
+      toast.success("Tag updated successfully");
       setIsEditOpen(false);
       setSelectedTag(null);
       resetForm();
       fetchTags(currentPage, searchTerm);
     } catch (_error) {
-      // console.error('Error updating tag:', error);
-      toast.error(_error instanceof Error ? _error.message : 'Failed to update tag');
+      toast.error(
+        _error instanceof Error ? _error.message : "Failed to update tag"
+      );
     } finally {
       setSubmitting(false);
     }
@@ -173,26 +210,29 @@ export default function TagsPage() {
 
     setSubmitting(true);
     try {
-      const hasProducts = selectedTag.productCount && selectedTag.productCount > 0;
-      const deleteUrl = `/api/tags/${selectedTag.id}${hasProducts ? '?force=true' : ''}`;
+      const hasProducts =
+        selectedTag.productCount && selectedTag.productCount > 0;
+      const deleteUrl = `/api/tags/${selectedTag.id}${hasProducts ? "?force=true" : ""}`;
 
       const response = await fetch(deleteUrl, {
-        method: 'DELETE',
+        method: "DELETE",
         headers: createAPIHeaders(),
       });
 
       if (!response.ok) {
         const errorData = await response.json();
-        throw new Error(errorData.message || 'Failed to delete tag');
+        throw new Error(errorData.message || "Failed to delete tag");
       }
 
-      toast.success('Tag deleted successfully');
+      toast.success("Tag deleted successfully");
       setIsDeleteOpen(false);
       setSelectedTag(null);
       fetchTags(currentPage, searchTerm);
     } catch (_error) {
       // console.error('Error deleting tag:', error);
-      toast.error(_error instanceof Error ? _error.message : 'Failed to delete tag');
+      toast.error(
+        _error instanceof Error ? _error.message : "Failed to delete tag"
+      );
     } finally {
       setSubmitting(false);
     }
@@ -215,15 +255,20 @@ export default function TagsPage() {
 
   return (
     <div className="container mx-auto py-6">
-      <div className="flex items-center justify-between mb-6">
+      <div className="mb-6 flex items-center justify-between">
         <div>
           <h1 className="text-3xl font-bold tracking-tight">Tags</h1>
           <p className="text-muted-foreground">Manage product tags</p>
         </div>
         <Dialog open={isCreateOpen} onOpenChange={setIsCreateOpen}>
           <DialogTrigger asChild>
-            <Button onClick={() => { resetForm(); setIsCreateOpen(true); }}>
-              <Plus className="h-4 w-4 mr-2" />
+            <Button
+              onClick={() => {
+                resetForm();
+                setIsCreateOpen(true);
+              }}
+            >
+              <Plus className="mr-2 h-4 w-4" />
               Create Tag
             </Button>
           </DialogTrigger>
@@ -236,11 +281,15 @@ export default function TagsPage() {
             </DialogHeader>
             <div className="grid gap-4 py-4">
               <div className="grid grid-cols-4 items-center gap-4">
-                <Label htmlFor="name" className="text-right">Name</Label>
+                <Label htmlFor="name" className="text-right">
+                  Name
+                </Label>
                 <Input
                   id="name"
                   value={formData.name}
-                  onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                  onChange={(e) =>
+                    setFormData({ ...formData, name: e.target.value })
+                  }
                   className="col-span-3"
                   placeholder="Tag name"
                 />
@@ -252,8 +301,10 @@ export default function TagsPage() {
                     <button
                       key={color}
                       type="button"
-                      className={`w-8 h-8 rounded-full border-2 ${
-                        formData.color === color ? 'border-gray-900' : 'border-gray-300'
+                      className={`h-8 w-8 rounded-full border-2 ${
+                        formData.color === color
+                          ? "border-gray-900"
+                          : "border-gray-300"
                       }`}
                       style={{ backgroundColor: color }}
                       onClick={() => setFormData({ ...formData, color })}
@@ -262,12 +313,16 @@ export default function TagsPage() {
                 </div>
               </div>
               <div className="grid grid-cols-4 items-center gap-4">
-                <Label htmlFor="custom-color" className="text-right">Custom</Label>
+                <Label htmlFor="custom-color" className="text-right">
+                  Custom
+                </Label>
                 <Input
                   id="custom-color"
                   type="color"
                   value={formData.color}
-                  onChange={(e) => setFormData({ ...formData, color: e.target.value })}
+                  onChange={(e) =>
+                    setFormData({ ...formData, color: e.target.value })
+                  }
                   className="col-span-3 h-10"
                 />
               </div>
@@ -278,7 +333,7 @@ export default function TagsPage() {
                 onClick={handleCreateTag}
                 disabled={submitting}
               >
-                {submitting ? 'Creating...' : 'Create Tag'}
+                {submitting ? "Creating..." : "Create Tag"}
               </Button>
             </DialogFooter>
           </DialogContent>
@@ -288,7 +343,7 @@ export default function TagsPage() {
       <div className="mb-6">
         <form onSubmit={handleSearch} className="flex gap-2">
           <div className="relative flex-1">
-            <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
+            <Search className="text-muted-foreground absolute top-2.5 left-2 h-4 w-4" />
             <Input
               placeholder="Search tags..."
               value={searchTerm}
@@ -303,7 +358,7 @@ export default function TagsPage() {
       </div>
 
       {loading ? (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+        <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
           {Array.from({ length: 8 }).map((_, i) => (
             <Card key={i}>
               <CardHeader>
@@ -318,33 +373,31 @@ export default function TagsPage() {
         </div>
       ) : (
         <>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 mb-6">
+          <div className="mb-6 grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
             {tags.map((tag) => (
-              <Card key={tag.id} className="hover:shadow-md transition-shadow">
+              <Card key={tag.id} className="transition-shadow hover:shadow-md">
                 <CardHeader>
                   <CardTitle className="flex items-center justify-between">
                     <div className="flex items-center gap-2">
                       <div
-                        className="w-4 h-4 rounded-full"
-                        style={{ backgroundColor: tag.color || '#6366f1' }}
+                        className="h-4 w-4 rounded-full"
+                        style={{ backgroundColor: tag.color || "#6366f1" }}
                       />
                       <span className="truncate">{tag.name}</span>
                     </div>
                     <Badge variant="secondary" className="ml-2">
-                      <Hash className="h-3 w-3 mr-1" />
+                      <Hash className="mr-1 h-3 w-3" />
                       {tag.productCount || 0}
                     </Badge>
                   </CardTitle>
-                  <CardDescription>
-                    Slug: {tag.slug}
-                  </CardDescription>
+                  <CardDescription>Slug: {tag.slug}</CardDescription>
                 </CardHeader>
                 <CardContent>
-                  <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                  <div className="text-muted-foreground flex items-center gap-2 text-sm">
                     <Palette className="h-4 w-4" />
                     <span>{tag.color}</span>
                   </div>
-                  <p className="text-xs text-muted-foreground mt-2">
+                  <p className="text-muted-foreground mt-2 text-xs">
                     Created: {new Date(tag.createdAt).toLocaleDateString()}
                   </p>
                 </CardContent>
@@ -370,15 +423,17 @@ export default function TagsPage() {
           </div>
 
           {tags.length === 0 && (
-            <div className="text-center py-12">
-              <Hash className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
-              <h3 className="text-lg font-semibold mb-2">No tags found</h3>
+            <div className="py-12 text-center">
+              <Hash className="text-muted-foreground mx-auto mb-4 h-12 w-12" />
+              <h3 className="mb-2 text-lg font-semibold">No tags found</h3>
               <p className="text-muted-foreground mb-4">
-                {searchTerm ? 'Try adjusting your search criteria.' : 'Get started by creating your first tag.'}
+                {searchTerm
+                  ? "Try adjusting your search criteria."
+                  : "Get started by creating your first tag."}
               </p>
               {!searchTerm && (
                 <Button onClick={() => setIsCreateOpen(true)}>
-                  <Plus className="h-4 w-4 mr-2" />
+                  <Plus className="mr-2 h-4 w-4" />
                   Create Tag
                 </Button>
               )}
@@ -389,7 +444,7 @@ export default function TagsPage() {
             <div className="flex justify-center gap-2">
               <Button
                 variant="outline"
-                onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
+                onClick={() => setCurrentPage((prev) => Math.max(1, prev - 1))}
                 disabled={currentPage === 1}
               >
                 Previous
@@ -399,7 +454,9 @@ export default function TagsPage() {
               </span>
               <Button
                 variant="outline"
-                onClick={() => setCurrentPage(prev => Math.min(totalPages, prev + 1))}
+                onClick={() =>
+                  setCurrentPage((prev) => Math.min(totalPages, prev + 1))
+                }
                 disabled={currentPage === totalPages}
               >
                 Next
@@ -414,26 +471,32 @@ export default function TagsPage() {
         <DialogContent>
           <DialogHeader>
             <DialogTitle>Edit Tag</DialogTitle>
-            <DialogDescription>
-              Update the tag information.
-            </DialogDescription>
+            <DialogDescription>Update the tag information.</DialogDescription>
           </DialogHeader>
           <div className="grid gap-4 py-4">
             <div className="grid grid-cols-4 items-center gap-4">
-              <Label htmlFor="edit-name" className="text-right">Name</Label>
+              <Label htmlFor="edit-name" className="text-right">
+                Name
+              </Label>
               <Input
                 id="edit-name"
                 value={formData.name}
-                onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                onChange={(e) =>
+                  setFormData({ ...formData, name: e.target.value })
+                }
                 className="col-span-3"
               />
             </div>
             <div className="grid grid-cols-4 items-center gap-4">
-              <Label htmlFor="edit-slug" className="text-right">Slug</Label>
+              <Label htmlFor="edit-slug" className="text-right">
+                Slug
+              </Label>
               <Input
                 id="edit-slug"
                 value={formData.slug}
-                onChange={(e) => setFormData({ ...formData, slug: e.target.value })}
+                onChange={(e) =>
+                  setFormData({ ...formData, slug: e.target.value })
+                }
                 className="col-span-3"
                 placeholder="URL-friendly name"
               />
@@ -445,8 +508,10 @@ export default function TagsPage() {
                   <button
                     key={color}
                     type="button"
-                    className={`w-8 h-8 rounded-full border-2 ${
-                      formData.color === color ? 'border-gray-900' : 'border-gray-300'
+                    className={`h-8 w-8 rounded-full border-2 ${
+                      formData.color === color
+                        ? "border-gray-900"
+                        : "border-gray-300"
                     }`}
                     style={{ backgroundColor: color }}
                     onClick={() => setFormData({ ...formData, color })}
@@ -455,12 +520,16 @@ export default function TagsPage() {
               </div>
             </div>
             <div className="grid grid-cols-4 items-center gap-4">
-              <Label htmlFor="edit-custom-color" className="text-right">Custom</Label>
+              <Label htmlFor="edit-custom-color" className="text-right">
+                Custom
+              </Label>
               <Input
                 id="edit-custom-color"
                 type="color"
                 value={formData.color}
-                onChange={(e) => setFormData({ ...formData, color: e.target.value })}
+                onChange={(e) =>
+                  setFormData({ ...formData, color: e.target.value })
+                }
                 className="col-span-3 h-10"
               />
             </div>
@@ -470,7 +539,7 @@ export default function TagsPage() {
               Cancel
             </Button>
             <Button onClick={handleEditTag} disabled={submitting}>
-              {submitting ? 'Updating...' : 'Update Tag'}
+              {submitting ? "Updating..." : "Update Tag"}
             </Button>
           </DialogFooter>
         </DialogContent>
@@ -482,12 +551,12 @@ export default function TagsPage() {
           <AlertDialogHeader>
             <AlertDialogTitle>Delete Tag</AlertDialogTitle>
             <AlertDialogDescription>
-              Are you sure you want to delete &quot;{selectedTag?.name}&quot;? 
+              Are you sure you want to delete &quot;{selectedTag?.name}&quot;?
               {selectedTag?.productCount && selectedTag.productCount > 0 && (
                 <>
                   <br />
                   <span className="text-destructive font-medium">
-                    This tag has {selectedTag.productCount} associated products. 
+                    This tag has {selectedTag.productCount} associated products.
                     Deleting it will remove the tag from all products.
                   </span>
                 </>
@@ -505,7 +574,7 @@ export default function TagsPage() {
               disabled={submitting}
               className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
             >
-              {submitting ? 'Deleting...' : 'Delete Tag'}
+              {submitting ? "Deleting..." : "Delete Tag"}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>

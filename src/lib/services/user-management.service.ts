@@ -1,13 +1,18 @@
 /**
  * User Management Service
- * 
+ *
  * Secure service layer for user management operations with comprehensive
  * audit logging, role-based access control, and security validations.
  */
 
 import { db, secureTransaction } from "@/lib/db";
-import { hasPermission, canManageRole, validateRoleTransition, PERMISSIONS } from "@/lib/permissions";
-import type { UserRole, User, Prisma } from "@prisma/client";
+import {
+  canManageRole,
+  hasPermission,
+  PERMISSIONS,
+  validateRoleTransition,
+} from "@/lib/permissions";
+import type { Prisma, User, UserRole } from "@prisma/client";
 
 /**
  * User query options for pagination and filtering
@@ -26,7 +31,19 @@ export interface UserQueryOptions {
  * User query result with pagination metadata
  */
 export interface UserQueryResult {
-  users: Array<Pick<User, "id" | "email" | "name" | "role" | "isActive" | "createdAt" | "lastLoginAt" | "stripeCustomerId">>;
+  users: Array<
+    Pick<
+      User,
+      | "id"
+      | "email"
+      | "name"
+      | "role"
+      | "isActive"
+      | "createdAt"
+      | "lastLoginAt"
+      | "stripeCustomerId"
+    >
+  >;
   pagination: {
     page: number;
     limit: number;
@@ -163,7 +180,7 @@ export class UserManagementService {
       };
     } catch (_error) {
       // Log error for security monitoring
-      // console.error("[USER_MANAGEMENT] Query error:", error);
+      console.error("[USER_MANAGEMENT] Query error:", _error);
       throw new Error("Failed to retrieve users");
     }
   }
@@ -216,7 +233,7 @@ export class UserManagementService {
 
       return user;
     } catch (_error) {
-      // console.error("[USER_MANAGEMENT] Get user error:", error);
+      console.error("[USER_MANAGEMENT] Get user error:", _error);
       throw new Error("Failed to retrieve user");
     }
   }
@@ -242,7 +259,9 @@ export class UserManagementService {
     if (updateData.role && updateData.role !== currentUser.role) {
       // Verify admin can assign the new role
       if (!canManageRole(auditContext.adminRole, updateData.role)) {
-        throw new Error(`Insufficient permissions to assign role ${updateData.role}`);
+        throw new Error(
+          `Insufficient permissions to assign role ${updateData.role}`
+        );
       }
 
       // Validate role transition
@@ -258,12 +277,12 @@ export class UserManagementService {
 
       // Log high-risk transitions
       if (transition.securityRisk === "HIGH") {
-        // console.warn("[SECURITY] High-risk role transition:", {
-        //   userId,
-        //   from: currentUser.role,
-        //   to: updateData.role,
-        //   adminUserId: auditContext.adminUserId,
-        // });
+        console.warn("[SECURITY] High-risk role transition:", {
+          userId,
+          from: currentUser.role,
+          to: updateData.role,
+          adminUserId: auditContext.adminUserId,
+        });
       }
     }
 
@@ -281,7 +300,10 @@ export class UserManagementService {
       changedFields.push("name");
     }
 
-    if (updateData.email !== undefined && updateData.email !== currentUser.email) {
+    if (
+      updateData.email !== undefined &&
+      updateData.email !== currentUser.email
+    ) {
       updatePayload.email = updateData.email;
       updatePayload.emailVerified = false; // Reset email verification
       changedFields.push("email");
@@ -292,22 +314,34 @@ export class UserManagementService {
       changedFields.push("role");
     }
 
-    if (updateData.isActive !== undefined && updateData.isActive !== currentUser.isActive) {
+    if (
+      updateData.isActive !== undefined &&
+      updateData.isActive !== currentUser.isActive
+    ) {
       updatePayload.isActive = updateData.isActive;
       changedFields.push("isActive");
     }
 
-    if (updateData.phone !== undefined && updateData.phone !== currentUser.phone) {
+    if (
+      updateData.phone !== undefined &&
+      updateData.phone !== currentUser.phone
+    ) {
       updatePayload.phone = updateData.phone;
       changedFields.push("phone");
     }
 
-    if (updateData.timezone !== undefined && updateData.timezone !== currentUser.timezone) {
+    if (
+      updateData.timezone !== undefined &&
+      updateData.timezone !== currentUser.timezone
+    ) {
       updatePayload.timezone = updateData.timezone;
       changedFields.push("timezone");
     }
 
-    if (updateData.preferredCurrency !== undefined && updateData.preferredCurrency !== currentUser.preferredCurrency) {
+    if (
+      updateData.preferredCurrency !== undefined &&
+      updateData.preferredCurrency !== currentUser.preferredCurrency
+    ) {
       updatePayload.preferredCurrency = updateData.preferredCurrency;
       changedFields.push("preferredCurrency");
     }
@@ -360,15 +394,15 @@ export class UserManagementService {
         return user;
       });
 
-      // console.log("[USER_MANAGEMENT] User updated:", {
-      //   userId,
-      //   changedFields,
-      //   adminUserId: auditContext.adminUserId,
-      // });
+      console.log("[USER_MANAGEMENT] User updated:", {
+        userId,
+        changedFields,
+        adminUserId: auditContext.adminUserId,
+      });
 
       return updatedUser;
     } catch (_error) {
-      // console.error("[USER_MANAGEMENT] Update error:", error);
+      console.error("[USER_MANAGEMENT] Update error:", error);
       throw new Error("Failed to update user");
     }
   }
@@ -442,14 +476,14 @@ export class UserManagementService {
         return user;
       });
 
-      // console.log("[USER_MANAGEMENT] User deactivated:", {
-      //   userId,
-      //   adminUserId: auditContext.adminUserId,
-      // });
+      console.log("[USER_MANAGEMENT] User deactivated:", {
+        userId,
+        adminUserId: auditContext.adminUserId,
+      });
 
       return updatedUser;
     } catch (_error) {
-      // console.error("[USER_MANAGEMENT] Deactivation error:", error);
+      console.error("[USER_MANAGEMENT] Deactivation error:", _error);
       throw new Error("Failed to deactivate user");
     }
   }
@@ -513,14 +547,14 @@ export class UserManagementService {
         return user;
       });
 
-      // console.log("[USER_MANAGEMENT] User activated:", {
-      //   userId,
-      //   adminUserId: auditContext.adminUserId,
-      // });
+      console.log("[USER_MANAGEMENT] User activated:", {
+        userId,
+        adminUserId: auditContext.adminUserId,
+      });
 
       return updatedUser;
     } catch (_error) {
-      // console.error("[USER_MANAGEMENT] Activation error:", error);
+      console.error("[USER_MANAGEMENT] Activation error:", _error);
       throw new Error("Failed to activate user");
     }
   }
@@ -549,7 +583,11 @@ export class UserManagementService {
 
     try {
       const now = new Date();
-      const startOfToday = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+      const startOfToday = new Date(
+        now.getFullYear(),
+        now.getMonth(),
+        now.getDate()
+      );
       const startOfWeek = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
 
       const [
@@ -577,11 +615,13 @@ export class UserManagementService {
           },
         }),
         // Get basic activity stats from audit logs (if available)
-        db.auditLog.count({
-          where: {
-            timestamp: { gte: startOfWeek },
-          },
-        }).catch(() => 0), // Fallback if audit log table doesn't exist or fails
+        db.auditLog
+          .count({
+            where: {
+              timestamp: { gte: startOfWeek },
+            },
+          })
+          .catch(() => 0), // Fallback if audit log table doesn't exist or fails
       ]);
 
       const roleDistribution: Record<UserRole, number> = {
@@ -618,7 +658,7 @@ export class UserManagementService {
         recentActivity,
       };
     } catch (_error) {
-      // console.error("[USER_MANAGEMENT] Statistics error:", error);
+      console.error("[USER_MANAGEMENT] Statistics error:", _error);
       throw new Error("Failed to retrieve user statistics");
     }
   }
@@ -649,7 +689,7 @@ export class UserManagementService {
       });
     } catch (_error) {
       // Don't throw on audit log failures, but log the error
-      // console.error("[USER_MANAGEMENT] Audit log error:", error);
+      console.error("[USER_MANAGEMENT] Audit log error:", _error);
     }
   }
 }

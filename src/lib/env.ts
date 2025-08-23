@@ -20,7 +20,10 @@ const serverEnvSchema = z.object({
     .string()
     .min(32, "Better Auth secret must be at least 32 characters"),
   BETTER_AUTH_URL: z.string().url("Invalid auth URL").optional(),
-  BETTER_AUTH_TRUSTED_ORIGINS: z.string().default("http://localhost:3000").optional(),
+  BETTER_AUTH_TRUSTED_ORIGINS: z
+    .string()
+    .default("http://localhost:3000")
+    .optional(),
 
   // Stripe Server-side
   STRIPE_SECRET_KEY: z.string().startsWith("sk_", "Invalid Stripe secret key"),
@@ -30,9 +33,7 @@ const serverEnvSchema = z.object({
     .optional(),
 
   // Email (required for email verification)
-  RESEND_API_KEY: z
-    .string()
-    .startsWith("re_", "Invalid Resend API key"),
+  RESEND_API_KEY: z.string().startsWith("re_", "Invalid Resend API key"),
   FROM_EMAIL: z
     .string()
     .email("Invalid from email")
@@ -97,8 +98,7 @@ export function getServerEnv() {
   try {
     return serverEnvSchema.parse(process.env);
   } catch (_error) {
-    // eslint-disable-next-line no-console
-    // console.error("❌ Invalid server environment variables:", error);
+    console.error("❌ Invalid server environment variables:", _error);
     throw new Error("Server environment validation failed");
   }
 }
@@ -122,8 +122,7 @@ export function getClientEnv() {
       NEXT_PUBLIC_SENTRY_DSN: process.env.NEXT_PUBLIC_SENTRY_DSN,
     });
   } catch (_error) {
-    // eslint-disable-next-line no-console
-    // console.error("❌ Invalid client environment variables:", error);
+    console.error("❌ Invalid client environment variables:", _error);
     throw new Error("Client environment validation failed");
   }
 }
@@ -174,10 +173,10 @@ const stripePublishableKey = clientEnv.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY;
 
 // Feature flags:
 if (isDebugMode()) {
-  // console.log("Debug mode is enabled");
+  console.log("Debug mode is enabled");
 }
 
 if (isStripeTestMode()) {
-  // console.log("Using Stripe test mode");
+   console.log("Using Stripe test mode");
 }
 */

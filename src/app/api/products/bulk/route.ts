@@ -17,18 +17,18 @@
  * - Rollback capabilities for failed operations
  */
 
-import { NextRequest, NextResponse } from "next/server";
-import { z } from "zod";
-import { ProductService } from "@/services/products/product.service";
-import { db } from "@/lib/db";
+import { auditAction, rateLimit } from "@/lib/api-helpers";
 import {
-  validateApiAccess,
   createApiErrorResponse,
   getAuditContext,
+  validateApiAccess,
 } from "@/lib/auth/server-session";
-import { bulkPriceUpdateSchema } from "@/lib/validations/base/product";
+import { db } from "@/lib/db";
 import { cuidSchema } from "@/lib/validations/base/common";
-import { rateLimit, auditAction } from "@/lib/api-helpers";
+import { bulkPriceUpdateSchema } from "@/lib/validations/base/product";
+import { ProductService } from "@/services/products/product.service";
+import { NextRequest, NextResponse } from "next/server";
+import { z } from "zod";
 
 const productService = new ProductService(db);
 
@@ -256,8 +256,6 @@ export async function POST(request: NextRequest) {
       { status: 200 }
     );
   } catch (_error) {
-    // console.error("Error performing bulk operation:", error);
-
     // Handle specific business logic errors
     if (_error instanceof Error) {
       if (_error.message.includes("not found")) {
