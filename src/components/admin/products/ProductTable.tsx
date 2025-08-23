@@ -1,21 +1,23 @@
-'use client';
+"use client";
 
-import { useState } from 'react';
-import { useRouter } from 'next/navigation';
-import { 
-  MoreHorizontal, 
-  Edit, 
-  Trash2, 
-  Eye, 
-  Copy, 
-  ChevronUp, 
+import { useState } from "react";
+import { useRouter } from "next/navigation";
+import {
+  MoreHorizontal,
+  Edit,
+  Trash2,
+  Eye,
+  Copy,
+  ChevronUp,
   ChevronDown,
   ChevronLeft,
   ChevronRight,
   ChevronsLeft,
-  ChevronsRight
-} from 'lucide-react';
-import { formatDistanceToNow } from 'date-fns';
+  ChevronsRight,
+  CheckCircle,
+  XCircle,
+} from "lucide-react";
+import { formatDistanceToNow } from "date-fns";
 
 import {
   Table,
@@ -24,17 +26,17 @@ import {
   TableHead,
   TableHeader,
   TableRow,
-} from '@/components/ui/table';
-import { Button } from '@/components/ui/button';
-import { Checkbox } from '@/components/ui/checkbox';
-import { Badge } from '@/components/ui/badge';
+} from "@/components/ui/table";
+import { Button } from "@/components/ui/button";
+import { Checkbox } from "@/components/ui/checkbox";
+import { Badge } from "@/components/ui/badge";
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu';
+} from "@/components/ui/dropdown-menu";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -44,19 +46,25 @@ import {
   AlertDialogFooter,
   AlertDialogHeader,
   AlertDialogTitle,
-} from '@/components/ui/alert-dialog';
-import { Skeleton } from '@/components/ui/skeleton';
+} from "@/components/ui/alert-dialog";
+import { Skeleton } from "@/components/ui/skeleton";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 
-import { StockIndicator } from './StockIndicator';
-import type { Product, ProductSort } from '@/lib/validations/base/product';
+import { StockIndicator } from "./StockIndicator";
+import type { Product, ProductSort } from "@/lib/validations/base/product";
 
 interface ProductTableProps {
   products: Product[];
   loading: boolean;
   selectedProducts: string[];
   onSelectionChange: (selectedIds: string[]) => void;
-  onSort: (field: ProductSort, direction: 'asc' | 'desc') => void;
-  currentSort: { field: ProductSort; direction: 'asc' | 'desc' };
+  onSort: (field: ProductSort, direction: "asc" | "desc") => void;
+  currentSort: { field: ProductSort; direction: "asc" | "desc" };
   onDeleteProduct: (productId: string) => void;
   pagination?: {
     page: number;
@@ -71,24 +79,30 @@ interface ProductTableProps {
 
 interface SortableHeaderProps {
   field: ProductSort;
-  currentSort: { field: ProductSort; direction: 'asc' | 'desc' };
-  onSort: (field: ProductSort, direction: 'asc' | 'desc') => void;
+  currentSort: { field: ProductSort; direction: "asc" | "desc" };
+  onSort: (field: ProductSort, direction: "asc" | "desc") => void;
   children: React.ReactNode;
 }
 
-function SortableHeader({ field, currentSort, onSort, children }: SortableHeaderProps) {
+function SortableHeader({
+  field,
+  currentSort,
+  onSort,
+  children,
+}: SortableHeaderProps) {
   const isActive = currentSort.field === field;
-  const nextDirection = isActive && currentSort.direction === 'asc' ? 'desc' : 'asc';
+  const nextDirection =
+    isActive && currentSort.direction === "asc" ? "desc" : "asc";
 
   return (
-    <TableHead 
+    <TableHead
       className="cursor-pointer select-none"
       onClick={() => onSort(field, nextDirection)}
     >
       <div className="flex items-center gap-2">
         {children}
         {isActive ? (
-          currentSort.direction === 'asc' ? (
+          currentSort.direction === "asc" ? (
             <ChevronUp className="h-4 w-4" />
           ) : (
             <ChevronDown className="h-4 w-4" />
@@ -108,7 +122,7 @@ function ProductTableSkeleton() {
         <div key={i} className="flex items-center space-x-4">
           <Skeleton className="h-4 w-4" />
           <Skeleton className="h-12 w-12" />
-          <div className="space-y-2 flex-1">
+          <div className="flex-1 space-y-2">
             <Skeleton className="h-4 w-[200px]" />
             <Skeleton className="h-3 w-[150px]" />
           </div>
@@ -140,7 +154,7 @@ export function ProductTable({
   // Handle select all
   const handleSelectAll = (checked: boolean) => {
     if (checked) {
-      onSelectionChange(products.map(product => product.id));
+      onSelectionChange(products.map((product) => product.id));
     } else {
       onSelectionChange([]);
     }
@@ -151,7 +165,7 @@ export function ProductTable({
     if (checked) {
       onSelectionChange([...selectedProducts, productId]);
     } else {
-      onSelectionChange(selectedProducts.filter(id => id !== productId));
+      onSelectionChange(selectedProducts.filter((id) => id !== productId));
     }
   };
 
@@ -177,17 +191,17 @@ export function ProductTable({
       sku: `${product.sku}-copy-${Date.now()}`,
       slug: `${product.slug}-copy-${Date.now()}`,
     };
-    
+
     // Navigate to create page with pre-filled data
     const params = new URLSearchParams();
-    params.set('duplicate', JSON.stringify(duplicateData));
+    params.set("duplicate", JSON.stringify(duplicateData));
     router.push(`/admin/products/create?${params.toString()}`);
   };
 
   // Format price
-  const formatPrice = (price: number, currency: string = 'USD') => {
-    return new Intl.NumberFormat('en-US', {
-      style: 'currency',
+  const formatPrice = (price: number, currency: string = "USD") => {
+    return new Intl.NumberFormat("en-US", {
+      style: "currency",
       currency: currency,
     }).format(price);
   };
@@ -195,24 +209,57 @@ export function ProductTable({
   // Get product type badge
   const getTypeBadge = (type: string) => {
     const variants = {
-      ONE_TIME: 'default',
-      SUBSCRIPTION: 'secondary',
-      USAGE_BASED: 'outline',
+      ONE_TIME: "default",
+      SUBSCRIPTION: "secondary",
+      USAGE_BASED: "outline",
     } as const;
-    
+
     return (
-      <Badge variant={variants[type as keyof typeof variants] || 'default'}>
-        {type.replace('_', ' ')}
+      <Badge variant={variants[type as keyof typeof variants] || "default"}>
+        {type.replace("_", " ")}
       </Badge>
     );
   };
 
-  // Get status badge
+  // Get status badge with enhanced visual indicators
   const getStatusBadge = (isActive: boolean) => {
+    const statusText = isActive ? "Active" : "Inactive";
+    const tooltipText = isActive
+      ? "This product is currently active and available for purchase"
+      : "This product is inactive and not available for purchase";
+
     return (
-      <Badge variant={isActive ? 'default' : 'secondary'}>
-        {isActive ? 'Active' : 'Inactive'}
-      </Badge>
+      <Tooltip>
+        <TooltipTrigger asChild>
+          <div
+            className="flex cursor-help items-center gap-2"
+            role="status"
+            aria-label={`Product status: ${statusText}`}
+          >
+            {isActive ? (
+              <CheckCircle
+                className="h-4 w-4 text-green-600"
+                aria-hidden="true"
+              />
+            ) : (
+              <XCircle className="h-4 w-4 text-red-500" aria-hidden="true" />
+            )}
+            <Badge
+              variant={isActive ? "default" : "secondary"}
+              className={
+                isActive
+                  ? "border-green-200 bg-green-100 text-green-800 hover:bg-green-200"
+                  : "border-red-200 bg-red-100 text-red-800 hover:bg-red-200"
+              }
+            >
+              {statusText}
+            </Badge>
+          </div>
+        </TooltipTrigger>
+        <TooltipContent>
+          <p>{tooltipText}</p>
+        </TooltipContent>
+      </Tooltip>
     );
   };
 
@@ -223,12 +270,12 @@ export function ProductTable({
     const { page, pages, total, hasNextPage, hasPrevPage } = pagination;
 
     return (
-      <div className="flex items-center justify-between mt-4">
-        <div className="text-sm text-muted-foreground">
-          Showing {(page - 1) * pagination.limit + 1} to{' '}
+      <div className="mt-4 flex items-center justify-between">
+        <div className="text-muted-foreground text-sm">
+          Showing {(page - 1) * pagination.limit + 1} to{" "}
           {Math.min(page * pagination.limit, total)} of {total} results
         </div>
-        
+
         <div className="flex items-center gap-2">
           <Button
             variant="outline"
@@ -246,7 +293,7 @@ export function ProductTable({
           >
             <ChevronLeft className="h-4 w-4" />
           </Button>
-          
+
           <div className="flex items-center gap-1">
             {Array.from({ length: Math.min(5, pages) }, (_, i) => {
               let pageNum: number;
@@ -263,7 +310,7 @@ export function ProductTable({
               return (
                 <Button
                   key={pageNum}
-                  variant={pageNum === page ? 'default' : 'outline'}
+                  variant={pageNum === page ? "default" : "outline"}
                   size="sm"
                   onClick={() => onPageChange(pageNum)}
                 >
@@ -272,7 +319,7 @@ export function ProductTable({
               );
             })}
           </div>
-          
+
           <Button
             variant="outline"
             size="sm"
@@ -300,172 +347,241 @@ export function ProductTable({
 
   if (products.length === 0) {
     return (
-      <div className="text-center py-12">
+      <div className="py-12 text-center">
         <p className="text-muted-foreground">No products found</p>
       </div>
     );
   }
 
-  const isAllSelected = products.length > 0 && selectedProducts.length === products.length;
-  const isPartiallySelected = selectedProducts.length > 0 && selectedProducts.length < products.length;
+  const isAllSelected =
+    products.length > 0 && selectedProducts.length === products.length;
+  const isPartiallySelected =
+    selectedProducts.length > 0 && selectedProducts.length < products.length;
 
   return (
-    <div className="space-y-4">
-      <Table>
-        <TableHeader>
-          <TableRow>
-            <TableHead className="w-12">
-              <Checkbox
-                checked={isAllSelected}
-                ref={(el) => {
-                  if (el) el.indeterminate = isPartiallySelected;
-                }}
-                onCheckedChange={handleSelectAll}
-                aria-label="Select all products"
-              />
-            </TableHead>
-            <TableHead className="w-20">Image</TableHead>
-            <SortableHeader field="name" currentSort={currentSort} onSort={onSort}>
-              Name
-            </SortableHeader>
-            <TableHead>SKU</TableHead>
-            <SortableHeader field="type" currentSort={currentSort} onSort={onSort}>
-              Type
-            </SortableHeader>
-            <SortableHeader field="price" currentSort={currentSort} onSort={onSort}>
-              Price
-            </SortableHeader>
-            <TableHead>Stock</TableHead>
-            <TableHead>Status</TableHead>
-            <SortableHeader field="createdAt" currentSort={currentSort} onSort={onSort}>
-              Created
-            </SortableHeader>
-            <TableHead className="w-12">Actions</TableHead>
-          </TableRow>
-        </TableHeader>
-        <TableBody>
-          {products.map((product) => (
-            <TableRow key={product.id}>
-              <TableCell>
+    <TooltipProvider>
+      <div className="space-y-4">
+        <Table>
+          <TableHeader>
+            <TableRow>
+              <TableHead className="w-12">
                 <Checkbox
-                  checked={selectedProducts.includes(product.id)}
-                  onCheckedChange={(checked) => handleSelectProduct(product.id, checked as boolean)}
-                  aria-label={`Select ${product.name}`}
+                  checked={isAllSelected}
+                  ref={(el) => {
+                    if (el) el.indeterminate = isPartiallySelected;
+                  }}
+                  onCheckedChange={handleSelectAll}
+                  aria-label="Select all products"
                 />
-              </TableCell>
-              <TableCell>
-                <div className="h-12 w-12 rounded-md bg-muted overflow-hidden">
-                  {product.thumbnail ? (
-                    <img
-                      src={product.thumbnail}
-                      alt={product.name}
-                      className="h-full w-full object-cover"
-                    />
-                  ) : (
-                    <div className="h-full w-full bg-muted flex items-center justify-center">
-                      <span className="text-xs text-muted-foreground">No image</span>
-                    </div>
-                  )}
-                </div>
-              </TableCell>
-              <TableCell>
-                <div className="space-y-1">
-                  <div className="font-medium">{product.name}</div>
-                  {product.shortDescription && (
-                    <div className="text-sm text-muted-foreground line-clamp-1">
-                      {product.shortDescription}
-                    </div>
-                  )}
-                </div>
-              </TableCell>
-              <TableCell>
-                <code className="text-sm bg-muted px-2 py-1 rounded">
-                  {product.sku}
-                </code>
-              </TableCell>
-              <TableCell>{getTypeBadge(product.type)}</TableCell>
-              <TableCell>
-                <div className="space-y-1">
-                  <div className="font-medium">
-                    {formatPrice(Number(product.price), product.currency)}
-                  </div>
-                  {product.compareAtPrice && (
-                    <div className="text-sm text-muted-foreground line-through">
-                      {formatPrice(Number(product.compareAtPrice), product.currency)}
-                    </div>
-                  )}
-                </div>
-              </TableCell>
-              <TableCell>
-                <StockIndicator 
-                  product={product}
-                  showLabel={true}
-                />
-              </TableCell>
-              <TableCell>{getStatusBadge(product.isActive)}</TableCell>
-              <TableCell>
-                <span className="text-sm text-muted-foreground">
-                  {formatDistanceToNow(new Date(product.createdAt), { addSuffix: true })}
-                </span>
-              </TableCell>
-              <TableCell>
-                <DropdownMenu>
-                  <DropdownMenuTrigger asChild>
-                    <Button variant="ghost" size="sm">
-                      <MoreHorizontal className="h-4 w-4" />
-                    </Button>
-                  </DropdownMenuTrigger>
-                  <DropdownMenuContent align="end">
-                    <DropdownMenuItem onClick={() => router.push(`/admin/products/${product.id}`)}>
-                      <Eye className="h-4 w-4 mr-2" />
-                      View Details
-                    </DropdownMenuItem>
-                    <DropdownMenuItem onClick={() => router.push(`/admin/products/edit/${product.id}`)}>
-                      <Edit className="h-4 w-4 mr-2" />
-                      Edit
-                    </DropdownMenuItem>
-                    <DropdownMenuItem onClick={() => handleDuplicate(product)}>
-                      <Copy className="h-4 w-4 mr-2" />
-                      Duplicate
-                    </DropdownMenuItem>
-                    <DropdownMenuSeparator />
-                    <DropdownMenuItem 
-                      onClick={() => handleDeleteClick(product)}
-                      className="text-destructive"
-                    >
-                      <Trash2 className="h-4 w-4 mr-2" />
-                      Delete
-                    </DropdownMenuItem>
-                  </DropdownMenuContent>
-                </DropdownMenu>
-              </TableCell>
+              </TableHead>
+              <TableHead className="w-20">Image</TableHead>
+              <SortableHeader
+                field="name"
+                currentSort={currentSort}
+                onSort={onSort}
+              >
+                Name
+              </SortableHeader>
+              <TableHead>SKU</TableHead>
+              <SortableHeader
+                field="type"
+                currentSort={currentSort}
+                onSort={onSort}
+              >
+                Type
+              </SortableHeader>
+              <SortableHeader
+                field="price"
+                currentSort={currentSort}
+                onSort={onSort}
+              >
+                Price
+              </SortableHeader>
+              <TableHead>Stock</TableHead>
+              <TableHead>Status</TableHead>
+              <SortableHeader
+                field="createdAt"
+                currentSort={currentSort}
+                onSort={onSort}
+              >
+                Created
+              </SortableHeader>
+              <TableHead className="w-12">Actions</TableHead>
             </TableRow>
-          ))}
-        </TableBody>
-      </Table>
+          </TableHeader>
+          <TableBody>
+            {products.map((product) => (
+              <TableRow
+                key={product.id}
+                className={!product.isActive ? "bg-muted/20 opacity-60" : ""}
+                data-inactive={!product.isActive}
+              >
+                <TableCell>
+                  <Checkbox
+                    checked={selectedProducts.includes(product.id)}
+                    onCheckedChange={(checked) =>
+                      handleSelectProduct(product.id, checked as boolean)
+                    }
+                    aria-label={`Select ${product.name}${!product.isActive ? " (inactive)" : ""}`}
+                  />
+                </TableCell>
+                <TableCell>
+                  <div className="bg-muted h-12 w-12 overflow-hidden rounded-md">
+                    {product.thumbnail ? (
+                      <img
+                        src={product.thumbnail}
+                        alt={product.name}
+                        className="h-full w-full object-cover"
+                      />
+                    ) : (
+                      <div className="bg-muted flex h-full w-full items-center justify-center">
+                        <span className="text-muted-foreground text-xs">
+                          No image
+                        </span>
+                      </div>
+                    )}
+                  </div>
+                </TableCell>
+                <TableCell>
+                  <div className="space-y-1">
+                    <div
+                      className={`font-medium ${!product.isActive ? "text-muted-foreground line-through" : ""}`}
+                    >
+                      {product.name}
+                      {!product.isActive && (
+                        <>
+                          <span className="sr-only">(Inactive Product)</span>
+                          <span className="ml-2 rounded-full bg-red-100 px-2 py-0.5 text-xs text-red-800">
+                            Inactive
+                          </span>
+                        </>
+                      )}
+                    </div>
+                    {product.shortDescription && (
+                      <div
+                        className={`text-muted-foreground line-clamp-1 text-sm ${!product.isActive ? "line-through" : ""}`}
+                      >
+                        {product.shortDescription}
+                      </div>
+                    )}
+                  </div>
+                </TableCell>
+                <TableCell>
+                  <code
+                    className={`bg-muted rounded px-2 py-1 text-sm ${!product.isActive ? "line-through opacity-75" : ""}`}
+                  >
+                    {product.sku}
+                  </code>
+                </TableCell>
+                <TableCell>{getTypeBadge(product.type)}</TableCell>
+                <TableCell>
+                  <div className="space-y-1">
+                    <div
+                      className={`font-medium ${!product.isActive ? "line-through opacity-75" : ""}`}
+                    >
+                      {formatPrice(Number(product.price), product.currency)}
+                    </div>
+                    {product.compareAtPrice && (
+                      <div
+                        className={`text-muted-foreground text-sm line-through ${!product.isActive ? "opacity-75" : ""}`}
+                      >
+                        {formatPrice(
+                          Number(product.compareAtPrice),
+                          product.currency
+                        )}
+                      </div>
+                    )}
+                  </div>
+                </TableCell>
+                <TableCell>
+                  <div className={!product.isActive ? "opacity-75" : ""}>
+                    <StockIndicator product={product} showLabel={true} />
+                  </div>
+                </TableCell>
+                <TableCell>{getStatusBadge(product.isActive)}</TableCell>
+                <TableCell>
+                  <span
+                    className={`text-muted-foreground text-sm ${!product.isActive ? "opacity-75" : ""}`}
+                  >
+                    {formatDistanceToNow(new Date(product.createdAt), {
+                      addSuffix: true,
+                    })}
+                  </span>
+                </TableCell>
+                <TableCell>
+                  <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        className={!product.isActive ? "opacity-75" : ""}
+                      >
+                        <MoreHorizontal className="h-4 w-4" />
+                      </Button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent align="end">
+                      <DropdownMenuItem
+                        onClick={() =>
+                          router.push(`/admin/products/${product.id}`)
+                        }
+                      >
+                        <Eye className="mr-2 h-4 w-4" />
+                        View Details
+                      </DropdownMenuItem>
+                      <DropdownMenuItem
+                        onClick={() =>
+                          router.push(`/admin/products/edit/${product.id}`)
+                        }
+                      >
+                        <Edit className="mr-2 h-4 w-4" />
+                        Edit
+                      </DropdownMenuItem>
+                      <DropdownMenuItem
+                        onClick={() => handleDuplicate(product)}
+                      >
+                        <Copy className="mr-2 h-4 w-4" />
+                        Duplicate
+                      </DropdownMenuItem>
+                      <DropdownMenuSeparator />
+                      <DropdownMenuItem
+                        onClick={() => handleDeleteClick(product)}
+                        className="text-destructive"
+                      >
+                        <Trash2 className="mr-2 h-4 w-4" />
+                        Delete
+                      </DropdownMenuItem>
+                    </DropdownMenuContent>
+                  </DropdownMenu>
+                </TableCell>
+              </TableRow>
+            ))}
+          </TableBody>
+        </Table>
 
-      <PaginationControls />
+        <PaginationControls />
 
-      {/* Delete Confirmation Dialog */}
-      <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>Delete Product</AlertDialogTitle>
-            <AlertDialogDescription>
-              Are you sure you want to delete &quot;{productToDelete?.name}&quot;? This action cannot be undone.
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel>Cancel</AlertDialogCancel>
-            <AlertDialogAction
-              onClick={handleDeleteConfirm}
-              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
-            >
-              Delete
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
-    </div>
+        {/* Delete Confirmation Dialog */}
+        <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
+          <AlertDialogContent>
+            <AlertDialogHeader>
+              <AlertDialogTitle>Delete Product</AlertDialogTitle>
+              <AlertDialogDescription>
+                Are you sure you want to delete &quot;{productToDelete?.name}
+                &quot;? This action cannot be undone.
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+              <AlertDialogCancel>Cancel</AlertDialogCancel>
+              <AlertDialogAction
+                onClick={handleDeleteConfirm}
+                className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+              >
+                Delete
+              </AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
+      </div>
+    </TooltipProvider>
   );
 }

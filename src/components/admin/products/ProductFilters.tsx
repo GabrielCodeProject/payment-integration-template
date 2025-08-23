@@ -1,53 +1,66 @@
-'use client';
+"use client";
 
-import { useState, useEffect } from 'react';
-import { X, CalendarIcon } from 'lucide-react';
-import { format } from 'date-fns';
+import { useState, useEffect } from "react";
+import { X, CalendarIcon } from "lucide-react";
+import { format } from "date-fns";
 
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Badge } from '@/components/ui/badge';
-import { Calendar } from '@/components/ui/calendar';
-import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { Badge } from "@/components/ui/badge";
+import { Calendar } from "@/components/ui/calendar";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
 
-import type { ProductFilter } from '@/lib/validations/base/product';
+import type { ProductFilter } from "@/lib/validations/base/product";
 
 interface ProductFiltersProps {
   filters: ProductFilter;
   onFiltersChange: (filters: ProductFilter) => void;
 }
 
-export function ProductFilters({ filters, onFiltersChange }: ProductFiltersProps) {
+export function ProductFilters({
+  filters,
+  onFiltersChange,
+}: ProductFiltersProps) {
   const [localFilters, setLocalFilters] = useState<ProductFilter>(filters);
   const [priceRange, setPriceRange] = useState({
-    min: filters.priceMin?.toString() || '',
-    max: filters.priceMax?.toString() || '',
+    min: filters.priceMin?.toString() || "",
+    max: filters.priceMax?.toString() || "",
   });
-  const [tagsInput, setTagsInput] = useState(filters.tags?.join(', ') || '');
+  const [tagsInput, setTagsInput] = useState(filters.tags?.join(", ") || "");
 
   // Update local state when filters prop changes
   useEffect(() => {
     setLocalFilters(filters);
     setPriceRange({
-      min: filters.priceMin?.toString() || '',
-      max: filters.priceMax?.toString() || '',
+      min: filters.priceMin?.toString() || "",
+      max: filters.priceMax?.toString() || "",
     });
-    setTagsInput(filters.tags?.join(', ') || '');
+    setTagsInput(filters.tags?.join(", ") || "");
   }, [filters]);
 
   // Apply filters
   const applyFilters = () => {
     const newFilters: ProductFilter = { ...localFilters };
-    
+
     // Handle price range
     if (priceRange.min) {
       newFilters.priceMin = parseFloat(priceRange.min);
     } else {
       delete newFilters.priceMin;
     }
-    
+
     if (priceRange.max) {
       newFilters.priceMax = parseFloat(priceRange.max);
     } else {
@@ -57,8 +70,8 @@ export function ProductFilters({ filters, onFiltersChange }: ProductFiltersProps
     // Handle tags
     if (tagsInput.trim()) {
       newFilters.tags = tagsInput
-        .split(',')
-        .map(tag => tag.trim())
+        .split(",")
+        .map((tag) => tag.trim())
         .filter(Boolean);
     } else {
       delete newFilters.tags;
@@ -70,8 +83,8 @@ export function ProductFilters({ filters, onFiltersChange }: ProductFiltersProps
   // Clear all filters
   const clearFilters = () => {
     setLocalFilters({});
-    setPriceRange({ min: '', max: '' });
-    setTagsInput('');
+    setPriceRange({ min: "", max: "" });
+    setTagsInput("");
     onFiltersChange({});
   };
 
@@ -80,21 +93,21 @@ export function ProductFilters({ filters, onFiltersChange }: ProductFiltersProps
     const newFilters = { ...localFilters };
     delete newFilters[key];
     setLocalFilters(newFilters);
-    
-    if (key === 'priceMin') {
-      setPriceRange(prev => ({ ...prev, min: '' }));
-    } else if (key === 'priceMax') {
-      setPriceRange(prev => ({ ...prev, max: '' }));
-    } else if (key === 'tags') {
-      setTagsInput('');
+
+    if (key === "priceMin") {
+      setPriceRange((prev) => ({ ...prev, min: "" }));
+    } else if (key === "priceMax") {
+      setPriceRange((prev) => ({ ...prev, max: "" }));
+    } else if (key === "tags") {
+      setTagsInput("");
     }
-    
+
     onFiltersChange(newFilters);
   };
 
   // Update local filter
   const updateFilter = (key: keyof ProductFilter, value: any) => {
-    setLocalFilters(prev => ({
+    setLocalFilters((prev) => ({
       ...prev,
       [key]: value,
     }));
@@ -104,7 +117,7 @@ export function ProductFilters({ filters, onFiltersChange }: ProductFiltersProps
   const activeFiltersCount = Object.keys(filters).length;
 
   return (
-    <div className="space-y-6 p-4 border rounded-lg bg-muted/50">
+    <div className="bg-muted/50 space-y-6 rounded-lg border p-4">
       <div className="flex items-center justify-between">
         <h3 className="text-sm font-medium">Filters</h3>
         {activeFiltersCount > 0 && (
@@ -117,7 +130,7 @@ export function ProductFilters({ filters, onFiltersChange }: ProductFiltersProps
         )}
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+      <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
         {/* Product Name */}
         <div className="space-y-2">
           <Label htmlFor="filter-name">Product Name</Label>
@@ -125,15 +138,17 @@ export function ProductFilters({ filters, onFiltersChange }: ProductFiltersProps
             <Input
               id="filter-name"
               placeholder="Filter by name..."
-              value={localFilters.name || ''}
-              onChange={(e) => updateFilter('name', e.target.value || undefined)}
+              value={localFilters.name || ""}
+              onChange={(e) =>
+                updateFilter("name", e.target.value || undefined)
+              }
             />
             {localFilters.name && (
               <Button
                 variant="ghost"
                 size="sm"
-                className="absolute right-1 top-1 h-6 w-6 p-0"
-                onClick={() => clearFilter('name')}
+                className="absolute top-1 right-1 h-6 w-6 p-0"
+                onClick={() => clearFilter("name")}
               >
                 <X className="h-3 w-3" />
               </Button>
@@ -145,8 +160,10 @@ export function ProductFilters({ filters, onFiltersChange }: ProductFiltersProps
         <div className="space-y-2">
           <Label>Product Type</Label>
           <Select
-            value={localFilters.type || 'all'}
-            onValueChange={(value) => updateFilter('type', value === 'all' ? undefined : value)}
+            value={localFilters.type || "all"}
+            onValueChange={(value) =>
+              updateFilter("type", value === "all" ? undefined : value)
+            }
           >
             <SelectTrigger>
               <SelectValue placeholder="All types" />
@@ -160,12 +177,21 @@ export function ProductFilters({ filters, onFiltersChange }: ProductFiltersProps
           </Select>
         </div>
 
-        {/* Status */}
+        {/* Status - Note: Main status filtering is now handled by quick filters above */}
         <div className="space-y-2">
-          <Label>Status</Label>
+          <Label>Status (Advanced)</Label>
           <Select
-            value={localFilters.isActive === undefined ? 'all' : localFilters.isActive.toString()}
-            onValueChange={(value) => updateFilter('isActive', value === 'all' ? undefined : value === 'true')}
+            value={
+              localFilters.isActive === undefined
+                ? "all"
+                : localFilters.isActive.toString()
+            }
+            onValueChange={(value) =>
+              updateFilter(
+                "isActive",
+                value === "all" ? undefined : value === "true"
+              )
+            }
           >
             <SelectTrigger>
               <SelectValue placeholder="All statuses" />
@@ -176,14 +202,26 @@ export function ProductFilters({ filters, onFiltersChange }: ProductFiltersProps
               <SelectItem value="false">Inactive</SelectItem>
             </SelectContent>
           </Select>
+          <p className="text-muted-foreground text-xs">
+            Use the quick status filters above for common filtering tasks
+          </p>
         </div>
 
         {/* Digital/Physical */}
         <div className="space-y-2">
           <Label>Product Format</Label>
           <Select
-            value={localFilters.isDigital === undefined ? 'all' : localFilters.isDigital.toString()}
-            onValueChange={(value) => updateFilter('isDigital', value === 'all' ? undefined : value === 'true')}
+            value={
+              localFilters.isDigital === undefined
+                ? "all"
+                : localFilters.isDigital.toString()
+            }
+            onValueChange={(value) =>
+              updateFilter(
+                "isDigital",
+                value === "all" ? undefined : value === "true"
+              )
+            }
           >
             <SelectTrigger>
               <SelectValue placeholder="All formats" />
@@ -200,8 +238,17 @@ export function ProductFilters({ filters, onFiltersChange }: ProductFiltersProps
         <div className="space-y-2">
           <Label>Stock Status</Label>
           <Select
-            value={localFilters.inStock === undefined ? 'all' : localFilters.inStock.toString()}
-            onValueChange={(value) => updateFilter('inStock', value === 'all' ? undefined : value === 'true')}
+            value={
+              localFilters.inStock === undefined
+                ? "all"
+                : localFilters.inStock.toString()
+            }
+            onValueChange={(value) =>
+              updateFilter(
+                "inStock",
+                value === "all" ? undefined : value === "true"
+              )
+            }
           >
             <SelectTrigger>
               <SelectValue placeholder="All stock levels" />
@@ -222,7 +269,9 @@ export function ProductFilters({ filters, onFiltersChange }: ProductFiltersProps
             type="number"
             placeholder="0.00"
             value={priceRange.min}
-            onChange={(e) => setPriceRange(prev => ({ ...prev, min: e.target.value }))}
+            onChange={(e) =>
+              setPriceRange((prev) => ({ ...prev, min: e.target.value }))
+            }
           />
         </div>
 
@@ -234,7 +283,9 @@ export function ProductFilters({ filters, onFiltersChange }: ProductFiltersProps
             type="number"
             placeholder="999.99"
             value={priceRange.max}
-            onChange={(e) => setPriceRange(prev => ({ ...prev, max: e.target.value }))}
+            onChange={(e) =>
+              setPriceRange((prev) => ({ ...prev, max: e.target.value }))
+            }
           />
         </div>
 
@@ -260,7 +311,7 @@ export function ProductFilters({ filters, onFiltersChange }: ProductFiltersProps
               >
                 <CalendarIcon className="mr-2 h-4 w-4" />
                 {localFilters.createdAfter ? (
-                  format(localFilters.createdAfter, 'PPP')
+                  format(localFilters.createdAfter, "PPP")
                 ) : (
                   <span>Pick a date</span>
                 )}
@@ -270,7 +321,7 @@ export function ProductFilters({ filters, onFiltersChange }: ProductFiltersProps
               <Calendar
                 mode="single"
                 selected={localFilters.createdAfter}
-                onSelect={(date) => updateFilter('createdAfter', date)}
+                onSelect={(date) => updateFilter("createdAfter", date)}
                 initialFocus
               />
             </PopoverContent>
@@ -288,7 +339,7 @@ export function ProductFilters({ filters, onFiltersChange }: ProductFiltersProps
               >
                 <CalendarIcon className="mr-2 h-4 w-4" />
                 {localFilters.createdBefore ? (
-                  format(localFilters.createdBefore, 'PPP')
+                  format(localFilters.createdBefore, "PPP")
                 ) : (
                   <span>Pick a date</span>
                 )}
@@ -298,7 +349,7 @@ export function ProductFilters({ filters, onFiltersChange }: ProductFiltersProps
               <Calendar
                 mode="single"
                 selected={localFilters.createdBefore}
-                onSelect={(date) => updateFilter('createdBefore', date)}
+                onSelect={(date) => updateFilter("createdBefore", date)}
                 initialFocus
               />
             </PopoverContent>
@@ -307,19 +358,19 @@ export function ProductFilters({ filters, onFiltersChange }: ProductFiltersProps
       </div>
 
       {/* Apply/Clear Actions */}
-      <div className="flex items-center justify-end gap-2 pt-4 border-t">
+      <div className="flex items-center justify-end gap-2 border-t pt-4">
         <Button variant="outline" onClick={clearFilters}>
           Clear All
         </Button>
-        <Button onClick={applyFilters}>
-          Apply Filters
-        </Button>
+        <Button onClick={applyFilters}>Apply Filters</Button>
       </div>
 
       {/* Active Filters Display */}
       {activeFiltersCount > 0 && (
         <div className="space-y-2">
-          <Label className="text-xs text-muted-foreground">Active Filters:</Label>
+          <Label className="text-muted-foreground text-xs">
+            Active Filters:
+          </Label>
           <div className="flex flex-wrap gap-1">
             {filters.name && (
               <Badge variant="secondary" className="gap-1">
@@ -327,8 +378,8 @@ export function ProductFilters({ filters, onFiltersChange }: ProductFiltersProps
                 <Button
                   variant="ghost"
                   size="sm"
-                  className="h-auto w-auto p-0 ml-1"
-                  onClick={() => clearFilter('name')}
+                  className="ml-1 h-auto w-auto p-0"
+                  onClick={() => clearFilter("name")}
                 >
                   <X className="h-3 w-3" />
                 </Button>
@@ -340,8 +391,8 @@ export function ProductFilters({ filters, onFiltersChange }: ProductFiltersProps
                 <Button
                   variant="ghost"
                   size="sm"
-                  className="h-auto w-auto p-0 ml-1"
-                  onClick={() => clearFilter('type')}
+                  className="ml-1 h-auto w-auto p-0"
+                  onClick={() => clearFilter("type")}
                 >
                   <X className="h-3 w-3" />
                 </Button>
@@ -349,12 +400,12 @@ export function ProductFilters({ filters, onFiltersChange }: ProductFiltersProps
             )}
             {filters.isActive !== undefined && (
               <Badge variant="secondary" className="gap-1">
-                Status: {filters.isActive ? 'Active' : 'Inactive'}
+                Status: {filters.isActive ? "Active" : "Inactive"}
                 <Button
                   variant="ghost"
                   size="sm"
-                  className="h-auto w-auto p-0 ml-1"
-                  onClick={() => clearFilter('isActive')}
+                  className="ml-1 h-auto w-auto p-0"
+                  onClick={() => clearFilter("isActive")}
                 >
                   <X className="h-3 w-3" />
                 </Button>
@@ -362,12 +413,12 @@ export function ProductFilters({ filters, onFiltersChange }: ProductFiltersProps
             )}
             {filters.isDigital !== undefined && (
               <Badge variant="secondary" className="gap-1">
-                Format: {filters.isDigital ? 'Digital' : 'Physical'}
+                Format: {filters.isDigital ? "Digital" : "Physical"}
                 <Button
                   variant="ghost"
                   size="sm"
-                  className="h-auto w-auto p-0 ml-1"
-                  onClick={() => clearFilter('isDigital')}
+                  className="ml-1 h-auto w-auto p-0"
+                  onClick={() => clearFilter("isDigital")}
                 >
                   <X className="h-3 w-3" />
                 </Button>
@@ -375,27 +426,28 @@ export function ProductFilters({ filters, onFiltersChange }: ProductFiltersProps
             )}
             {filters.inStock !== undefined && (
               <Badge variant="secondary" className="gap-1">
-                Stock: {filters.inStock ? 'In Stock' : 'Out of Stock'}
+                Stock: {filters.inStock ? "In Stock" : "Out of Stock"}
                 <Button
                   variant="ghost"
                   size="sm"
-                  className="h-auto w-auto p-0 ml-1"
-                  onClick={() => clearFilter('inStock')}
+                  className="ml-1 h-auto w-auto p-0"
+                  onClick={() => clearFilter("inStock")}
                 >
                   <X className="h-3 w-3" />
                 </Button>
               </Badge>
             )}
-            {(filters.priceMin !== undefined || filters.priceMax !== undefined) && (
+            {(filters.priceMin !== undefined ||
+              filters.priceMax !== undefined) && (
               <Badge variant="secondary" className="gap-1">
-                Price: {filters.priceMin || '0'} - {filters.priceMax || '∞'}
+                Price: {filters.priceMin || "0"} - {filters.priceMax || "∞"}
                 <Button
                   variant="ghost"
                   size="sm"
-                  className="h-auto w-auto p-0 ml-1"
+                  className="ml-1 h-auto w-auto p-0"
                   onClick={() => {
-                    clearFilter('priceMin');
-                    clearFilter('priceMax');
+                    clearFilter("priceMin");
+                    clearFilter("priceMax");
                   }}
                 >
                   <X className="h-3 w-3" />
@@ -404,12 +456,12 @@ export function ProductFilters({ filters, onFiltersChange }: ProductFiltersProps
             )}
             {filters.tags && filters.tags.length > 0 && (
               <Badge variant="secondary" className="gap-1">
-                Tags: {filters.tags.join(', ')}
+                Tags: {filters.tags.join(", ")}
                 <Button
                   variant="ghost"
                   size="sm"
-                  className="h-auto w-auto p-0 ml-1"
-                  onClick={() => clearFilter('tags')}
+                  className="ml-1 h-auto w-auto p-0"
+                  onClick={() => clearFilter("tags")}
                 >
                   <X className="h-3 w-3" />
                 </Button>

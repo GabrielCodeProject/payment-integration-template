@@ -1,13 +1,13 @@
 /**
  * Product Bulk Operations API Route
- * 
+ *
  * Handles:
  * - POST: Bulk operations on multiple products
  *   - Bulk update (status, tags, type)
  *   - Bulk price adjustments (percentage or fixed)
  *   - Bulk activation/deactivation
  *   - Bulk tag management
- * 
+ *
  * Features:
  * - Admin-only access with strict authentication
  * - Transaction-based operations for data consistency
@@ -17,58 +17,92 @@
  * - Rollback capabilities for failed operations
  */
 
-import { NextRequest, NextResponse } from 'next/server';
-import { z } from 'zod';
-import { ProductService } from '@/services/products/product.service';
-import { db } from '@/lib/db';
-import { validateApiAccess, createApiErrorResponse, getAuditContext } from '@/lib/auth/server-session';
-import { bulkPriceUpdateSchema } from '@/lib/validations/base/product';
-import { cuidSchema } from '@/lib/validations/base/common';
-import { rateLimit, auditAction } from '@/lib/api-helpers';
+import { NextRequest, NextResponse } from "next/server";
+import { z } from "zod";
+import { ProductService } from "@/services/products/product.service";
+import { db } from "@/lib/db";
+import {
+  validateApiAccess,
+  createApiErrorResponse,
+  getAuditContext,
+} from "@/lib/auth/server-session";
+import { bulkPriceUpdateSchema } from "@/lib/validations/base/product";
+import { cuidSchema } from "@/lib/validations/base/common";
+import { rateLimit, auditAction } from "@/lib/api-helpers";
 
 const productService = new ProductService(db);
 
 // Bulk operation type schema
-const bulkOperationSchema = z.discriminatedUnion('operation', [
+const bulkOperationSchema = z.discriminatedUnion("operation", [
   // Bulk update operation
   z.object({
-    operation: z.literal('update'),
-    productIds: z.array(cuidSchema).min(1, 'At least one product ID is required').max(100, 'Maximum 100 products per operation'),
-    updates: z.object({
-      isActive: z.boolean().optional(),
-      tags: z.array(z.string()).optional(),
-      type: z.enum(['ONE_TIME', 'SUBSCRIPTION', 'USAGE_BASED']).optional(),
-    }).partial(),
+    operation: z.literal("update"),
+    productIds: z
+      .array(cuidSchema)
+      .min(1, "At least one product ID is required")
+      .max(100, "Maximum 100 products per operation"),
+    updates: z
+      .object({
+        isActive: z.boolean().optional(),
+        tags: z.array(z.string()).optional(),
+        type: z.enum(["ONE_TIME", "SUBSCRIPTION", "USAGE_BASED"]).optional(),
+      })
+      .partial(),
   }),
-  
+
   // Bulk price adjustment operation
   z.object({
-    operation: z.literal('price_adjustment'),
-    productIds: z.array(cuidSchema).min(1, 'At least one product ID is required').max(100, 'Maximum 100 products per operation'),
+    operation: z.literal("price_adjustment"),
+    productIds: z
+      .array(cuidSchema)
+      .min(1, "At least one product ID is required")
+      .max(100, "Maximum 100 products per operation"),
     adjustment: z.object({
-      type: z.enum(['percentage', 'fixed'], {
-        errorMap: () => ({ message: 'Adjustment type must be percentage or fixed' }),
+      type: z.enum(["percentage", "fixed"], {
+        errorMap: () => ({
+          message: "Adjustment type must be percentage or fixed",
+        }),
       }),
       value: z.number(),
     }),
-    effectiveDate: z.string().transform(val => new Date(val)).optional(),
+    effectiveDate: z
+      .string()
+      .transform((val) => new Date(val))
+      .optional(),
   }),
-  
+
   // Bulk tag management operation
   z.object({
-    operation: z.literal('tag_management'),
-    productIds: z.array(cuidSchema).min(1, 'At least one product ID is required').max(100, 'Maximum 100 products per operation'),
-    tagAction: z.enum(['add', 'remove', 'replace'], {
-      errorMap: () => ({ message: 'Tag action must be add, remove, or replace' }),
+    operation: z.literal("tag_management"),
+    productIds: z
+      .array(cuidSchema)
+      .min(1, "At least one product ID is required")
+      .max(100, "Maximum 100 products per operation"),
+    tagAction: z.enum(["add", "remove", "replace"], {
+      errorMap: () => ({
+        message: "Tag action must be add, remove, or replace",
+      }),
     }),
-    tags: z.array(z.string()).min(1, 'At least one tag is required'),
+    tags: z.array(z.string()).min(1, "At least one tag is required"),
   }),
-  
+
   // Bulk activation/deactivation operation
   z.object({
-    operation: z.literal('activation'),
-    productIds: z.array(cuidSchema).min(1, 'At least one product ID is required').max(100, 'Maximum 100 products per operation'),
+    operation: z.literal("activation"),
+    productIds: z
+      .array(cuidSchema)
+      .min(1, "At least one product ID is required")
+      .max(100, "Maximum 100 products per operation"),
     activate: z.boolean(),
+  }),
+
+  // Bulk delete operation
+  z.object({
+    operation: z.literal("delete"),
+    productIds: z
+      .array(cuidSchema)
+      .min(1, "At least one product ID is required")
+      .max(100, "Maximum 100 products per operation"),
   }),
 ]);
 
@@ -76,19 +110,22 @@ type BulkOperation = z.infer<typeof bulkOperationSchema>;
 
 /**
  * POST /api/products/bulk - Perform bulk operations on products
- * 
+ *
  * Supports multiple types of bulk operations with comprehensive validation
  * and audit logging. Operations are performed within transactions for consistency.
  */
 export async function POST(request: NextRequest) {
   try {
     // Validate admin authentication
-    const { isValid, session, error } = await validateApiAccess(request, 'ADMIN');
-    
+    const { isValid, session, error } = await validateApiAccess(
+      request,
+      "ADMIN"
+    );
+
     if (!isValid || !session) {
       return createApiErrorResponse(
         error?.code || 401,
-        error?.message || 'Admin authentication required'
+        error?.message || "Admin authentication required"
       );
     }
 
@@ -100,7 +137,10 @@ export async function POST(request: NextRequest) {
     });
 
     if (!rateLimitResult.success) {
-      return createApiErrorResponse(429, 'Too many bulk operations. Please try again later.');
+      return createApiErrorResponse(
+        429,
+        "Too many bulk operations. Please try again later."
+      );
     }
 
     // Parse and validate request body
@@ -108,7 +148,7 @@ export async function POST(request: NextRequest) {
     try {
       requestData = await request.json();
     } catch {
-      return createApiErrorResponse(400, 'Invalid JSON in request body');
+      return createApiErrorResponse(400, "Invalid JSON in request body");
     }
 
     let validatedOperation: BulkOperation;
@@ -116,7 +156,11 @@ export async function POST(request: NextRequest) {
       validatedOperation = bulkOperationSchema.parse(requestData);
     } catch (error) {
       if (error instanceof z.ZodError) {
-        return createApiErrorResponse(400, 'Invalid bulk operation data', error.issues);
+        return createApiErrorResponse(
+          400,
+          "Invalid bulk operation data",
+          error.issues
+        );
       }
       throw error;
     }
@@ -129,20 +173,20 @@ export async function POST(request: NextRequest) {
     let auditDetails;
 
     switch (validatedOperation.operation) {
-      case 'update':
+      case "update":
         result = await handleBulkUpdate(validatedOperation);
         auditDetails = {
-          operation: 'bulk_update',
+          operation: "bulk_update",
           productCount: validatedOperation.productIds.length,
           updates: validatedOperation.updates,
           affectedProducts: result.affectedCount,
         };
         break;
 
-      case 'price_adjustment':
+      case "price_adjustment":
         result = await handleBulkPriceAdjustment(validatedOperation);
         auditDetails = {
-          operation: 'bulk_price_adjustment',
+          operation: "bulk_price_adjustment",
           productCount: validatedOperation.productIds.length,
           adjustment: validatedOperation.adjustment,
           affectedProducts: result.affectedCount,
@@ -150,10 +194,10 @@ export async function POST(request: NextRequest) {
         };
         break;
 
-      case 'tag_management':
+      case "tag_management":
         result = await handleBulkTagManagement(validatedOperation);
         auditDetails = {
-          operation: 'bulk_tag_management',
+          operation: "bulk_tag_management",
           productCount: validatedOperation.productIds.length,
           tagAction: validatedOperation.tagAction,
           tags: validatedOperation.tags,
@@ -161,25 +205,35 @@ export async function POST(request: NextRequest) {
         };
         break;
 
-      case 'activation':
+      case "activation":
         result = await handleBulkActivation(validatedOperation);
         auditDetails = {
-          operation: 'bulk_activation',
+          operation: "bulk_activation",
           productCount: validatedOperation.productIds.length,
           activate: validatedOperation.activate,
           affectedProducts: result.affectedCount,
         };
         break;
 
+      case "delete":
+        result = await handleBulkDelete(validatedOperation);
+        auditDetails = {
+          operation: "bulk_delete",
+          productCount: validatedOperation.productIds.length,
+          affectedProducts: result.affectedCount,
+          deletedProducts: result.deletions || [],
+        };
+        break;
+
       default:
-        return createApiErrorResponse(400, 'Unsupported bulk operation');
+        return createApiErrorResponse(400, "Unsupported bulk operation");
     }
 
     // Log the admin action for audit
     await auditAction({
-      action: 'BULK_PRODUCT_OPERATION',
-      resource: 'Product',
-      resourceId: 'bulk_operation',
+      action: "BULK_PRODUCT_OPERATION",
+      resource: "Product",
+      resourceId: "bulk_operation",
       adminUserId: auditContext.adminUserId,
       adminRole: auditContext.adminRole,
       ipAddress: auditContext.ipAddress,
@@ -189,40 +243,47 @@ export async function POST(request: NextRequest) {
         requestedProducts: validatedOperation.productIds,
         executionTime: Date.now(),
       },
-      severity: 'INFO',
+      severity: "INFO",
     });
 
-    return NextResponse.json({
-      success: true,
-      operation: validatedOperation.operation,
-      message: `Bulk ${validatedOperation.operation} completed successfully`,
-      result,
-    }, { status: 200 });
-
+    return NextResponse.json(
+      {
+        success: true,
+        operation: validatedOperation.operation,
+        message: `Bulk ${validatedOperation.operation} completed successfully`,
+        result,
+      },
+      { status: 200 }
+    );
   } catch (error) {
-    console.error('Error performing bulk operation:', error);
-    
+    console.error("Error performing bulk operation:", error);
+
     // Handle specific business logic errors
     if (error instanceof Error) {
-      if (error.message.includes('not found')) {
+      if (error.message.includes("not found")) {
         return createApiErrorResponse(404, error.message);
       }
-      if (error.message.includes('validation')) {
+      if (error.message.includes("validation")) {
         return createApiErrorResponse(400, error.message);
       }
-      if (error.message.includes('transaction')) {
-        return createApiErrorResponse(500, 'Operation failed - data consistency maintained');
+      if (error.message.includes("transaction")) {
+        return createApiErrorResponse(
+          500,
+          "Operation failed - data consistency maintained"
+        );
       }
     }
 
-    return createApiErrorResponse(500, 'Failed to perform bulk operation');
+    return createApiErrorResponse(500, "Failed to perform bulk operation");
   }
 }
 
 /**
  * Handle bulk update operations
  */
-async function handleBulkUpdate(operation: Extract<BulkOperation, { operation: 'update' }>) {
+async function handleBulkUpdate(
+  operation: Extract<BulkOperation, { operation: "update" }>
+) {
   const { productIds, updates } = operation;
 
   // Validate that products exist
@@ -232,9 +293,9 @@ async function handleBulkUpdate(operation: Extract<BulkOperation, { operation: '
   });
 
   if (existingProducts.length !== productIds.length) {
-    const foundIds = existingProducts.map(p => p.id);
-    const missingIds = productIds.filter(id => !foundIds.includes(id));
-    throw new Error(`Products not found: ${missingIds.join(', ')}`);
+    const foundIds = existingProducts.map((p) => p.id);
+    const missingIds = productIds.filter((id) => !foundIds.includes(id));
+    throw new Error(`Products not found: ${missingIds.join(", ")}`);
   }
 
   // Perform bulk update
@@ -243,7 +304,7 @@ async function handleBulkUpdate(operation: Extract<BulkOperation, { operation: '
   return {
     affectedCount: result.count,
     requestedCount: productIds.length,
-    products: existingProducts.map(p => ({ id: p.id, name: p.name })),
+    products: existingProducts.map((p) => ({ id: p.id, name: p.name })),
     updates,
   };
 }
@@ -251,7 +312,9 @@ async function handleBulkUpdate(operation: Extract<BulkOperation, { operation: '
 /**
  * Handle bulk price adjustment operations
  */
-async function handleBulkPriceAdjustment(operation: Extract<BulkOperation, { operation: 'price_adjustment' }>) {
+async function handleBulkPriceAdjustment(
+  operation: Extract<BulkOperation, { operation: "price_adjustment" }>
+) {
   const { productIds, adjustment, effectiveDate } = operation;
 
   // Validate price adjustment data
@@ -268,20 +331,20 @@ async function handleBulkPriceAdjustment(operation: Extract<BulkOperation, { ope
   });
 
   if (originalProducts.length !== productIds.length) {
-    const foundIds = originalProducts.map(p => p.id);
-    const missingIds = productIds.filter(id => !foundIds.includes(id));
-    throw new Error(`Products not found: ${missingIds.join(', ')}`);
+    const foundIds = originalProducts.map((p) => p.id);
+    const missingIds = productIds.filter((id) => !foundIds.includes(id));
+    throw new Error(`Products not found: ${missingIds.join(", ")}`);
   }
 
   // Perform bulk price update
   const result = await productService.bulkPriceUpdate(productIds, adjustment);
 
   // Calculate price changes for audit
-  const priceChanges = originalProducts.map(product => {
+  const priceChanges = originalProducts.map((product) => {
     const currentPrice = parseFloat(product.price.toString());
     let newPrice: number;
 
-    if (adjustment.type === 'percentage') {
+    if (adjustment.type === "percentage") {
       newPrice = currentPrice * (1 + adjustment.value / 100);
     } else {
       newPrice = currentPrice + adjustment.value;
@@ -295,7 +358,10 @@ async function handleBulkPriceAdjustment(operation: Extract<BulkOperation, { ope
       originalPrice: currentPrice,
       newPrice,
       change: newPrice - currentPrice,
-      changePercentage: ((newPrice - currentPrice) / currentPrice * 100).toFixed(2),
+      changePercentage: (
+        ((newPrice - currentPrice) / currentPrice) *
+        100
+      ).toFixed(2),
     };
   });
 
@@ -304,15 +370,23 @@ async function handleBulkPriceAdjustment(operation: Extract<BulkOperation, { ope
     requestedCount: productIds.length,
     adjustment,
     priceChanges,
-    totalOriginalValue: priceChanges.reduce((sum, change) => sum + change.originalPrice, 0),
-    totalNewValue: priceChanges.reduce((sum, change) => sum + change.newPrice, 0),
+    totalOriginalValue: priceChanges.reduce(
+      (sum, change) => sum + change.originalPrice,
+      0
+    ),
+    totalNewValue: priceChanges.reduce(
+      (sum, change) => sum + change.newPrice,
+      0
+    ),
   };
 }
 
 /**
  * Handle bulk tag management operations
  */
-async function handleBulkTagManagement(operation: Extract<BulkOperation, { operation: 'tag_management' }>) {
+async function handleBulkTagManagement(
+  operation: Extract<BulkOperation, { operation: "tag_management" }>
+) {
   const { productIds, tagAction, tags } = operation;
 
   // Get current products with their tags
@@ -322,23 +396,23 @@ async function handleBulkTagManagement(operation: Extract<BulkOperation, { opera
   });
 
   if (products.length !== productIds.length) {
-    const foundIds = products.map(p => p.id);
-    const missingIds = productIds.filter(id => !foundIds.includes(id));
-    throw new Error(`Products not found: ${missingIds.join(', ')}`);
+    const foundIds = products.map((p) => p.id);
+    const missingIds = productIds.filter((id) => !foundIds.includes(id));
+    throw new Error(`Products not found: ${missingIds.join(", ")}`);
   }
 
   // Process tag operations
-  const updates = products.map(product => {
+  const updates = products.map((product) => {
     let newTags: string[];
 
     switch (tagAction) {
-      case 'add':
+      case "add":
         newTags = [...new Set([...product.tags, ...tags])]; // Remove duplicates
         break;
-      case 'remove':
-        newTags = product.tags.filter(tag => !tags.includes(tag));
+      case "remove":
+        newTags = product.tags.filter((tag) => !tags.includes(tag));
         break;
-      case 'replace':
+      case "replace":
         newTags = tags;
         break;
       default:
@@ -353,7 +427,7 @@ async function handleBulkTagManagement(operation: Extract<BulkOperation, { opera
 
   // Perform bulk tag updates within a transaction
   const results = await db.$transaction(
-    updates.map(update => db.product.update(update))
+    updates.map((update) => db.product.update(update))
   );
 
   return {
@@ -361,11 +435,11 @@ async function handleBulkTagManagement(operation: Extract<BulkOperation, { opera
     requestedCount: productIds.length,
     tagAction,
     tags,
-    productUpdates: products.map(product => ({
+    productUpdates: products.map((product) => ({
       id: product.id,
       name: product.name,
       originalTags: product.tags,
-      newTags: results.find(r => r.id === product.id)?.tags || [],
+      newTags: results.find((r) => r.id === product.id)?.tags || [],
     })),
   };
 }
@@ -373,7 +447,9 @@ async function handleBulkTagManagement(operation: Extract<BulkOperation, { opera
 /**
  * Handle bulk activation/deactivation operations
  */
-async function handleBulkActivation(operation: Extract<BulkOperation, { operation: 'activation' }>) {
+async function handleBulkActivation(
+  operation: Extract<BulkOperation, { operation: "activation" }>
+) {
   const { productIds, activate } = operation;
 
   // Get current products
@@ -383,26 +459,28 @@ async function handleBulkActivation(operation: Extract<BulkOperation, { operatio
   });
 
   if (products.length !== productIds.length) {
-    const foundIds = products.map(p => p.id);
-    const missingIds = productIds.filter(id => !foundIds.includes(id));
-    throw new Error(`Products not found: ${missingIds.join(', ')}`);
+    const foundIds = products.map((p) => p.id);
+    const missingIds = productIds.filter((id) => !foundIds.includes(id));
+    throw new Error(`Products not found: ${missingIds.join(", ")}`);
   }
 
   // Filter products that actually need status change
-  const productsToUpdate = products.filter(product => product.isActive !== activate);
+  const productsToUpdate = products.filter(
+    (product) => product.isActive !== activate
+  );
 
   if (productsToUpdate.length === 0) {
     return {
       affectedCount: 0,
       requestedCount: productIds.length,
-      message: `All products are already ${activate ? 'active' : 'inactive'}`,
+      message: `All products are already ${activate ? "active" : "inactive"}`,
       activate,
     };
   }
 
   // Perform bulk activation/deactivation
   const result = await productService.bulkUpdate(
-    productsToUpdate.map(p => p.id),
+    productsToUpdate.map((p) => p.id),
     { isActive: activate }
   );
 
@@ -410,7 +488,7 @@ async function handleBulkActivation(operation: Extract<BulkOperation, { operatio
     affectedCount: result.count,
     requestedCount: productIds.length,
     activate,
-    statusChanges: productsToUpdate.map(product => ({
+    statusChanges: productsToUpdate.map((product) => ({
       id: product.id,
       name: product.name,
       previousStatus: product.isActive,
@@ -421,16 +499,74 @@ async function handleBulkActivation(operation: Extract<BulkOperation, { operatio
 }
 
 /**
+ * Handle bulk delete operations
+ */
+async function handleBulkDelete(
+  operation: Extract<BulkOperation, { operation: "delete" }>
+) {
+  const { productIds } = operation;
+
+  // Get current products before deletion for audit purposes
+  const products = await db.product.findMany({
+    where: { id: { in: productIds } },
+    select: { id: true, name: true, sku: true, isActive: true, type: true },
+  });
+
+  if (products.length !== productIds.length) {
+    const foundIds = products.map((p) => p.id);
+    const missingIds = productIds.filter((id) => !foundIds.includes(id));
+    throw new Error(`Products not found: ${missingIds.join(", ")}`);
+  }
+
+  // Filter products that are still active (soft delete only deactivates)
+  const productsToDelete = products.filter((product) => product.isActive);
+
+  if (productsToDelete.length === 0) {
+    return {
+      affectedCount: 0,
+      requestedCount: productIds.length,
+      message: "All selected products are already deactivated",
+      deletions: [],
+      skippedCount: products.length,
+    };
+  }
+
+  // Perform bulk soft delete (deactivation) within a transaction
+  const results = await db.$transaction(
+    productsToDelete.map((product) =>
+      db.product.update({
+        where: { id: product.id },
+        data: { isActive: false },
+      })
+    )
+  );
+
+  return {
+    affectedCount: results.length,
+    requestedCount: productIds.length,
+    deletions: productsToDelete.map((product) => ({
+      id: product.id,
+      name: product.name,
+      sku: product.sku,
+      type: product.type,
+      previouslyActive: product.isActive,
+      newStatus: false,
+    })),
+    skippedCount: products.length - productsToDelete.length,
+  };
+}
+
+/**
  * OPTIONS /api/products/bulk - Handle CORS preflight requests
  */
 export async function OPTIONS() {
   return new NextResponse(null, {
     status: 200,
     headers: {
-      'Access-Control-Allow-Origin': '*',
-      'Access-Control-Allow-Methods': 'POST, OPTIONS',
-      'Access-Control-Allow-Headers': 'Content-Type, Authorization',
-      'Access-Control-Max-Age': '86400',
+      "Access-Control-Allow-Origin": "*",
+      "Access-Control-Allow-Methods": "POST, OPTIONS",
+      "Access-Control-Allow-Headers": "Content-Type, Authorization",
+      "Access-Control-Max-Age": "86400",
     },
   });
 }
